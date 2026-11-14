@@ -1,5 +1,14 @@
 {
   "dependencies": {
+    "com.anatawa12.avatar-optimizer": {
+      "version": "file:com.anatawa12.avatar-optimizer",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.unity.burst": "1.8.7"
+      }
+    },
     "com.unity.ai.navigation": {
       "version": "1.1.5",
       "depth": 0,
@@ -217,10 +226,40 @@
         "com.unity.modules.animation": "1.0.0"
       }
     },
-    "net.wirenook.package-template": {
-      "version": "file:net.wirenook.package-template",
+    "net.wirenook.adventure-tools": {
+      "version": "file:../modules/adventure-tools/Packages/net.wirenook.adventure-tools",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "net.wirenook.assets": {
+      "version": "file:../modules/wirenook-assets/Packages/net.wirenook.assets",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "net.wirenook.avatar-stations": {
+      "version": "file:../modules/avatar-stations/Packages/net.wirenook.avatar-stations",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "net.wirenook.cass": {
+      "version": "file:net.wirenook.cass",
       "depth": 0,
       "source": "embedded",
+      "dependencies": {}
+    },
+    "net.wirenook.locomotion": {
+      "version": "file:../modules/locomotion/Packages/net.wirenook.locomotion",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "net.wirenook.world-sync": {
+      "version": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
+      "depth": 0,
+      "source": "local",
       "dependencies": {}
     },
     "com.unity.modules.ai": {

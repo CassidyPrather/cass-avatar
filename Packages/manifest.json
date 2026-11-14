@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "net.wirenook.adventure-tools": "file:../modules/adventure-tools/Packages/net.wirenook.adventure-tools",
+    "net.wirenook.assets": "file:../modules/wirenook-assets/Packages/net.wirenook.assets",
+    "net.wirenook.avatar-stations": "file:../modules/avatar-stations/Packages/net.wirenook.avatar-stations",
+    "net.wirenook.locomotion": "file:../modules/locomotion/Packages/net.wirenook.locomotion",
+    "net.wirenook.world-sync": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.ide.rider": "3.0.40",
     "com.unity.ide.visualstudio": "2.0.29",
@@ -40,6 +45,8 @@
     "com.unity.modules.xr": "1.0.0"
   },
   "testables": [
-    "net.wirenook.package-template"
+    "net.wirenook.cass",
+    "net.wirenook.assets",
+    "net.wirenook.locomotion"
   ]
 }

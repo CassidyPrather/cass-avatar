@@ -1,0 +1,180 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &3559050885482078472
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8658064087365775311}
+    m_Modifications:
+    - target: {fileID: 4030245592429070019, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Locomotion
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 580fc0fe10858174d949dd955f4eb063, type: 3}
+--- !u!4 &8116908797932702244 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4738143494587509548, guid: 580fc0fe10858174d949dd955f4eb063,
+    type: 3}
+  m_PrefabInstance: {fileID: 3559050885482078472}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &8295671952910066448
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 21509155664729701, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_Name
+      value: cass
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8116908797932702244}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 21509155664729701, guid: 8e3692fc4bd37054f838ea05414808dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3277673936474467717}
+  m_SourcePrefab: {fileID: 100100000, guid: 8e3692fc4bd37054f838ea05414808dc, type: 3}
+--- !u!1 &8317110327304041845 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 21509155664729701, guid: 8e3692fc4bd37054f838ea05414808dc,
+    type: 3}
+  m_PrefabInstance: {fileID: 8295671952910066448}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3277673936474467717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8317110327304041845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b9bbeb42d63c2418fc93cf4ff86610, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  avatarName: cass
+  summary: 'Everyday build: default outfit, weighty locomotion, face tracking.'
+  description: 'Cassidy''s avatar. Source, licence (AGPLv3) and downloads: github.com/CassidyPrather/cass-avatar'
+  extraTags: []
+--- !u!4 &8658064087365775311 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,
+    type: 3}
+  m_PrefabInstance: {fileID: 8295671952910066448}
+  m_PrefabAsset: {fileID: 0}

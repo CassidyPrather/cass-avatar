@@ -1,0 +1,16 @@
+{
+    "name": "Wirenook.DevTools.UnityBridge",
+    "rootNamespace": "Wirenook.DevTools",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

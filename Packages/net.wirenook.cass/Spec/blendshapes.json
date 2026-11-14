@@ -1,0 +1,755 @@
+{
+  "$comment": "Blendshape contract for the Body mesh. Blender validates against it on export; Unity builds the face-tracking sets, visemes and gesture clips from it. MMD worlds animate these names on a mesh that must itself be called Body.",
+  "mesh": "Body",
+  "visemes": [
+    "vrc.v_sil",
+    "vrc.v_pp",
+    "vrc.v_ff",
+    "vrc.v_th",
+    "vrc.v_dd",
+    "vrc.v_kk",
+    "vrc.v_ch",
+    "vrc.v_ss",
+    "vrc.v_nn",
+    "vrc.v_rr",
+    "vrc.v_aa",
+    "vrc.v_e",
+    "vrc.v_ih",
+    "vrc.v_oh",
+    "vrc.v_ou"
+  ],
+  "faceTracking": [
+    {
+      "key": "EyeLookUpRight",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookDownRight",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookInRight",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookOutRight",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookUpLeft",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookDownLeft",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookInLeft",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeLookOutLeft",
+      "region": "gaze",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeClosedRight",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "EyeClosedLeft",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "EyeDilationRight",
+      "region": "eyes",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeDilationLeft",
+      "region": "eyes",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeConstrictRight",
+      "region": "eyes",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeConstrictLeft",
+      "region": "eyes",
+      "tier": "extended"
+    },
+    {
+      "key": "EyeSquintRight",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "EyeSquintLeft",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "EyeWideRight",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "EyeWideLeft",
+      "region": "eyes",
+      "tier": "core"
+    },
+    {
+      "key": "BrowPinchRight",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowPinchLeft",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowLowererRight",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowLowererLeft",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowInnerUpRight",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowInnerUpLeft",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowOuterUpRight",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "BrowOuterUpLeft",
+      "region": "brows",
+      "tier": "core"
+    },
+    {
+      "key": "NoseSneerRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "NoseSneerLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "NasalDilationRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "NasalDilationLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "NasalConstrictRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "NasalConstrictLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "CheekSquintRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "CheekSquintLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "CheekPuffRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "CheekPuffLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "CheekSuckRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "CheekSuckLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "JawOpen",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "JawRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "JawLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "JawForward",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "JawBackward",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "JawClench",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "JawMandibleRaise",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "MouthClosed",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipSuckUpperRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipSuckUpperLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipSuckLowerRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipSuckLowerLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipSuckCornerRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "LipSuckCornerLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "LipFunnelUpperRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipFunnelUpperLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipFunnelLowerRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipFunnelLowerLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipPuckerUpperRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipPuckerUpperLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipPuckerLowerRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "LipPuckerLowerLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthUpperUpRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthUpperUpLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthUpperDeepenRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "MouthUpperDeepenLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "MouthLowerDownRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthLowerDownLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthUpperRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthUpperLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthLowerRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthLowerLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthCornerPullRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthCornerPullLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthCornerSlantRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthCornerSlantLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthFrownRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthFrownLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthStretchRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthStretchLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthDimpleRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthDimpleLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthRaiserUpper",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthRaiserLower",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthPressRight",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthPressLeft",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "MouthTightenerRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "MouthTightenerLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueOut",
+      "region": "mouth",
+      "tier": "core"
+    },
+    {
+      "key": "TongueUp",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueDown",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueRoll",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueBendDown",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueCurlUp",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueSquish",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueFlat",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueTwistRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "TongueTwistLeft",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "SoftPalateClose",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "ThroatSwallow",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "NeckFlexRight",
+      "region": "mouth",
+      "tier": "extended"
+    },
+    {
+      "key": "NeckFlexLeft",
+      "region": "mouth",
+      "tier": "extended"
+    }
+  ],
+  "mmd": [
+    {
+      "name": "まばたき",
+      "meaning": "blink",
+      "region": "eyes"
+    },
+    {
+      "name": "笑い",
+      "meaning": "joy: eyes closed in upward arcs",
+      "region": "eyes"
+    },
+    {
+      "name": "ウィンク",
+      "meaning": "wink left, joy arc",
+      "region": "eyes"
+    },
+    {
+      "name": "ウィンク右",
+      "meaning": "wink right, joy arc",
+      "region": "eyes"
+    },
+    {
+      "name": "ウィンク２",
+      "meaning": "wink left, plain",
+      "region": "eyes"
+    },
+    {
+      "name": "ｳｨﾝｸ２右",
+      "meaning": "wink right, plain",
+      "region": "eyes"
+    },
+    {
+      "name": "なごみ",
+      "meaning": "calm: flat closed eyes",
+      "region": "eyes"
+    },
+    {
+      "name": "はぅ",
+      "meaning": "squeezed shut: > <",
+      "region": "eyes"
+    },
+    {
+      "name": "びっくり",
+      "meaning": "surprised: wide",
+      "region": "eyes"
+    },
+    {
+      "name": "じと目",
+      "meaning": "half-lidded stare",
+      "region": "eyes"
+    },
+    {
+      "name": "ｷﾘｯ",
+      "meaning": "sharp, determined",
+      "region": "eyes"
+    },
+    {
+      "name": "はちゅ目",
+      "meaning": "blank white round eyes",
+      "region": "eyes"
+    },
+    {
+      "name": "はぁと",
+      "meaning": "heart pupils",
+      "region": "eyes"
+    },
+    {
+      "name": "星目",
+      "meaning": "star pupils",
+      "region": "eyes"
+    },
+    {
+      "name": "瞳小",
+      "meaning": "small pupils",
+      "region": "eyes"
+    },
+    {
+      "name": "ハイライト消",
+      "meaning": "highlights off",
+      "region": "eyes"
+    },
+    {
+      "name": "あ",
+      "meaning": "a",
+      "region": "mouth"
+    },
+    {
+      "name": "い",
+      "meaning": "i",
+      "region": "mouth"
+    },
+    {
+      "name": "う",
+      "meaning": "u",
+      "region": "mouth"
+    },
+    {
+      "name": "え",
+      "meaning": "e",
+      "region": "mouth"
+    },
+    {
+      "name": "お",
+      "meaning": "o",
+      "region": "mouth"
+    },
+    {
+      "name": "あ２",
+      "meaning": "a, wider",
+      "region": "mouth"
+    },
+    {
+      "name": "ん",
+      "meaning": "closed n",
+      "region": "mouth"
+    },
+    {
+      "name": "▲",
+      "meaning": "triangle mouth",
+      "region": "mouth"
+    },
+    {
+      "name": "∧",
+      "meaning": "pout, corners down",
+      "region": "mouth"
+    },
+    {
+      "name": "□",
+      "meaning": "square open",
+      "region": "mouth"
+    },
+    {
+      "name": "ワ",
+      "meaning": "wa: open smile",
+      "region": "mouth"
+    },
+    {
+      "name": "ω",
+      "meaning": "cat mouth",
+      "region": "mouth"
+    },
+    {
+      "name": "ω□",
+      "meaning": "cat mouth open",
+      "region": "mouth"
+    },
+    {
+      "name": "にやり",
+      "meaning": "smirk",
+      "region": "mouth"
+    },
+    {
+      "name": "にっこり",
+      "meaning": "closed smile",
+      "region": "mouth"
+    },
+    {
+      "name": "ぺろっ",
+      "meaning": "tongue out",
+      "region": "mouth"
+    },
+    {
+      "name": "てへぺろ",
+      "meaning": "tongue out to the side",
+      "region": "mouth"
+    },
+    {
+      "name": "口角上げ",
+      "meaning": "corners up",
+      "region": "mouth"
+    },
+    {
+      "name": "口角下げ",
+      "meaning": "corners down",
+      "region": "mouth"
+    },
+    {
+      "name": "口横広げ",
+      "meaning": "widen",
+      "region": "mouth"
+    },
+    {
+      "name": "真面目",
+      "meaning": "serious",
+      "region": "brows"
+    },
+    {
+      "name": "困る",
+      "meaning": "troubled",
+      "region": "brows"
+    },
+    {
+      "name": "にこり",
+      "meaning": "cheerful",
+      "region": "brows"
+    },
+    {
+      "name": "怒り",
+      "meaning": "angry",
+      "region": "brows"
+    },
+    {
+      "name": "上",
+      "meaning": "raise",
+      "region": "brows"
+    },
+    {
+      "name": "下",
+      "meaning": "lower",
+      "region": "brows"
+    },
+    {
+      "name": "照れ",
+      "meaning": "blush",
+      "region": "other"
+    },
+    {
+      "name": "涙",
+      "meaning": "tears",
+      "region": "other"
+    }
+  ]
+}

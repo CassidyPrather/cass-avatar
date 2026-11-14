@@ -1,0 +1,281 @@
+{
+  "size": [
+    128,
+    128
+  ],
+  "cell": 16,
+  "swatches": {
+    "skin": {
+      "color": "#ffe6d6",
+      "uv": [
+        0.0625,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "skin-shade": {
+      "color": "#f6c6b4",
+      "uv": [
+        0.1875,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "blush": {
+      "color": "#ff9d9d",
+      "uv": [
+        0.3125,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "mouth-inner": {
+      "color": "#7a2638",
+      "uv": [
+        0.4375,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "tongue": {
+      "color": "#f08a8a",
+      "uv": [
+        0.5625,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "teeth": {
+      "color": "#ffffff",
+      "uv": [
+        0.6875,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "eye-white": {
+      "color": "#ffffff",
+      "uv": [
+        0.8125,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "lash": {
+      "color": "#3a2414",
+      "uv": [
+        0.9375,
+        0.9375
+      ],
+      "emissive": false
+    },
+    "iris": {
+      "color": "#2f8be0",
+      "uv": [
+        0.0625,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "iris-dark": {
+      "color": "#1b3f8f",
+      "uv": [
+        0.1875,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "pupil": {
+      "color": "#10224f",
+      "uv": [
+        0.3125,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "highlight": {
+      "color": "#ffffff",
+      "uv": [
+        0.4375,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "hair": {
+      "color": "#f5d273",
+      "uv": [
+        0.5625,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "hair-shade": {
+      "color": "#d9a94c",
+      "uv": [
+        0.6875,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "hair-inner": {
+      "color": "#1f8fe0",
+      "uv": [
+        0.8125,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "brow": {
+      "color": "#b88a3e",
+      "uv": [
+        0.9375,
+        0.8125
+      ],
+      "emissive": false
+    },
+    "ear-fur": {
+      "color": "#fff1cf",
+      "uv": [
+        0.0625,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "ear-inner": {
+      "color": "#f6b5b0",
+      "uv": [
+        0.1875,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "sweater": {
+      "color": "#c9a67c",
+      "uv": [
+        0.3125,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "sweater-shade": {
+      "color": "#a98661",
+      "uv": [
+        0.4375,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "denim": {
+      "color": "#6f9bd8",
+      "uv": [
+        0.5625,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "denim-shade": {
+      "color": "#4a73b5",
+      "uv": [
+        0.6875,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "denim-stitch": {
+      "color": "#f4f8ff",
+      "uv": [
+        0.8125,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "heart": {
+      "color": "#ff4f8b",
+      "uv": [
+        0.9375,
+        0.6875
+      ],
+      "emissive": false
+    },
+    "hat": {
+      "color": "#9a7350",
+      "uv": [
+        0.0625,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "hat-shade": {
+      "color": "#7a583c",
+      "uv": [
+        0.1875,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "hat-band": {
+      "color": "#2b2018",
+      "uv": [
+        0.3125,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "boot": {
+      "color": "#8a6240",
+      "uv": [
+        0.4375,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "boot-shade": {
+      "color": "#6b4a2f",
+      "uv": [
+        0.5625,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "boot-stitch": {
+      "color": "#e9cf9e",
+      "uv": [
+        0.6875,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "boot-sole": {
+      "color": "#3a2a1e",
+      "uv": [
+        0.8125,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "scribble": {
+      "color": "#20202a",
+      "uv": [
+        0.9375,
+        0.5625
+      ],
+      "emissive": false
+    },
+    "tear": {
+      "color": "#8fd0ff",
+      "uv": [
+        0.0625,
+        0.4375
+      ],
+      "emissive": false
+    },
+    "star": {
+      "color": "#ffd84a",
+      "uv": [
+        0.1875,
+        0.4375
+      ],
+      "emissive": false
+    }
+  }
+}

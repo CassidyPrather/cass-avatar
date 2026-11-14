@@ -1,144 +1,337 @@
-# VPM Package Template
+![cass, a VRChat avatar from wirenook.net](art/banner/banner.png)
 
-Cassidy's opinionated template for VRChat avatars, worlds, and the VPM packages
-that ship them. Enter at your own peril.
+# cass
+
+Cassidy's VRChat avatar, built as a pipeline rather than a scene: the model
+comes out of Blender, everything Unity needs is generated from it and from a
+handful of spec files, the optimising happens at build time on a throwaway
+copy, and uploads fill in their own metadata.
+
+The model is currently a **placeholder**. The pipeline around it is real.
+
+## How it fits together
+
+```
+blender/cass.blend ──export──▶ Packages/net.wirenook.cass/BlenderExports/cass.fbx
+                                        │  import rules applied in code
+Spec/*.json ───────────────────────────▶│
+                                        ▼
+                         generated materials, FX animator, menus
+                                        ▼
+        Prefabs/cass-root.prefab        the one root avatar prefab (a variant of the model)
+                    ▼
+        Prefabs/Variants/cass.prefab        everyday upload
+                    ▼
+        Prefabs/Variants/cass-adv.prefab    adds flight, stations and hand tools
+                    ▼  at build time, on a copy
+        Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
+```
+
+| Path | What it is |
+| --- | --- |
+| `blender/` | `cass.blend` and the headless scripts that validate and export it. |
+| `Packages/net.wirenook.cass/` | The avatar, as a VPM package. `Spec/` holds the contracts, `BlenderExports/` the one place exports land, `Editor/` the generators, `Generated/`, `Materials/` and `Prefabs/` their output. |
+| `modules/` | Five standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
+| `Assets/` | The validation scene and development tools. Not shipped. |
+| `tools/`, `art/` | The thumbnail composer, contact-sheet composer and banner. |
+
+### The standalone packages
+
+| Submodule | Package | What it provides |
+| --- | --- | --- |
+| [`wirenook-assets`](https://github.com/CassidyPrather/wirenook-assets) | `net.wirenook.assets` | The shared palette, materials, menu icons, sounds and the editor helpers the others build with. |
+| [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, and collider flight. |
+| [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world. |
+| [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat and a catch-up portal. |
+| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer, megaphone, flashlight, lantern, screen notices. |
+
+They are mounted as submodules and referenced in place
+(`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
+checkout edits everything in one Unity project. Someone installing the
+avatar from a VPM listing gets them as ordinary dependencies instead.
+
+## Getting started
+
+```bash
+git clone --recurse-submodules https://github.com/CassidyPrather/cass-avatar
+```
+
+Requires Unity 2022.3.22f1 through a VPM client (prefer
+[ALCOM](https://vrc-get.anatawa12.com/en/alcom/)), Blender 5.0, Python
+3.11+ with Pillow and numpy, and the [.NET SDK](https://dotnet.microsoft.com/download)
+11 for the headless checks.
+
+Add these listings to your VPM client once, then add this folder as a
+project and open it in Unity:
+
+| Listing | For |
+| --- | --- |
+| `https://vpm.nadena.dev/vpm.json` | Modular Avatar, NDMF |
+| `https://lilxyzw.github.io/vpm-repos/vpm.json` | lilToon |
+| `https://vpm.anatawa12.com/vpm.json` | Avatar Optimizer |
+
+## Everyday commands
+
+These talk to the Unity editor you already have open; nothing needs to be
+closed or restarted.
+
+```bash
+scripts/cass.sh export            # Blender -> BlenderExports/cass.fbx, validated
+scripts/cass.sh rebuild           # regenerate materials, animators, menus, prefabs
+scripts/cass.sh verify cass       # build the variant as an upload would, and check it
+scripts/cass.sh sheets cass       # contact sheets in dist/validation/cass/
+scripts/cass.sh preview cass      # what an upload would send to VRChat
+scripts/cass.sh upload cass       # build and upload
+scripts/cass.sh all               # export, rebuild, verify every variant
+```
+
+The same things are in Unity's menu under `Tools > Wirenook`.
+
+## The model contract
+
+Blender validates these on export and Unity builds from them, so each name
+is written down once, in `Packages/net.wirenook.cass/Spec/`.
+
+- **`skeleton.json`**: one armature shared by every outfit and variant,
+  mapped to Unity's humanoid bones by name.
+- **`blendshapes.json`**: the shapes the `Body` mesh carries.
+  - the 15 VRChat visemes (`vrc.v_*`);
+  - VRChat's native face-tracking keys (Unified Expressions names, 102 in
+    SDK 3.10.6), each tagged with a face region and whether it is required;
+  - 44 MMD shapes under their Japanese names. MMD worlds find them on a
+    mesh that must itself be called `Body`, directly under the avatar root.
+- **`uv-tiles.json`**: toggles as UV tile discard. Every face carries a
+  second UV set that only says which toggle group it belongs to, and the
+  shader drops whole groups. A garment lists the body zones it covers, and
+  a zone is drawn only while nothing covers it, so skin cannot clip through
+  clothing and a hidden zone costs nothing to draw. It is one float per
+  group on the material rather than a renderer per toggle, which is what
+  lets the whole avatar be one mesh and one material slot.
+- **`proportions.json`**: the body proportions the model is built to,
+  used wherever the character design leaves one open.
+
+Modelling notes for a human replacing the placeholder are in
+[`blender/README.md`](blender/README.md).
+
+### Textures
+
+Flat colour comes from a small swatch texture
+(`Textures/cass-palette.toml`): every face maps to the centre of one solid
+cell. Nothing is mirrored and nothing is wasted, and because cells are
+solid, mip-mapping and atlasing cannot bleed. Painted detail will need real
+textures later; the flat fills can stay.
+
+Materials are lilToon with no minimum brightness (in a dark world the
+avatar is dark), and lilToon's Clipping Canceller is switched on for the
+project so a face seen from very close is pushed back rather than cut open.
+
+## Gestures and face tracking
+
+`Spec/gestures.json` is Cassidy's learned layout, one expression per
+gesture per hand:
+
+| Gesture | Left hand | Right hand |
+| --- | --- | --- |
+| Fist | Sleepy Content | Happy |
+| Open | Sleepy Sad | Sleepy Happy |
+| Thumbs up | Flummoxed | Excited |
+| Finger gun | Afraid | Sad |
+| Point | Angry | Smug |
+| Peace | Hungry | Wink 1 |
+| Rock | Heart Eyes | Wink 2 |
+
+The right hand's layer sits above the left's, so where both touch the same
+blendshape the right hand wins. Expressions are recipes over the shapes
+above, not extra blendshapes.
+
+**With a face tracker.** The tracking keys are split into three blendshape
+sets, eyes, brows and mouth, and each expression says which of those it
+*owns*. While a tracker is live, holding a gesture fades out only the sets
+it owns and animates only those regions; the tracker keeps the rest. Sleepy
+Content closes your eyes while your tracked mouth goes on talking. Heart
+Eyes and the scribbled Afraid eyes work the same way.
+
+**Without one**, or with the menu's Face Tracking switch off, the sets stay
+at zero, gestures animate the whole face, and an animated blink runs. It
+pauses while a gesture owns the eyes, so a wink is never blinked through.
+
+The gesture layers are FX layers 1 and 2, the two MMD worlds silence, and
+they are the only layers that touch the MMD-named shapes.
+
+## Variants and uploads
+
+`Spec/variants.json` lists the upload variants. Each is a prefab variant of
+the root prefab, or of another variant, with feature prefabs added as
+children.
+
+| Variant | Adds |
+| --- | --- |
+| `cass` | Default outfit with per-garment toggles, procedural locomotion, the Face Tracking switch. |
+| `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, flashlight, lantern, screen notices. |
+
+`scripts/cass.sh upload <slug>` builds the variant and sends it with:
+
+- the **name** and **description** from the variant's upload profile;
+- the tags **`ai`** and **`agplv3`**, plus a tag for each feature the
+  variant actually contains, highest priority first, within VRChat's limit
+  of ten (VRChat lower-cases tags and stores them as `author_tag_*`);
+- visibility **public**;
+- a **thumbnail** composed from a cut-out render of the built avatar, its
+  performance rank, feature list and tags (`tools/thumbnail/`).
+
+It refuses to upload if the description does not mention
+`github.com/CassidyPrather/cass-avatar`, if a required tag is missing, or if
+the avatar would not be public. A hook applies the same check to uploads
+made by hand from the SDK panel. These are guardrails against forgetting,
+not locks: the policy is `Runtime/Core/UploadGuard.cs`, and removing the
+upload profile from an avatar switches the check off.
+
+VRChat asks whoever uploads to confirm they hold the rights to the
+content. That dialog is left to you.
+
+## Checking the work
+
+`scripts/cass.sh verify <slug>` runs the real build on a copy and checks
+what came out: the performance rank against the variant's target, that
+`Body` and the gesture layers are still where MMD worlds expect them, that
+the optimiser kept every viseme, tracking and MMD shape, the synced
+parameter and station budgets, and that no material has a brightness floor.
+
+`scripts/cass.sh sheets <slug>` photographs the built avatar in
+`Assets/Scenes/Validation.unity` and writes eight labelled contact sheets to
+`dist/validation/<slug>/`:
+
+1. **Cameras**: sixteen fixed views, from full body to nose-to-nose (for
+   near-plane clipping), including from above and below.
+2. **Lighting**: seven conditions, including no light at all (the avatar
+   should go black), far too bright (it should not blow out) and saturated
+   coloured lights.
+3. **Animations**: VRChat's own walk, run, crouch, crawl, sit, fall, AFK
+   and emotes.
+4. **Range of motion**: each joint group pushed to both ends of its
+   humanoid range, plus a squat, a high kick and a hug. This is where
+   clothing and skin intersect.
+5. **Expressions**: every gesture expression.
+6. **Visemes**.
+7. **Outfit**: each garment taken off in turn, then all of them, to check
+   the skin underneath comes back whole.
+8. **Features**: each optional feature switched on by itself.
+
+The sheets show the avatar after the build, so what you review is what
+would be uploaded. Open the scene to look around by hand; the cameras and
+lighting conditions are ordinary objects in it.
+
+## Build-time optimisation
+
+Nothing is merged or baked in the project. The prefabs stay modular (six
+meshes, a feature prefab per gadget) and the build does the work on a
+copy:
+
+- **Avatar Optimizer** merges the meshes, merges identical material slots,
+  drops blendshapes and bones nothing uses, and trims the animator.
+- **`net.wirenook.assets`** adds two steps before it. Optimisers only merge
+  renderers that are alike in every way they can see, so the build makes
+  hand-held props agree with the body (same root bone, bounds, probe
+  anchor, and the same animated material properties) and removes the
+  editor-only marker components that would otherwise make an optimiser
+  give up.
+- Props that can be left in the world (the seat, the portal) are built as
+  plain rigid meshes instead. Merged into the avatar they would be culled
+  with it, and vanish whenever the avatar itself was out of view.
+- Every toggle is something a merged mesh can still do: UV tile discard
+  for the outfit, scaling a bone to nothing for props.
+
+| Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cass` | Good | 8,202 | 2 + 0 (from 6) | 2 (from 6) | 59 | 5 of 256 |
+| `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 20 of 256 |
+
+The second skinned mesh is what stands between this and Excellent. It is
+the face: Avatar Optimizer keeps meshes with blendshapes apart, because
+every vertex added to such a mesh makes each expression cost more. That
+is the better trade for real performance, so it is left alone. A final
+model could put only the face (named `Body`, for MMD worlds) on that mesh
+and let the rest of the skin merge.
+
+Texture atlasing is not used: the flat palettes leave nothing to atlas.
+When painted textures arrive, [TexTransTool](https://ttt.rs64.net/) is the
+tool for it.
+
+## Status
+
+**Nothing here has run in the VRChat client yet, and the avatar has not
+been uploaded.** Everything below was checked in Blender, in the Unity
+editor, or headless.
+
+Checked:
+
+- The Blender export validates against the specs with no errors, and the
+  exported file is read back and compared (names, bones, shape keys, UVs,
+  orientation).
+- Both variants build through Modular Avatar and Avatar Optimizer and pass
+  `scripts/cass.sh verify`: rank Good, the MMD mesh name and layer order
+  intact after the build, every viseme, required tracking key and MMD
+  shape still present, budgets respected, no brightness floor.
+- The contact sheets render and were looked at: all fourteen expressions,
+  the outfit zones, the lighting extremes, and each feature in place.
+- The upload record composes and passes the policy; the thumbnail is
+  generated. The upload itself was not run.
+- Headless tests: 18 for the avatar's core logic, 18 for the thumbnail
+  composer, and each submodule's own suite.
+
+Not checked, because only the client can:
+
+- **Face tracking hand-over.** The design follows VRChat's documentation
+  for SDK 3.10.6, but that documentation does not say what happens when an
+  animation and a tracker drive the same blendshape, which is why gestures
+  only animate shapes the tracker is not mapped to while one is live.
+- **MMD worlds**, beyond the mesh name and layer order.
+- **Every gadget in use**: collider flight, the carry seat, the portal's
+  station, the laser's raycast, the screen notice in a headset, dropped
+  props for late joiners. Each submodule's README says what its own
+  unknowns are.
+- **How the locomotion feels**, and how it sits with real tracking.
+- **Hand poses**: props sit in the hand pointing where the fingers point,
+  and the fingers do not close around them.
+
+Known gaps:
+
+- The model is a placeholder: no eyelids (closing the eyes squashes the
+  decals), ears pass through the hat brim without a hole, garment openings
+  are hollow and rely on the double-sided material. `blender/README.md`
+  lists the rest.
+- The locomotion clips are baked on a generic rig and retargeted, not
+  fitted to this avatar; `LocomotionBuild.BakeFor` exists for that.
+- Nothing is published: no releases, and the repositories are not on the
+  VPM listing.
 
 ## Development
-
-Requires Unity 2022.3.22f1 (see `ProjectSettings/ProjectVersion.txt`) via a VPM
-client (prefer [ALCOM](https://vrc-get.anatawa12.com/en/alcom/)).
-Requires [.NET SDK](https://dotnet.microsoft.com/download) 11 for headless checks.
-
-Open: add this folder as a project in your VPM client, then open in Unity. The
-client installs the defaults pinned in `Packages/vpm-manifest.json`: the
-VRChat Avatars SDK, [lilToon](https://lilxyzw.github.io/lilToon/), and
-[Modular Avatar](https://modular-avatar.nadena.dev/) (with NDMF). Add their
-listings to your client once: `https://lilxyzw.github.io/vpm-repos/vpm.json`
-and `https://vpm.nadena.dev/vpm.json`
-
-Test (editor): Window > General > Test Runner, EditMode tab
 
 ```bash
 scripts/check-meta.sh          # every visible file has a committed .meta
 scripts/check-manifests.py     # package.json sanity across Packages/
 scripts/format.sh --check      # dotnet-format over the CI-visible C#
 scripts/test.sh                # headless NUnit run of Runtime/Core + Tests
-scripts/build-packages.sh      # VPM .zip + .unitypackage per package -> dist/
+python tools/thumbnail/test_thumbnail.py
+scripts/compile-check.py Packages/net.wirenook.cass   # type-check without the editor
+scripts/unity-refresh.sh       # recompile the open editor once everything type-checks
 ```
 
-### Advanced
+Pre-commit hook: `git config core.hooksPath .githooks`
 
-Pre-commit hook: `git config core.hooksPath .githooks` (runs the meta and
-manifest checks)
+[`SKILL.md`](SKILL.md) has the rules that are easy to break and how to
+drive the open editor from scripts.
 
-Release:
+### Releasing
 
-1. Bump `version` in the package's `package.json`
-2. Commit and push
-3. Create a GitHub release tagged with that version — CI attaches the `.zip`
-   and `.unitypackage` for every package whose version matches the tag
-4. Add the repository to your listing's `githubRepos`
-   ([CassidyPrather/vpm](https://github.com/CassidyPrather/vpm)) once; every
-   later release is picked up from the release assets automatically
+The avatar is versioned in `Packages/net.wirenook.cass/package.json`.
 
-## Template Setup
-
-1. **Create a new repository** from this template on GitHub (click "Use this
-   template")
-
-2. **Clone your new repository** and navigate to it
-
-3. **Pick a flavor.** The four supported shapes are avatar *project*, world
-   *project* (yours alone, nothing redistributable), avatar *package*, and
-   world *package* (a redistributable under `Packages/`). The defaults are
-   set up for avatars: `com.vrchat.avatars` 3.10.6 plus Modular Avatar. For a
-   world flavor, use your VPM client to remove Modular Avatar (and the NDMF it
-   pulled in), then swap `com.vrchat.avatars` for `com.vrchat.worlds`. Never
-   install both SDKs; they refuse to coexist. lilToon works in worlds too, so
-   keep it or drop it. SDK 3.10.x is still Unity 2022.3, so ignore any prompt
-   to move the project to Unity 6.
-
-4. **Project, not package?** Gut the package scaffolding:
-   - Delete `Packages/net.wirenook.package-template/`
-   - Remove the `!net.wirenook.package-template` line from `Packages/.gitignore`
-   - Remove `net.wirenook.package-template` from `testables` in
-     `Packages/manifest.json`
-   - Delete the `build-and-publish` job from `.github/workflows/ci-cd.yml`,
-     plus `scripts/build-packages.sh` and `scripts/unitypackage.py`
-   - Everything else stays: the checks and headless tests degrade cleanly to
-     "nothing to do" until you give them something, and the meta check earns
-     its keep on `Assets/` alone
-
-5. **Package? Rename the sample** everywhere its name is hardcoded:
-   - The `Packages/net.wirenook.package-template/` directory itself
-   - `package.json`: `name`, `displayName`, `description`, and `author`
-   - Both `.asmdef` file names and their `name` fields, and the Tests asmdef's
-     reference to the Runtime assembly
-   - The `!net.wirenook.package-template` line in `Packages/.gitignore`
-   - The `testables` entry in `Packages/manifest.json`
-   - Declare the SDK in `vpmDependencies`, e.g.
-     `"com.vrchat.avatars": "^3.10.6"`, plus whichever default packages your
-     code actually uses, e.g. `"nadena.dev.modular-avatar": "^1.18.7"`. The
-     project-level defaults don't carry over to people who install your
-     package, so anything you depend on has to be declared here.
-
-6. **Vendored proprietary assets** — keep or strip:
-   - Keep: create a *private* repository for the assets and mount it:
-     `git submodule add <private-remote> Assets/Vendor`. Open Unity once,
-     commit the generated `Assets/Vendor.meta`, and from then on
-     `git clone --recurse-submodules` Just Works. See Vendored assets below.
-   - Strip: delete the Vendored assets section from this README. That's it —
-     the mechanism is git itself, so there is nothing else to remove.
-
-7. **Update the README**: replace the title and description, remove or
-   customize this Template Setup section
-
-8. **Verify everything works**:
-
-   ```bash
-   scripts/check-meta.sh
-   scripts/check-manifests.py
-   scripts/test.sh
-   scripts/build-packages.sh
-   ```
-
-### Replacing the demo
-
-The sample package exists so the template ships exercised, not because it is
-precious. Its full blast radius, in gutting order:
-
-1. `Runtime/Core/Easing.cs` — replace wholesale. Keep the shape: pure C#, no
-   UnityEngine, no SDK. Everything in `Runtime/Core/` is compiled by
-   `scripts/test.sh` against nothing but the standard library and NUnit, so a
-   stray engine reference there fails CI — that is the fence working, not a
-   bug.
-2. `Tests/Editor/EasingTests.cs` — rewrite against your logic. Stick to the
-   classic asserts; the same files run under `dotnet test` in CI and the Unity
-   Test Runner in the editor.
-3. `Editor/PackageTemplateMenu.cs` — demo-specific; replace or delete.
-4. `Runtime/` outside `Core/` is where MonoBehaviours and SDK-facing glue go.
-   CI compiles none of it, the editor all of it.
-
-Nothing else references the demo.
-
-See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for curated links:
-tooling, docs, avatar frameworks, asset sources, and so on and so forth.
-
-## Vendored assets
-
-Proprietary assets — store purchases, licensed packs — must never be published
-in this repository. They live in a *private* repository mounted as a submodule
-at `Assets/Vendor`; clone with `--recurse-submodules` and they Just Work.
-Because `.unitypackage` imports preserve GUIDs, anyone who imports their own
-licensed copy of the same pack gets the same GUIDs — so references from
-committed prefabs and scenes into vendored assets survive for people who can't
-see your submodule at all.
-
-Clones without access still open fine: git leaves `Assets/Vendor` empty and
-Unity shrugs. CI clones without submodules on purpose — it is the standing
-proof that nothing tracked *requires* the private half. Record each pack in
-[CREDITS.md](CREDITS.md), license column included, even though the bytes stay
-private.
+1. Bump `version`, commit and push.
+2. Create a GitHub release tagged with that version. CI attaches the `.zip`
+   and `.unitypackage`.
+3. Each submodule releases the same way from its own repository.
+4. Add the repositories to the listing's `githubRepos`
+   ([CassidyPrather/vpm](https://github.com/CassidyPrather/vpm)) once.
 
 ## Legal
 
@@ -160,4 +353,4 @@ respects. (This exception also in `LICENSE_ADDENDUM`.)
 Descended from https://github.com/vrchat-community/template-package
 ([VRCHAT DISTRO LICENSE FILE](https://github.com/vrchat-community/template-package/blob/d9cf13fe9f56867cbf7315a4dbbf1901bc1537ec/Packages/com.vrchat.core.bootstrap/License.md))
 
-Vendored third-party material is inventoried in [CREDITS.md](CREDITS.md).
+Third-party material is inventoried in [CREDITS.md](CREDITS.md).

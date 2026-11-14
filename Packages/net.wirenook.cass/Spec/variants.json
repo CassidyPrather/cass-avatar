@@ -1,0 +1,25 @@
+{
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to; the checks fail if it ranks lower.",
+  "description": "Cassidy's avatar. Source, licence (AGPLv3) and downloads: github.com/CassidyPrather/cass-avatar",
+  "variants": [
+    {
+      "slug": "cass",
+      "summary": "Everyday build: default outfit, weighty locomotion, face tracking.",
+      "worstRank": "Good",
+      "features": [
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Locomotion.prefab"
+      ]
+    },
+    {
+      "slug": "cass-adv",
+      "extends": "cass",
+      "summary": "Adventure build: adds flight, a carry seat, a catch-up portal and the hand tools.",
+      "worstRank": "Good",
+      "features": [
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
+        "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools.prefab"
+      ]
+    }
+  ]
+}

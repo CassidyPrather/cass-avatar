@@ -1,0 +1,15 @@
+[submodule "modules/wirenook-assets"]
+	path = modules/wirenook-assets
+	url = https://github.com/CassidyPrather/wirenook-assets.git
+[submodule "modules/locomotion"]
+	path = modules/locomotion
+	url = https://github.com/CassidyPrather/locomotion.git
+[submodule "modules/world-sync"]
+	path = modules/world-sync
+	url = https://github.com/CassidyPrather/world-sync.git
+[submodule "modules/avatar-stations"]
+	path = modules/avatar-stations
+	url = https://github.com/CassidyPrather/avatar-stations.git
+[submodule "modules/adventure-tools"]
+	path = modules/adventure-tools
+	url = https://github.com/CassidyPrather/adventure-tools.git

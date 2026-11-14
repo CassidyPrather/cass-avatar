@@ -1,0 +1,104 @@
+{
+  "$comment": "Cassidy's learned gesture layout. Each hand picks one expression; the right hand's layer sits above the left's, so where both touch the same blendshape the right hand wins. `shapes` are blendshape weights (0-100) from blendshapes.json; a trailing * expands to the Left and Right pair. `owns` lists the face regions the expression takes away from face tracking while it is held: with tracking live, shapes in regions it does not own are left to the tracker, so a tracked mouth keeps talking under closed gesture eyes. `tiles` flips UV discard tiles from uv-tiles.json (true = shown).",
+  "gestureValues": {
+    "neutral": 0,
+    "fist": 1,
+    "open": 2,
+    "point": 3,
+    "peace": 4,
+    "rock": 5,
+    "gun": 6,
+    "thumb": 7
+  },
+  "left": {
+    "fist": "sleepy_content",
+    "open": "sleepy_sad",
+    "thumb": "flummoxed",
+    "gun": "afraid",
+    "point": "angry",
+    "peace": "hungry",
+    "rock": "heart_eyes"
+  },
+  "right": {
+    "fist": "happy",
+    "open": "sleepy_happy",
+    "thumb": "excited",
+    "gun": "sad",
+    "point": "smug",
+    "peace": "wink_1",
+    "rock": "wink_2"
+  },
+  "expressions": {
+    "sleepy_content": {
+      "label": "Sleepy Content",
+      "owns": ["eyes"],
+      "shapes": { "なごみ": 100, "MouthCornerPull*": 35, "BrowInnerUp*": 15 }
+    },
+    "sleepy_sad": {
+      "label": "Sleepy Sad",
+      "owns": ["eyes", "brows"],
+      "shapes": { "まばたき": 100, "困る": 80, "MouthFrown*": 55, "MouthRaiserLower": 30 }
+    },
+    "flummoxed": {
+      "label": "Flummoxed",
+      "owns": ["eyes", "brows"],
+      "shapes": { "はぅ": 100, "困る": 60, "MouthStretch*": 60, "JawOpen": 12, "照れ": 60 }
+    },
+    "afraid": {
+      "label": "Afraid",
+      "owns": ["eyes", "brows"],
+      "shapes": { "びっくり": 60, "困る": 100, "JawOpen": 30, "MouthStretch*": 70, "MouthFrown*": 40 },
+      "tiles": { "face.eyes": false, "face.eyes_scribble": true }
+    },
+    "angry": {
+      "label": "Angry",
+      "owns": ["brows"],
+      "shapes": { "怒り": 100, "EyeSquint*": 45, "NoseSneer*": 60, "MouthFrown*": 60, "MouthPress*": 40 }
+    },
+    "hungry": {
+      "label": "Hungry",
+      "owns": [],
+      "shapes": { "JawOpen": 25, "TongueOut": 60, "MouthCornerPull*": 40, "EyeWide*": 30 }
+    },
+    "heart_eyes": {
+      "label": "Heart Eyes",
+      "owns": ["eyes"],
+      "shapes": { "はぁと": 100, "EyeWide*": 40, "MouthCornerPull*": 70, "照れ": 80 }
+    },
+    "happy": {
+      "label": "Happy",
+      "owns": ["eyes"],
+      "shapes": { "笑い": 100, "MouthCornerPull*": 85, "CheekSquint*": 50, "JawOpen": 10 }
+    },
+    "sleepy_happy": {
+      "label": "Sleepy Happy",
+      "owns": ["eyes"],
+      "shapes": { "まばたき": 100, "MouthCornerPull*": 70, "JawOpen": 15, "BrowOuterUp*": 30 }
+    },
+    "excited": {
+      "label": "Excited",
+      "owns": ["brows"],
+      "shapes": { "上": 80, "EyeWide*": 80, "JawOpen": 50, "MouthCornerPull*": 90, "MouthUpperUp*": 30 }
+    },
+    "sad": {
+      "label": "Sad",
+      "owns": ["brows"],
+      "shapes": { "困る": 100, "EyeSquint*": 20, "MouthFrown*": 80, "MouthRaiserLower": 40 }
+    },
+    "smug": {
+      "label": "Smug",
+      "owns": ["eyes", "brows"],
+      "shapes": { "じと目": 70, "真面目": 40, "MouthCornerPullLeft": 75, "MouthDimpleLeft": 40, "MouthPressRight": 20 }
+    },
+    "wink_1": {
+      "label": "Wink 1",
+      "owns": ["eyes"],
+      "shapes": { "ウィンク": 100, "MouthCornerPull*": 70, "CheekSquintLeft": 50 }
+    },
+    "wink_2": {
+      "label": "Wink 2",
+      "owns": ["eyes"],
+      "shapes": { "ｳｨﾝｸ２右": 100, "TongueOut": 50, "MouthCornerPull*": 50, "JawOpen": 12 }
+    }
+  }
+}

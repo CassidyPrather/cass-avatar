@@ -21,6 +21,8 @@
 - [Modular Avatar](https://modular-avatar.nadena.dev/) - NDMF's flagship and a default dependency here; study its packaging before inventing your own.
 - [Av3Emulator](https://github.com/lyuma/Av3Emulator) - exercise avatar behaviour in the editor instead of uploading to find out.
 - [lilToon](https://github.com/lilxyzw/lilToon) - shader builder under MIT and a default dependency here; plays nice with copyleft.
+- [Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/) - lossless build-time merging and trimming; what keeps the modular prefabs cheap once uploaded. MIT.
+- [TexTransTool](https://ttt.rs64.net/) - build-time texture atlasing and decals for NDMF; the tool to reach for once painted textures replace the flat palettes. MIT, logo excepted. Not installed.
 
 ## Assets
 

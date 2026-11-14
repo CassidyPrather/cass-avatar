@@ -1,0 +1,39 @@
+# Cass's flat colours as a swatch texture, sampled from ref/. Baked by
+# modules/wirenook-assets/tools/palette.py; the placeholder model maps every
+# face onto one of these cells. Painted detail (face, embroidery, gingham)
+# will want real textures later; the flat fills can stay here.
+columns = 8
+cell = 16
+
+# Skin, face.
+[[row]]
+swatches = [
+  ["skin", "#ffe6d6"], ["skin-shade", "#f6c6b4"], ["blush", "#ff9d9d"], ["mouth-inner", "#7a2638"],
+  ["tongue", "#f08a8a"], ["teeth", "#ffffff"], ["eye-white", "#ffffff"], ["lash", "#3a2414"],
+]
+
+# Eyes, hair, ears.
+[[row]]
+swatches = [
+  ["iris", "#2f8be0"], ["iris-dark", "#1b3f8f"], ["pupil", "#10224f"], ["highlight", "#ffffff"],
+  ["hair", "#f5d273"], ["hair-shade", "#d9a94c"], ["hair-inner", "#1f8fe0"], ["brow", "#b88a3e"],
+]
+
+# Ears, outfit.
+[[row]]
+swatches = [
+  ["ear-fur", "#fff1cf"], ["ear-inner", "#f6b5b0"], ["sweater", "#c9a67c"], ["sweater-shade", "#a98661"],
+  ["denim", "#6f9bd8"], ["denim-shade", "#4a73b5"], ["denim-stitch", "#f4f8ff"], ["heart", "#ff4f8b"],
+]
+
+[[row]]
+swatches = [
+  ["hat", "#9a7350"], ["hat-shade", "#7a583c"], ["hat-band", "#2b2018"], ["boot", "#8a6240"],
+  ["boot-shade", "#6b4a2f"], ["boot-stitch", "#e9cf9e"], ["boot-sole", "#3a2a1e"], ["scribble", "#20202a"],
+]
+
+# Face extras that only some expressions show (MMD 涙 and 星目).
+[[row]]
+swatches = [
+  ["tear", "#8fd0ff"], ["star", "#ffd84a"],
+]

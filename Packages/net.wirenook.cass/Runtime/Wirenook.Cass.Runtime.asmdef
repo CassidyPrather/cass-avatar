@@ -1,0 +1,16 @@
+{
+    "name": "Wirenook.Cass",
+    "rootNamespace": "Wirenook.Cass",
+    "references": [
+        "Wirenook.Assets.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

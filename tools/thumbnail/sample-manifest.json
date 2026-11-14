@@ -1,0 +1,23 @@
+{
+  "name": "cass",
+  "variant": "cass-adv",
+  "version": "0.1.0",
+  "performanceRank": "Medium",
+  "features": [
+    { "id": "outfit", "label": "Outfits", "icon": "outfit" },
+    { "id": "expressions", "label": "Expressions", "icon": "expressions" },
+    { "id": "face-tracking", "label": "Face tracking", "icon": "face-tracking" },
+    { "id": "locomotion", "label": "Locomotion", "icon": "locomotion" },
+    { "id": "flight", "label": "Flight", "icon": "flight" },
+    { "id": "carry", "label": "Carry a friend", "icon": "carry" },
+    { "id": "teleport-pair", "label": "Portal pair", "icon": "teleport-pair" },
+    { "id": "catch-up", "label": "Catch up", "icon": "catch-up" },
+    { "id": "laser-pointer", "label": "Laser pointer", "icon": "laser-pointer" },
+    { "id": "megaphone", "label": "Megaphone", "icon": "megaphone" },
+    { "id": "flashlight", "label": "Flashlight", "icon": "flashlight" },
+    { "id": "lantern", "label": "Lantern", "icon": "lantern" }
+  ],
+  "tags": ["ai", "AGPLv3"],
+  "url": "github.com/CassidyPrather/cass-avatar",
+  "cutout": null
+}

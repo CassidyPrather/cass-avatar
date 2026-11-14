@@ -1,0 +1,16 @@
+{
+  "$comment": "The body proportions the model is built to, in metres, used wherever the character design leaves one open. The design wins where it has an opinion: the head is drawn larger than life (headScale), so limb lengths and landmark heights follow these numbers and the head does not. Heights are barefoot; the placeholder adds bootHeelHeight.",
+  "height": 1.778,
+  "shoulderWidth": 0.375,
+  "neckBaseHeight": 1.45,
+  "shoulderToWrist": 0.58,
+  "hipHeight": 0.87,
+  "neckCircumference": 0.33,
+  "bustCircumference": 0.775,
+  "underbustCircumference": 0.73,
+  "waistCircumference": 0.765,
+  "hipCircumference": 0.855,
+  "footLength": 0.275,
+  "bootHeelHeight": 0.03,
+  "headScale": 1.15
+}

@@ -1,0 +1,25 @@
+{
+  "$comment": "UV tile discard layout. Every vertex carries a second UV set (index 1, `uvChannel`) whose only job is to say which toggle group the face belongs to: all of a group's UVs sit inside one whole-number tile, and lilToon's UDIM Discard drops the tiles a toggle switches off. Tile (0,0) is never discarded. Because this is one float per tile on the material rather than one renderer per toggle, every group can live in the same mesh and material slot. `shown` is the state with nothing animating it. `hides` names the body zones a garment fully covers, so wearing it discards the skin underneath instead of fighting it for depth. `toggle` gives a tile a synced menu switch.",
+  "uvChannel": 1,
+  "columns": 4,
+  "rows": 4,
+  "property": "_UDIMDiscardRow{row}_{column}",
+  "tiles": [
+    {"id": "always", "column": 0, "row": 0, "shown": true, "note": "Head, hands, anything no toggle may hide."},
+    {"id": "body.torso", "column": 1, "row": 0, "shown": true, "note": "Collar loop down to the waist loop."},
+    {"id": "body.hips", "column": 2, "row": 0, "shown": true, "note": "Waist loop down to the mid-thigh loop."},
+    {"id": "body.feet", "column": 3, "row": 0, "shown": true, "note": "Mid-calf loop down, toes included."},
+    {"id": "body.arms", "column": 0, "row": 1, "shown": true, "note": "Shoulder seam down to the wrist loop."},
+    {"id": "body.legs", "column": 1, "row": 1, "shown": true, "note": "Mid-thigh loop down to the mid-calf loop."},
+    {"id": "face.eyes", "column": 2, "row": 1, "shown": true, "note": "Ordinary irises and pupils."},
+    {"id": "face.eyes_scribble", "column": 3, "row": 1, "shown": false, "note": "Scratchy blank white eyes for the Afraid gesture."},
+    {"id": "outfit.default.top", "column": 0, "row": 2, "shown": true, "hides": ["body.torso", "body.arms"], "toggle": {"parameter": "Outfit/Top", "label": "Sweater", "icon": "outfit"}, "note": "Oversized sweater."},
+    {"id": "outfit.default.bottom", "column": 1, "row": 2, "shown": true, "hides": ["body.hips"], "toggle": {"parameter": "Outfit/Bottom", "label": "Shorts", "icon": "outfit"}, "note": "Denim short-shorts."},
+    {"id": "outfit.default.shoes", "column": 2, "row": 2, "shown": true, "hides": ["body.feet"], "toggle": {"parameter": "Outfit/Shoes", "label": "Boots", "icon": "outfit"}, "note": "Cowboy boots."},
+    {"id": "outfit.default.hat", "column": 3, "row": 2, "shown": true, "toggle": {"parameter": "Outfit/Hat", "label": "Hat", "icon": "outfit"}, "note": "Cowboy hat; the ears pass through the brim."},
+    {"id": "reserved.0", "column": 0, "row": 3, "shown": true},
+    {"id": "reserved.1", "column": 1, "row": 3, "shown": true},
+    {"id": "reserved.2", "column": 2, "row": 3, "shown": true},
+    {"id": "reserved.3", "column": 3, "row": 3, "shown": true}
+  ]
+}
