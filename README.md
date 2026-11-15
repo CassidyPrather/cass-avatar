@@ -219,7 +219,9 @@ which vertex data each mesh kept, which shaders it carries, and a picture
 (`dist/validation/bundle.png`). Unity strips vertex channels it believes
 no shader reads when it packs a bundle, and the outfit toggles live in the
 second UV channel, so this is worth a look after anything changes in the
-materials. The build logs a shader error from lilToon
+materials. The picture is taken without the avatar's animator running, so
+every prop shows at once, as it would for someone whose safety settings
+block the avatar's animations. The build logs a shader error from lilToon
 (`unrecognized identifier 'CBUFFER_START'`); it comes from a pass that
 never draws, and the uploaded bundle renders correctly.
 
@@ -297,9 +299,11 @@ tool for it.
 
 ## Status
 
-**The placeholder `cass` is uploaded and public
-(`avtr_83eafc89-950e-4553-bb36-c37238333069`); `cass-adv` is not. Nothing
-has been worn in the VRChat client yet.** Everything below was checked in
+**Both placeholder variants are uploaded and public: `cass`
+(`avtr_83eafc89-950e-4553-bb36-c37238333069`) and `cass-adv`
+(`avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9`). `cass` has been worn in the
+VRChat client and loads; no individual feature has been checked there, and
+`cass-adv` has not been worn at all.** Everything below was checked in
 Blender, in the Unity editor, against VRChat's API, or headless.
 
 Checked:
@@ -313,10 +317,11 @@ Checked:
   shape still present, budgets respected, no brightness floor.
 - The contact sheets render and were looked at: all fourteen expressions,
   the outfit zones, the lighting extremes, and each feature in place.
-- `cass` uploaded through `scripts/cass.sh upload`. VRChat's record reads
-  back with the source link, both required tags and public visibility, and
-  the uploaded bundle, opened again in the editor, renders correctly with
-  both UV channels intact.
+- Both variants uploaded through `scripts/cass.sh upload`. VRChat's
+  records read back with the source link, the required tags (and
+  `cass-adv`'s eight feature tags) and public visibility, and each
+  uploaded bundle, opened again in the editor, renders correctly with both
+  UV channels intact.
 - Headless tests: 19 for the avatar's core logic, 18 for the thumbnail
   composer, and each submodule's own suite.
 
