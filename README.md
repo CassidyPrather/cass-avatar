@@ -220,8 +220,8 @@ which vertex data each mesh kept, which shaders it carries, and a picture
 no shader reads when it packs a bundle, and the outfit toggles live in the
 second UV channel, so this is worth a look after anything changes in the
 materials. The picture is taken without the avatar's animator running, so
-every prop shows at once, as it would for someone whose safety settings
-block the avatar's animations. The build logs a shader error from lilToon
+it shows the avatar as it rests, which is also what someone whose safety
+settings block its animations sees. The build logs a shader error from lilToon
 (`unrecognized identifier 'CBUFFER_START'`); it comes from a pass that
 never draws, and the uploaded bundle renders correctly.
 
@@ -231,7 +231,10 @@ never draws, and the uploaded bundle renders correctly.
 what came out: the performance rank against the variant's target, that
 `Body` and the gesture layers are still where MMD worlds expect them, that
 the optimiser kept every viseme, tracking and MMD shape, the synced
-parameter and station budgets, and that no material has a brightness floor.
+parameter and station budgets, that no material has a brightness floor,
+and that everything the FX layers scale or switch rests the way they start
+it (a prop that relies on the animator to hide it shows permanently for
+anyone who has the avatar's animations blocked).
 With the SDK control panel open it also runs the SDK's own upload
 validation on the result. Anything that fails stops an upload after the
 build, so it is cheaper to hear about it here (it is how sound effects

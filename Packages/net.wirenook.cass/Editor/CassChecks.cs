@@ -46,6 +46,7 @@ namespace Wirenook.Cass.Editor
                 Blendshapes(built, problems);
                 Budgets(built, report, problems);
                 Brightness(built, problems);
+                RestPose(built, problems);
                 SdkValidation(built, problems, notes);
             }
             finally
@@ -157,7 +158,53 @@ namespace Wirenook.Cass.Editor
                 problems.Add("Has " + stations + " stations; VRChat disables all but " + StationBudget + ".");
         }
 
-        /// <summary>No lit material may keep a brightness floor: in the dark the avatar should be dark.</summary>
+        /// <summary>
+        /// Whatever the FX layers scale or switch must rest the way their
+        /// default states hold it. A viewer whose safety settings block the
+        /// avatar's animations sees it as it rests, so a prop that rests at
+        /// full size and relies on the animator to hide it shows for them
+        /// permanently.
+        /// </summary>
+        private static void RestPose(GameObject built, List<string> problems)
+        {
+            var fx = built.GetComponent<VRCAvatarDescriptor>().baseAnimationLayers
+                .FirstOrDefault(layer => layer.type == VRCAvatarDescriptor.AnimLayerType.FX)
+                .animatorController as AnimatorController;
+            if (fx == null) return;
+
+            var showing = new List<string>();
+            foreach (var layer in fx.layers)
+            {
+                var state = layer.stateMachine != null ? layer.stateMachine.defaultState : null;
+                if (state == null || !(state.motion is AnimationClip clip)) continue;
+
+                foreach (var binding in UnityEditor.AnimationUtility.GetCurveBindings(clip))
+                {
+                    var target = built.transform.Find(binding.path);
+                    if (target == null) continue;
+
+                    float rest;
+                    if (binding.type == typeof(GameObject) && binding.propertyName == "m_IsActive")
+                        rest = target.gameObject.activeSelf ? 1f : 0f;
+                    else if (binding.type == typeof(Transform) && binding.propertyName == "m_LocalScale.x")
+                        rest = target.localScale.x;
+                    else if (binding.type == typeof(Transform) && binding.propertyName == "m_LocalScale.y")
+                        rest = target.localScale.y;
+                    else if (binding.type == typeof(Transform) && binding.propertyName == "m_LocalScale.z")
+                        rest = target.localScale.z;
+                    else
+                        continue;
+
+                    var starts = UnityEditor.AnimationUtility.GetEditorCurve(clip, binding).Evaluate(0f);
+                    if (!Mathf.Approximately(rest, starts)) showing.Add(target.name + " (layer " + layer.name + ")");
+                }
+            }
+
+            if (showing.Count > 0)
+                problems.Add("These rest differently from how their animator starts them, so they look wrong " +
+                             "to anyone who has the avatar's animations blocked: " + string.Join(", ", showing.Distinct()));
+        }
+
         /// <summary>
         /// Runs the checks the SDK panel runs on the built avatar before it
         /// will upload one. Anything it lists as an error stops an upload
@@ -206,6 +253,7 @@ namespace Wirenook.Cass.Editor
             }
         }
 
+        /// <summary>No lit material may keep a brightness floor: in the dark the avatar should be dark.</summary>
         private static void Brightness(GameObject built, List<string> problems)
         {
             var floored = built.GetComponentsInChildren<Renderer>(true)
