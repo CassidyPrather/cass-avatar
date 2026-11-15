@@ -365,7 +365,6 @@ namespace Wirenook.Cass.Editor
 
             var profile = Ensure<AvatarUploadProfile>(root);
             profile.avatarName = variant.Slug;
-            profile.summary = variant.Summary;
             profile.description = spec.Description;
 
             foreach (var path in variant.Features)

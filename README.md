@@ -23,6 +23,7 @@ Spec/*.json ──────────────────────�
         Prefabs/Variants/cass.prefab        everyday upload
                     ▼
         Prefabs/Variants/cass-adv.prefab    adds flight, stations and hand tools
+        Prefabs/Variants/cass-adv-lit.prefab  the same, with a real light (extends cass)
                     ▼  at build time, on a copy
         Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
 ```
@@ -170,7 +171,8 @@ children.
 | Variant | Adds |
 | --- | --- |
 | `cass` | Default outfit with per-garment toggles, procedural locomotion, the Face Tracking switch. |
-| `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, flashlight, lantern, screen notices. |
+| `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
+| `cass-adv-lit` | The same as `cass-adv`, except that the flashlight and lantern shine a real light and can be placed in the world. A light ranks an avatar Poor, which is why this is a variant of its own. |
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:
 
@@ -179,8 +181,9 @@ children.
   variant actually contains, highest priority first, within VRChat's limit
   of ten (VRChat lower-cases tags and stores them as `author_tag_*`);
 - visibility **public**;
-- a **thumbnail** composed from a cut-out render of the built avatar, its
-  performance rank, feature list and tags (`tools/thumbnail/`).
+- a **thumbnail** with no text: a cut-out render of the built avatar's
+  head and shoulders, and one icon per kind of feature (`tools/thumbnail/`).
+  It repeats nothing VRChat already shows beside it.
 
 It refuses to upload if the description does not mention
 `github.com/CassidyPrather/cass-avatar`, if a required tag is missing, or if
@@ -291,7 +294,8 @@ copy:
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
 | `cass` | Good | 8,202 | 2 + 0 (from 6) | 2 (from 6) | 59 | 5 of 256 |
-| `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 85 of 256 |
+| `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 91 of 256 |
+| `cass-adv-lit` | Poor (one light) | 11,480 | 2 + 7 | 11 (from 18) | 65 | 157 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the face: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -306,30 +310,32 @@ tool for it.
 
 ## Status
 
-**Both placeholder variants are uploaded and public: `cass`
+**Two placeholder variants are uploaded and public: `cass`
 (`avtr_83eafc89-950e-4553-bb36-c37238333069`) and `cass-adv`
-(`avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9`). `cass` has been worn in the
-VRChat client and loads; no individual feature has been checked there, and
-`cass-adv` has not been worn at all.** Everything below was checked in
-Blender, in the Unity editor, against VRChat's API, or headless.
+(`avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9`). Both have been worn in the
+VRChat client, which is where the portal's pop-out, the notices' early
+exit and the thumbnails were found wanting; the fixes for those have not
+been tried in the client yet. `cass-adv-lit` has not been uploaded.**
+Everything below was checked in Blender, in the Unity editor, against
+VRChat's API, or headless.
 
 Checked:
 
 - The Blender export validates against the specs with no errors, and the
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- Both variants build through Modular Avatar and Avatar Optimizer and pass
-  `scripts/cass.sh verify`: rank Good, the MMD mesh name and layer order
+- All three variants build through Modular Avatar and Avatar Optimizer and
+  pass `scripts/cass.sh verify`: the rank each is held to, the MMD mesh name and layer order
   intact after the build, every viseme, required tracking key and MMD
   shape still present, budgets respected, no brightness floor.
 - The contact sheets render and were looked at: all fourteen expressions,
   the outfit zones, the lighting extremes, and each feature in place.
-- Both variants uploaded through `scripts/cass.sh upload`. VRChat's
+- `cass` and `cass-adv` uploaded through `scripts/cass.sh upload`. VRChat's
   records read back with the source link, the required tags (and
   `cass-adv`'s eight feature tags) and public visibility, and each
   uploaded bundle, opened again in the editor, renders correctly with both
   UV channels intact.
-- Headless tests: 19 for the avatar's core logic, 18 for the thumbnail
+- Headless tests: 19 for the avatar's core logic, 11 for the thumbnail
   composer, and each submodule's own suite.
 
 Not checked, because only the client can:

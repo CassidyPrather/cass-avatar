@@ -9,8 +9,8 @@ namespace Wirenook.Cass.Editor
 {
     /// <summary>
     /// Produces the image VRChat shows for an avatar: a cut-out render of the
-    /// built avatar, composed by tools/thumbnail with the facts from its
-    /// build report (performance rank, features, tags).
+    /// built avatar's head and shoulders, composed by tools/thumbnail with
+    /// one icon per kind of feature in its build report.
     /// </summary>
     public static class CassThumbnail
     {
@@ -22,9 +22,11 @@ namespace Wirenook.Cass.Editor
         private const int CutoutLayer = 31;
 
         /// <summary>
-        /// Renders <paramref name="avatar"/> alone on a transparent background,
-        /// standing, as it looks when it first loads in. The avatar is a
-        /// throwaway build copy; this moves it to its own layer.
+        /// Renders <paramref name="avatar"/> from the chest up, alone on a
+        /// transparent background, as it looks when it first loads in. VRChat
+        /// shows thumbnails small, and a whole standing figure leaves the face
+        /// a few pixels. The avatar is a throwaway build copy; this moves it
+        /// to its own layer.
         /// </summary>
         public static string RenderCutout(GameObject avatar, string path)
         {
@@ -46,6 +48,19 @@ namespace Wirenook.Cass.Editor
             }
 
             if (!any) throw new InvalidOperationException("Nothing to render: " + avatar.name + " has no renderers.");
+
+            var animator = avatar.GetComponent<Animator>();
+            var head = animator != null ? animator.GetBoneTransform(HumanBodyBones.Head) : null;
+            var chest = animator != null ? animator.GetBoneTransform(HumanBodyBones.Chest) : null;
+            if (head == null || chest == null)
+                throw new InvalidOperationException("A bust needs a humanoid rig with head and chest bones; " + avatar.name + " has none.");
+
+            // From the chest bone to the top of whatever the head carries
+            // (ears, a hat), centred on the head.
+            var top = bounds.max.y;
+            var bottom = chest.position.y;
+            var centre = new Vector3(head.position.x, (top + bottom) * 0.5f, head.position.z);
+            var reach = (top - bottom) * 0.5f;
 
             // A square cut-out; the composer scales it into its own layout.
             const int size = 1024;
@@ -69,12 +84,12 @@ namespace Wirenook.Cass.Editor
                 camera.targetTexture = target;
                 camera.cullingMask = 1 << CutoutLayer;
 
-                // From the front and slightly to the side, far enough back to
-                // fit the whole bounding sphere with a little air around it.
+                // From the front and slightly to the side, far enough back
+                // that the frame runs from the chest to just above the top.
                 var direction = avatar.transform.rotation * Quaternion.Euler(4f, 200f, 0f) * Vector3.back;
-                var distance = bounds.extents.magnitude * 1.05f / Mathf.Sin(camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-                camera.transform.position = bounds.center + direction * distance;
-                camera.transform.LookAt(bounds.center);
+                var distance = reach * 1.04f / Mathf.Tan(camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+                camera.transform.position = centre + direction * distance;
+                camera.transform.LookAt(centre);
                 camera.Render();
 
                 RenderTexture.active = target;

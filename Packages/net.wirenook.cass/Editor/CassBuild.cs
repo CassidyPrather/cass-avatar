@@ -95,6 +95,8 @@ namespace Wirenook.Cass.Editor
                     id = feature.id,
                     label = feature.label,
                     icon = feature.icon != null ? feature.icon.name : "",
+                    summaryIcon = feature.summaryIcon != null ? feature.summaryIcon.name
+                        : feature.icon != null ? feature.icon.name : "",
                 })
                 .ToList();
             var tags = ComposeTags(built, out var dropped);
@@ -112,6 +114,7 @@ namespace Wirenook.Cass.Editor
                 version = PackageVersion(),
                 performanceRank = stats.GetPerformanceRatingForCategory(AvatarPerformanceCategory.Overall).ToString(),
                 features = features,
+                icons = features.Select(feature => feature.summaryIcon).Where(icon => icon.Length > 0).Distinct().ToList(),
                 tags = tags.Select(FeatureTags.Normalize).ToList(),
                 apiTags = tags,
                 droppedTags = dropped,
@@ -162,9 +165,9 @@ namespace Wirenook.Cass.Editor
     }
 
     /// <summary>
-    /// What a build of one variant produced. The thumbnail generator reads the
-    /// first seven fields as its manifest, so their names are part of that
-    /// tool's input format.
+    /// What a build of one variant produced. The thumbnail generator reads
+    /// <see cref="icons"/> and <see cref="cutout"/> as its manifest, so their
+    /// names are part of that tool's input format.
     /// </summary>
     [Serializable]
     public sealed class BuildReport
@@ -175,6 +178,7 @@ namespace Wirenook.Cass.Editor
             public string id;
             public string label;
             public string icon;
+            public string summaryIcon;
         }
 
         public string name;
@@ -184,7 +188,9 @@ namespace Wirenook.Cass.Editor
         public List<Feature> features = new List<Feature>();
         /// <summary>Tags as people read them, without VRChat's prefix.</summary>
         public List<string> tags = new List<string>();
-        public string url = "github.com/CassidyPrather/cass-avatar";
+
+        /// <summary>One icon per group of like features, for the thumbnail.</summary>
+        public List<string> icons = new List<string>();
         public string cutout;
 
         /// <summary>Tags as VRChat stores them.</summary>

@@ -1,9 +1,9 @@
-"""The thumbnail manifest: what one avatar variant wants printed on its card.
+"""The thumbnail manifest: what one avatar variant wants on its picture.
 
 The schema is documented in README.md. The Unity build hands over its whole
 build report, so keys this tool does not know are ignored; the keys it does
 know are checked strictly, because a wrong type that was quietly skipped
-would publish a thumbnail that is silently missing its badge.
+would publish a thumbnail that is silently missing its icons.
 """
 
 import dataclasses
@@ -11,14 +11,7 @@ import json
 import pathlib
 import re
 
-# VRChat's five overall performance ranks, spelt as the SDK's enum spells them.
-PERFORMANCE_RANKS = ("Excellent", "Good", "Medium", "Poor", "VeryPoor")
-# The same enum's value for "not rated"; the build writes it when the SDK has
-# no statistics, and it means the same as leaving the rank out.
-UNRATED = "None"
-
-_KEYS = ("name", "variant", "version", "performanceRank", "features", "tags", "url", "cutout")
-_FEATURE_KEYS = ("id", "label", "icon")
+_KEYS = ("icons", "cutout")
 # Icon names are file stems in the shared Icons/ directory, which are
 # kebab-case; anything else (a path, an extension) is a mistake in the manifest.
 _ICON_NAME = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
@@ -29,22 +22,9 @@ class ManifestError(ValueError):
 
 
 @dataclasses.dataclass(frozen=True)
-class Feature:
-    id: str
-    label: str
-    # None: the feature has no icon of its own and gets the placeholder tile.
-    icon: str | None
-
-
-@dataclasses.dataclass(frozen=True)
 class Manifest:
-    name: str
-    variant: str
-    version: str
-    performance_rank: str | None = None
-    features: tuple[Feature, ...] = ()
-    tags: tuple[str, ...] = ()
-    url: str | None = None
+    # One per group of like features, in the order they are drawn.
+    icons: tuple[str, ...] = ()
     # Absolute once loaded: a relative path in the file is relative to the file.
     cutout: pathlib.Path | None = None
 
@@ -52,8 +32,8 @@ class Manifest:
 def _misspelt(data: dict, known: tuple[str, ...], where: str) -> None:
     """Unknown keys are fine, except one that is a known key in the wrong case.
 
-    `performancerank` beside a schema that says `performanceRank` is never
-    extra data; ignoring it would drop the badge without a word.
+    `Icons` beside a schema that says `icons` is never extra data; ignoring
+    it would drop every icon without a word.
     """
     by_folded = {key.lower(): key for key in known}
     for key in data:
@@ -62,69 +42,29 @@ def _misspelt(data: dict, known: tuple[str, ...], where: str) -> None:
             raise ManifestError(f'{where}: unknown key "{key}"; did you mean "{intended}"?')
 
 
-def _required(data: dict, key: str, where: str) -> str:
-    value = data.get(key)
-    if value is None:
-        raise ManifestError(f'{where}: "{key}" is required')
-    if not isinstance(value, str):
-        raise ManifestError(f'{where}: "{key}" must be a string, got {type(value).__name__}')
-    if not value.strip():
-        raise ManifestError(f'{where}: "{key}" must not be empty')
-    return value.strip()
-
-
-def _optional(data: dict, key: str, where: str) -> str | None:
-    """A string, or None when the key is absent, null or blank."""
-    value = data.get(key)
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise ManifestError(f'{where}: "{key}" must be a string or null, got {type(value).__name__}')
-    return value.strip() or None
-
-
-def _feature(entry: object, where: str) -> Feature:
-    if not isinstance(entry, dict):
-        raise ManifestError(f"{where}: must be an object with id, label and icon")
-    _misspelt(entry, _FEATURE_KEYS, where)
-    icon = _optional(entry, "icon", where)
-    if icon is not None and not _ICON_NAME.fullmatch(icon):
-        raise ManifestError(f'{where}: "icon" must be a kebab-case icon name such as "face-tracking" '
-                            f"(no path, no extension); got {icon!r}")
-    return Feature(_required(entry, "id", where), _required(entry, "label", where), icon)
-
-
 def parse(data: object, base: pathlib.Path) -> Manifest:
     """Validates decoded JSON. `base` is the directory a relative `cutout` is resolved against."""
     if not isinstance(data, dict):
         raise ManifestError("manifest: the top level must be a JSON object")
     _misspelt(data, _KEYS, "manifest")
 
-    rank = _optional(data, "performanceRank", "manifest")
-    if rank == UNRATED:
-        rank = None
-    if rank is not None and rank not in PERFORMANCE_RANKS:
-        raise ManifestError(f'manifest: "performanceRank" must be null or one of '
-                            f'{", ".join(PERFORMANCE_RANKS)}; got {rank!r}')
+    icons = data.get("icons") or []
+    if not isinstance(icons, list):
+        raise ManifestError('manifest: "icons" must be a list of icon names')
+    seen: list[str] = []
+    for index, icon in enumerate(icons):
+        if not isinstance(icon, str) or not _ICON_NAME.fullmatch(icon.strip()):
+            raise ManifestError(f'manifest: icons[{index}] must be a kebab-case icon name such as "face-tracking" '
+                                f"(no path, no extension); got {icon!r}")
+        # The same icon twice says nothing the first one did not.
+        if icon.strip() not in seen:
+            seen.append(icon.strip())
 
-    features = data.get("features") or []
-    if not isinstance(features, list):
-        raise ManifestError('manifest: "features" must be a list')
-    tags = data.get("tags") or []
-    if not isinstance(tags, list) or not all(isinstance(tag, str) and tag.strip() for tag in tags):
-        raise ManifestError('manifest: "tags" must be a list of non-empty strings')
-
-    cutout = _optional(data, "cutout", "manifest")
-    return Manifest(
-        name=_required(data, "name", "manifest"),
-        variant=_required(data, "variant", "manifest"),
-        version=_required(data, "version", "manifest"),
-        performance_rank=rank,
-        features=tuple(_feature(entry, f"features[{index}]") for index, entry in enumerate(features)),
-        tags=tuple(tag.strip() for tag in tags),
-        url=_optional(data, "url", "manifest"),
-        cutout=(base / cutout).resolve() if cutout else None,
-    )
+    cutout = data.get("cutout")
+    if cutout is not None and not isinstance(cutout, str):
+        raise ManifestError(f'manifest: "cutout" must be a string or null, got {type(cutout).__name__}')
+    cutout = (cutout or "").strip()
+    return Manifest(icons=tuple(seen), cutout=(base / cutout).resolve() if cutout else None)
 
 
 def load(path: pathlib.Path) -> Manifest:

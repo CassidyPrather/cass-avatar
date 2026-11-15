@@ -17,11 +17,8 @@ namespace Wirenook.Cass
         [Tooltip("The avatar's name on VRChat: \"cass\", or \"cass-\" plus a short variant slug.")]
         public string avatarName = "cass";
 
-        [Tooltip("One line saying what sets this variant apart; shown first in the description.")]
-        public string summary = "";
-
         [TextArea(3, 8)]
-        [Tooltip("The rest of the description. It has to say where the avatar's source can be found.")]
+        [Tooltip("The description. It has to say where the avatar's source can be found.")]
         public string description = "";
 
         [Tooltip("Tags beyond the required ones and those the variant's features contribute.")]
@@ -30,11 +27,7 @@ namespace Wirenook.Cass
         /// <summary>The description as it is sent to VRChat.</summary>
         public string ComposeDescription()
         {
-            var first = (summary ?? "").Trim();
-            var rest = (description ?? "").Trim();
-            if (first.Length == 0) return rest;
-            if (rest.Length == 0) return first;
-            return first + " " + rest;
+            return (description ?? "").Trim();
         }
     }
 }

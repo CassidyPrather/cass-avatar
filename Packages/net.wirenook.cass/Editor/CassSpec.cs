@@ -140,7 +140,6 @@ namespace Wirenook.Cass.Editor
                 {
                     Slug = (string)token["slug"],
                     Extends = (string)token["extends"],
-                    Summary = (string)token["summary"] ?? "",
                     WorstRank = (string)token["worstRank"] ?? "Good",
                     Features = token["features"]?.Select(path => (string)path).ToList() ?? new List<string>(),
                 });
@@ -225,8 +224,6 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Slug of the variant this one builds on; null builds on the root prefab.</summary>
         public string Extends;
-
-        public string Summary;
 
         /// <summary>The worst VRChat performance rank this variant may build to.</summary>
         public string WorstRank;

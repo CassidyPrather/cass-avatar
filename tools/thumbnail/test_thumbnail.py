@@ -5,8 +5,6 @@
 
 Everything renders into a temporary directory with generated icons and a
 generated cut-out, so the tests need neither Unity nor the shared icon set.
-Headings use the bundled fallback face, so results do not depend on whether
-the optional display font happens to be on this machine.
 """
 
 import contextlib
@@ -29,229 +27,120 @@ import make_thumbnail  # noqa: E402  (needs the path line above)
 import manifest as manifest_module  # noqa: E402
 from manifest import ManifestError  # noqa: E402
 
-ICON_NAMES = ["outfit", "expressions", "flight", "lantern"]
-# Stamps that hold other stamps; everything else must keep to itself.
-CONTAINERS = {"window"}
+ICON_NAMES = ["locomotion", "flight", "carry", "catch-up", "megaphone", "flashlight"]
+# Stamps that others are drawn over on purpose.
+BEHIND = {"cutout"}
 # Layout is floating point: boxes that share an edge may differ in the last
 # bit. A hundredth of a pixel is far below anything that could be seen.
 SLACK = 0.01
 
 
-def base_manifest() -> dict:
-    return {
-        "name": "cass",
-        "variant": "cass-adv",
-        "version": "0.1.0",
-        "performanceRank": "Good",
-        "features": [],
-        "tags": ["ai", "AGPLv3"],
-        "url": "github.com/CassidyPrather/cass-avatar",
-        "cutout": None,
-    }
-
-
-def features(count: int) -> list[dict]:
-    return [
-        {"id": f"feature-{index}", "label": f"Feature number {index}", "icon": ICON_NAMES[index % len(ICON_NAMES)]}
-        for index in range(count)
-    ]
-
-
 class ThumbnailTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls._scratch = tempfile.TemporaryDirectory()
-        cls.scratch = pathlib.Path(cls._scratch.name)
-        cls.icons = cls.scratch / "icons"
-        cls.icons.mkdir()
+    def setUp(self):
+        self._directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self._directory.cleanup)
+        self.directory = pathlib.Path(self._directory.name)
+        self.icons = self.directory / "icons"
+        self.icons.mkdir()
         for name in ICON_NAMES:
-            icon = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-            ImageDraw.Draw(icon).ellipse([40, 40, 216, 216], fill="#d7fbff", outline="#271452", width=8)
-            icon.save(cls.icons / f"{name}.png")
-        # A tall figure with a wide transparent margin, as Unity renders one.
-        tall = Image.new("RGBA", (800, 1600), (0, 0, 0, 0))
-        ImageDraw.Draw(tall).ellipse([300, 100, 500, 1500], fill="#365fc6")
-        tall.save(cls.scratch / "tall.png")
-        wide = Image.new("RGBA", (1600, 400), (0, 0, 0, 0))
-        ImageDraw.Draw(wide).ellipse([50, 50, 1550, 350], fill="#6d2c95")
-        wide.save(cls.scratch / "wide.png")
-        cls.fonts = make_thumbnail.load_fonts(display=None)
+            icon = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+            ImageDraw.Draw(icon).ellipse([8, 8, 56, 56], fill=(255, 255, 255, 255))
+            icon.save(self.icons / f"{name}.png")
+        # A bust: wider than it is tall once trimmed, with a transparent margin.
+        cutout = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+        ImageDraw.Draw(cutout).rectangle([60, 80, 340, 399], fill=(200, 160, 120, 255))
+        self.cutout = self.directory / "cutout.png"
+        cutout.save(self.cutout)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._scratch.cleanup()
+    def compose(self, icons=(), cutout=True):
+        data = {"icons": list(icons), "cutout": str(self.cutout) if cutout else None}
+        return make_thumbnail.compose(manifest_module.parse(data, self.directory), icons=self.icons)
 
-    def compose(self, **changes) -> make_thumbnail.Result:
-        data = {**base_manifest(), **changes}
-        manifest = manifest_module.parse(data, self.scratch)
-        result = make_thumbnail.compose(manifest, icons=self.icons, fonts=self.fonts)
-        self.assert_sound(result)
-        return result
-
-    def assert_sound(self, result: make_thumbnail.Result) -> None:
-        """Right size and mode, nothing off the canvas, no stamp on top of another."""
-        self.assertEqual(result.image.size, (1200, 900))
-        self.assertEqual(result.image.mode, "RGB")
-        window = next(placement.box for placement in result.placements if placement.stamp == "window")
-        leaves = [placement for placement in result.placements if placement.stamp not in CONTAINERS]
+    def assert_sound(self, result):
+        self.assertEqual(result.image.size, make_thumbnail.CANVAS)
+        frame = make_thumbnail.Box(-SLACK, -SLACK, make_thumbnail.CANVAS[0] + SLACK, make_thumbnail.CANVAS[1] + SLACK)
         for placement in result.placements:
-            self.assertTrue(make_thumbnail.FRAME.contains(placement.box.inset(SLACK)), f"{placement} leaves the canvas")
-        for placement in leaves:
-            if placement.stamp != "cutout":
-                self.assertTrue(window.contains(placement.box.inset(SLACK)), f"{placement} leaves the card")
-        for first, second in itertools.combinations(leaves, 2):
-            self.assertFalse(first.box.inset(SLACK).overlaps(second.box), f"{first} overlaps {second}")
-        cutouts = [placement.box for placement in result.placements if placement.stamp == "cutout"]
-        for box in cutouts:
-            self.assertFalse(box.overlaps(window), "the cut-out runs under the card")
+            self.assertTrue(frame.contains(placement.box), f"{placement.stamp} leaves the canvas: {placement.box}")
+        separate = [placement for placement in result.placements if placement.stamp not in BEHIND]
+        for first, second in itertools.combinations(separate, 2):
+            self.assertFalse(first.box.inset(SLACK).overlaps(second.box.inset(SLACK)),
+                             f"{first.stamp} {first.box} overlaps {second.stamp} {second.box}")
 
-    def stamps(self, result: make_thumbnail.Result) -> list[str]:
-        return [placement.stamp for placement in result.placements]
+    def test_every_icon_count_stays_on_the_canvas_without_overlap(self):
+        for count in (0, 1, 2, 6, 12, 30):
+            with self.subTest(icons=count):
+                names = [f"icon-{index}" for index in range(count)]
+                result = self.compose(names)
+                self.assert_sound(result)
+                self.assertEqual(sum(placement.stamp == "icon" for placement in result.placements), count)
 
-    # ---- layout edge cases
+    def test_works_without_a_cutout(self):
+        result = self.compose(ICON_NAMES, cutout=False)
+        self.assert_sound(result)
+        self.assertNotIn("cutout", {placement.stamp for placement in result.placements})
 
-    def test_no_features(self):
-        result = self.compose(features=[])
-        self.assertNotIn("feature", self.stamps(result))
+    def test_the_bust_stands_on_the_bottom_edge(self):
+        box = next(placement.box for placement in self.compose().placements if placement.stamp == "cutout")
+        self.assertAlmostEqual(box.bottom, make_thumbnail.CANVAS[1])
 
-    def test_twelve_features(self):
-        result = self.compose(features=features(12), cutout="tall.png")
-        self.assertEqual(self.stamps(result).count("feature"), 12)
-        self.assertEqual(result.warnings, [])
+    def test_icons_are_large_enough_to_read_small(self):
+        # VRChat lists avatars at roughly a sixth of this size; a tile under a
+        # tenth of the width would be a dozen pixels there.
+        tiles = [placement.box for placement in self.compose(ICON_NAMES).placements if placement.stamp == "icon"]
+        self.assertGreaterEqual(min(tile.width for tile in tiles), make_thumbnail.CANVAS[0] / 10)
 
-    def test_more_features_than_fit_are_summarised(self):
-        result = self.compose(features=features(60), cutout="tall.png")
-        self.assertIn("features-more", self.stamps(result))
-        self.assertLess(self.stamps(result).count("feature"), 60)
-        self.assertTrue(any("more" in warning for warning in result.warnings))
-
-    def test_long_text_everywhere(self):
-        self.compose(
-            name="cassiopeia-the-extremely-long-named-avatar " * 3,
-            variant="cassiopeia-adventure-tools-quest-fallback-edition-" * 4,
-            version="12.345.678-beta.9+build.20261114.abcdef0123456789" * 2,
-            performanceRank="VeryPoor",
-            features=[{"id": f"f{index}", "label": "A label that goes on and on and on " * 4, "icon": "outfit"}
-                      for index in range(12)],
-            tags=[f"a-rather-long-tag-number-{index}" for index in range(30)] + ["x" * 400],
-            url="https://github.com/CassidyPrather/cass-avatar/tree/main/" + "deep/" * 60,
-            cutout="tall.png",
-        )
-
-    def test_missing_cutout_centres_the_card(self):
-        result = self.compose(cutout=None, features=features(5))
-        self.assertNotIn("cutout", self.stamps(result))
-        window = next(placement.box for placement in result.placements if placement.stamp == "window")
-        self.assertAlmostEqual((window.left + window.right) / 2, 600, delta=1)
-
-    def test_missing_rank(self):
-        result = self.compose(performanceRank=None, features=features(3))
-        self.assertNotIn("rank", self.stamps(result))
-
-    def test_every_rank(self):
-        for rank in manifest_module.PERFORMANCE_RANKS:
-            with self.subTest(rank=rank):
-                self.assertIn("rank", self.stamps(self.compose(performanceRank=rank)))
-
-    def test_only_the_required_fields(self):
-        result = self.compose(performanceRank=None, features=[], tags=[], url=None, cutout=None)
-        self.assertEqual(sorted(self.stamps(result)), ["name", "variant", "version", "window"])
-
-    def test_missing_icon_is_skipped_with_a_warning(self):
-        result = self.compose(features=[{"id": "ghost", "label": "Ghost", "icon": "no-such-icon"}])
-        self.assertEqual(self.stamps(result).count("feature"), 1)
+    def test_a_missing_icon_keeps_its_tile_and_warns(self):
+        result = self.compose(["locomotion", "no-such-icon"])
+        self.assertEqual(sum(placement.stamp == "icon" for placement in result.placements), 2)
         self.assertTrue(any("no-such-icon" in warning for warning in result.warnings))
 
-    def test_feature_without_an_icon_is_drawn_quietly(self):
-        for icon in ("", None):
-            with self.subTest(icon=icon):
-                result = self.compose(features=[{"id": "plain", "label": "Plain", "icon": icon}])
-                self.assertEqual(self.stamps(result).count("feature"), 1)
-                self.assertEqual(result.warnings, [])
+    def test_a_repeated_icon_is_drawn_once(self):
+        self.assertEqual(manifest_module.parse({"icons": ["flight", "flight", "carry"]}, self.directory).icons,
+                         ("flight", "carry"))
 
-    def test_build_report_extras_are_ignored(self):
-        # The Unity build passes its whole report: statistics ride along, and
-        # the SDK's "None" rank means the avatar was not rated.
-        result = self.compose(performanceRank="None", triangles=69420, droppedTags=["x"],
-                              belowExcellent={"Bones": "Good"})
-        self.assertNotIn("rank", self.stamps(result))
+    def test_unknown_keys_are_ignored(self):
+        parsed = manifest_module.parse({"icons": ["flight"], "triangles": 9000, "name": "cass"}, self.directory)
+        self.assertEqual(parsed.icons, ("flight",))
 
-    def test_cutout_is_fitted_whole(self):
-        for name in ("tall.png", "wide.png"):
-            with self.subTest(cutout=name):
-                result = self.compose(cutout=name)
-                box = next(placement.box for placement in result.placements if placement.stamp == "cutout")
-                self.assertTrue(make_thumbnail.AVATAR_FIT.contains(box.inset(SLACK)),
-                                "the cut-out is cropped by its frame")
-                visible = make_thumbnail.load_cutout(self.scratch / name)
-                self.assertAlmostEqual(box.width / box.height, visible.width / visible.height, places=2)
-
-    def test_display_font_falls_back_when_absent(self):
-        fonts = make_thumbnail.load_fonts(display=self.scratch / "not-here.ttf")
-        self.assertFalse(fonts.has_display)
-
-    # ---- command line and input errors
-
-    def run_cli(self, data: object, *extra: str) -> tuple[int, str, pathlib.Path]:
-        manifest_path = self.scratch / "manifest.json"
-        manifest_path.write_text(json.dumps(data), encoding="utf-8")
-        out = self.scratch / "out" / "thumbnail.png"
-        out.unlink(missing_ok=True)
-        errors = io.StringIO()
-        with contextlib.redirect_stderr(errors), contextlib.redirect_stdout(io.StringIO()):
-            code = make_thumbnail.main(["--manifest", str(manifest_path), "--out", str(out),
-                                        "--icons", str(self.icons), *extra])
-        return code, errors.getvalue(), out
-
-    def test_cli_writes_a_png(self):
-        code, errors, out = self.run_cli({**base_manifest(), "features": features(4), "cutout": "tall.png"})
-        self.assertEqual(code, 0, errors)
-        with Image.open(out) as image:
-            self.assertEqual(image.format, "PNG")
-            self.assertEqual(image.size, (1200, 900))
-            self.assertEqual(image.mode, "RGB")
-
-    def test_cli_reports_a_missing_cutout_file(self):
-        code, errors, out = self.run_cli({**base_manifest(), "cutout": "nowhere.png"})
-        self.assertEqual(code, 1)
-        self.assertIn("nowhere.png", errors)
-        self.assertFalse(out.exists())
-
-    def test_cli_reports_invalid_json(self):
-        manifest_path = self.scratch / "broken.json"
-        manifest_path.write_text("{ not json", encoding="utf-8")
-        with contextlib.redirect_stderr(io.StringIO()) as errors:
-            code = make_thumbnail.main(["--manifest", str(manifest_path), "--out", str(self.scratch / "x.png")])
-        self.assertEqual(code, 1)
-        self.assertIn("not valid JSON", errors.getvalue())
-
-    def test_invalid_manifests_name_the_field(self):
+    def test_bad_manifests_name_the_field(self):
         cases = {
-            "name": {"name": None},
-            "variant": {"variant": 7},
-            "version": {"version": "  "},
-            "performanceRank": {"performanceRank": "Great"},
-            "features": {"features": "outfit"},
-            "features[0]": {"features": [{"id": "a", "icon": "outfit"}]},
-            "features[1]": {"features": [{"id": "a", "label": "A", "icon": "outfit"}, "flight"]},
-            "icon": {"features": [{"id": "a", "label": "A", "icon": "../secret.png"}]},
-            "tags": {"tags": ["ai", 3]},
-            "url": {"url": ["github.com"]},
-            "cutout": {"cutout": 5},
-            "did you mean": {"performancerank": "Good"},
+            "icons": ({"icons": "flight"}, {"icons": ["Icons/flight.png"]}, {"icons": [3]}, {"Icons": ["flight"]}),
+            "cutout": ({"cutout": 3}, {"Cutout": "x.png"}),
         }
-        for expected, changes in cases.items():
-            with self.subTest(field=expected):
-                with self.assertRaises(ManifestError) as raised:
-                    manifest_module.parse({**base_manifest(), **changes}, self.scratch)
-                self.assertIn(expected, str(raised.exception))
+        for field, manifests in cases.items():
+            for data in manifests:
+                with self.subTest(data=data):
+                    with self.assertRaises(ManifestError) as raised:
+                        manifest_module.parse(data, self.directory)
+                    self.assertIn(field, str(raised.exception).lower())
         with self.assertRaises(ManifestError):
-            manifest_module.parse(["not", "an", "object"], self.scratch)
+            manifest_module.parse([], self.directory)
 
-    def test_sample_manifest_is_valid(self):
-        sample = pathlib.Path(__file__).resolve().parent / "sample-manifest.json"
-        manifest = manifest_module.load(sample)
-        self.assertEqual(len(manifest.features), 12)
+    def test_a_missing_or_empty_cutout_is_an_error(self):
+        with self.assertRaises(make_thumbnail.ThumbnailError):
+            make_thumbnail.compose(manifest_module.parse({"cutout": "absent.png"}, self.directory), icons=self.icons)
+        Image.new("RGBA", (32, 32), (0, 0, 0, 0)).save(self.directory / "empty.png")
+        with self.assertRaises(make_thumbnail.ThumbnailError):
+            make_thumbnail.compose(manifest_module.parse({"cutout": "empty.png"}, self.directory), icons=self.icons)
+
+    def test_command_line_writes_the_picture(self):
+        manifest = self.directory / "manifest.json"
+        manifest.write_text(json.dumps({"icons": ICON_NAMES, "cutout": "cutout.png"}), encoding="utf-8")
+        out = self.directory / "out" / "thumbnail.png"
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            status = make_thumbnail.main(["--manifest", str(manifest), "--out", str(out), "--icons", str(self.icons)])
+        self.assertEqual(status, 0)
+        with Image.open(out) as written:
+            self.assertEqual(written.size, make_thumbnail.CANVAS)
+
+    def test_command_line_reports_a_bad_manifest(self):
+        manifest = self.directory / "manifest.json"
+        manifest.write_text("{", encoding="utf-8")
+        errors = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(errors):
+            status = make_thumbnail.main(["--manifest", str(manifest), "--out", str(self.directory / "x.png")])
+        self.assertEqual(status, 1)
+        self.assertIn("not valid JSON", errors.getvalue())
 
 
 if __name__ == "__main__":

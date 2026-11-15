@@ -1,8 +1,12 @@
 # Thumbnail generator
 
 Draws the 1200x900 (4:3) picture VRChat shows for an avatar, from a small
-JSON manifest. One tool serves every upload variant: each part of the
-picture is a stamp that is drawn only when the manifest has data for it.
+JSON manifest.
+
+VRChat shows the picture a couple of hundred pixels wide, next to the
+avatar's name, description, tags and performance rank. So the picture has no
+text and repeats none of those: it is the avatar's head and shoulders over
+a wirenook.net backdrop, with one icon per kind of feature the variant has.
 
 ```bash
 python tools/thumbnail/make_thumbnail.py --manifest tools/thumbnail/sample-manifest.json --out thumbnail.png
@@ -15,48 +19,32 @@ Needs Python 3.10+ and Pillow 10. Nothing else: no network, no Inkscape.
 
 ```json
 {
-  "name": "cass",
-  "variant": "cass-adv",
-  "version": "0.1.0",
-  "performanceRank": "Medium",
-  "features": [{ "id": "flight", "label": "Flight", "icon": "flight" }],
-  "tags": ["ai", "AGPLv3"],
-  "url": "github.com/CassidyPrather/cass-avatar",
+  "icons": ["locomotion", "flight", "flashlight"],
   "cutout": "cass-adv-cutout.png"
 }
 ```
 
-| Key | Type | Stamp |
+| Key | Type | |
 | --- | --- | --- |
-| `name` | string, required | Avatar name, in the heading face |
-| `variant` | string, required | Variant slug chip |
-| `version` | string, required | Version chip; a leading digit gets a `v` |
-| `performanceRank` | `Excellent`, `Good`, `Medium`, `Poor`, `VeryPoor` or null | Rank badge; the SDK's `None` (not rated) counts as null |
-| `features` | list of `{id, label, icon}` | Feature grid; omitted when empty |
-| `tags` | list of strings | Tag chips |
-| `url` | string or null | Source link strip |
+| `icons` | list of strings | One tile each, in a row along the bottom |
 | `cutout` | string or null | Path to the avatar render, relative to the manifest |
 
-`performanceRank`, `features`, `tags`, `url` and `cutout` may be left out;
-that is the same as null or an empty list, and so is an empty string. A
-wrong type, a missing required field or a rank outside the five is an error
-that names the field.
+Both may be left out. Keys the tool does not know are ignored, so the Unity
+build passes its whole build report as the manifest. The one exception is a
+known key in the wrong case (`Icons`), which is an error rather than a
+picture that silently loses its icons.
 
-Keys the tool does not know are ignored, so the Unity build can pass its
-whole build report as the manifest. The one exception is a known key in the
-wrong case (`performancerank`), which is an error rather than a badge that
-silently goes missing.
+An icon is the stem of a PNG in the icons directory (`flight` for
+`flight.png`), kebab-case, no path and no extension. A name listed twice is
+drawn once. The build lists each feature's *summary icon*, which like
+features share, so a flashlight and a lantern show as one light and the
+pointer, megaphone and notices as one megaphone.
 
-In a feature, `id` is the build's own name for it and `label` is what gets
-printed; both are required. `icon` is the stem of a PNG in the icons
-directory (`flight` for `flight.png`), kebab-case, no path and no extension.
-Null or `""` means the feature has no icon and gets a placeholder tile.
-
-The cut-out is an RGBA PNG of the avatar on a transparent background. Its
-transparent margin is trimmed, then it is scaled, up or down, to fit its
-frame whole and stood on the pedestal. It is never cropped. A `cutout` that
-names a missing or unreadable file is an error; null leaves the avatar out
-and centres the card.
+The cut-out is an RGBA PNG of the avatar from the chest up on a transparent
+background. Its transparent margin is trimmed, then it is scaled, up or
+down, to fit the picture whole and stood on the bottom edge. It is never
+cropped. A `cutout` that names a missing or unreadable file is an error;
+null leaves the avatar out.
 
 ## Options
 
@@ -65,33 +53,23 @@ and centres the card.
 | `--manifest` | required | Manifest JSON |
 | `--out` | required | PNG to write; parent directories are created |
 | `--icons` | `modules/wirenook-assets/Packages/net.wirenook.assets/Icons` | Directory of `<icon>.png` |
-| `--display-font` | `../cass-website/static/fonts/Unique.ttf` beside this repository | Heading face |
 
 Exit status is 0 on success and 1 on a bad manifest or cut-out, with the
-reason on stderr. Things that degrade rather than fail (an icon that is
-named but not found, more features than fit) are reported as warnings on
-stderr and still exit 0.
+reason on stderr. An icon that is named but not found keeps its tile, gets
+a placeholder, and is reported as a warning on stderr; the exit status is
+still 0.
 
 ## How it holds together
 
-- Text is shrunk to fit its box, down to a floor, and then cut short with
-  `...`. Nothing is ever drawn outside its box.
-- The rank badge sits at the right of the title row; a long name pushes it
-  down a row.
-- The feature grid takes whatever height the rest of the card leaves: one
-  column up to four features, two after that, three when two would not fit.
-  Beyond that the last cell reads `+N more`, with a warning.
-- Tags wrap to at most two rows; the rest collapse into a `+N` chip.
-- A feature whose icon cannot be found keeps its row and gets a placeholder
-  tile.
-- The performance rank is shown three ways (colour, five pips, the word),
-  so it survives colour blindness and greyscale.
+- The icons share one row. Tiles are as large as fit, up to a maximum, so a
+  variant with many kinds of feature gets smaller tiles rather than a
+  second row. If the tiles are getting too small to read, group more
+  features under one summary icon.
+- The row sits over the avatar's chest; the face stays clear above it.
 
 `compose()` returns the image together with the box of every stamp it drew.
-The tests use those boxes to assert that nothing leaves the canvas and no two
-stamps overlap, across the awkward cases: no features, twelve, sixty, long
-text in every field, no cut-out, no rank, a missing icon, a full build
-report.
+The tests use those boxes to assert that nothing leaves the canvas and no
+two icons overlap, from no icons to thirty.
 
 ## Files
 
@@ -99,17 +77,6 @@ report.
 | --- | --- |
 | `make_thumbnail.py` | Command line, the stamps, and the layout |
 | `manifest.py` | Manifest loading and validation |
-| `paint.py` | Colours, fonts and the supersampled canvas |
-| `sample-manifest.json` | A twelve-feature example without a cut-out |
+| `paint.py` | Colours and the supersampled canvas |
+| `sample-manifest.json` | A six-icon example without a cut-out |
 | `test_thumbnail.py` | `unittest` suite; renders into a temporary directory |
-| `fonts/` | Atkinson Hyperlegible Regular and Bold, with their licence |
-
-## Fonts
-
-Body text is Atkinson Hyperlegible, bundled under the SIL Open Font License
-1.1 (`fonts/OFL.txt`).
-
-Headings use the site's display face, Unique, only when its file is found at
-`--display-font`. Its licence is unconfirmed, so it is not in this
-repository and must not be added. Without it headings are set in Atkinson
-Hyperlegible Bold. The tool prints which face it used.
