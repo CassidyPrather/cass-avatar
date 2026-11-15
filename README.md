@@ -23,7 +23,7 @@ Spec/*.json ──────────────────────�
         Prefabs/Variants/cass.prefab        everyday upload
                     ▼
         Prefabs/Variants/cass-adv.prefab    adds flight, stations and hand tools
-        Prefabs/Variants/cass-adv-lit.prefab  the same, with a real light (extends cass)
+        Prefabs/Variants/cass-flashlight.prefab, cass-lantern.prefab   one real light each (extend cass)
                     ▼  at build time, on a copy
         Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
 ```
@@ -80,13 +80,15 @@ closed or restarted.
 scripts/cass.sh export            # Blender -> BlenderExports/cass.fbx, validated
 scripts/cass.sh rebuild           # regenerate materials, animators, menus, prefabs
 scripts/cass.sh verify cass       # build the variant as an upload would, and check it
+scripts/cass.sh verify cass android   # the same for another platform's build
 scripts/cass.sh sheets cass       # contact sheets in dist/validation/cass/
 scripts/cass.sh preview cass      # what an upload would send to VRChat
-scripts/cass.sh upload cass       # build and upload
+scripts/cass.sh platform android  # switch the editor to pc, android or ios
+scripts/cass.sh upload cass       # build and upload for the editor's platform
 scripts/cass.sh live cass         # what VRChat holds for the uploaded variant
 scripts/cass.sh publish cass      # send name, description, tags, visibility only
 scripts/cass.sh bundle            # inspect the bundle the SDK built last
-scripts/cass.sh all               # export, rebuild, verify every variant
+scripts/cass.sh all               # export, rebuild, verify every variant on every platform
 ```
 
 The same things are in Unity's menu under `Tools > Wirenook`.
@@ -172,7 +174,7 @@ children.
 | --- | --- |
 | `cass` | Default outfit with per-garment toggles, procedural locomotion, the Face Tracking switch. |
 | `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
-| `cass-adv-lit` | The same as `cass-adv`, except that the flashlight and lantern shine a real light and can be placed in the world. A light ranks an avatar Poor, which is why this is a variant of its own. |
+| `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. PC only. |
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:
 
@@ -231,6 +233,55 @@ it shows the avatar as it rests, which is also what someone whose safety
 settings block its animations sees. The build logs a shader error from lilToon
 (`unrecognized identifier 'CBUFFER_START'`); it comes from a pass that
 never draws, and the uploaded bundle renders correctly.
+
+## Platforms
+
+A variant is built for PC, Android and iOS from the same prefab; the
+differences are made at build time, on the copy. `Spec/variants.json` can
+narrow a variant's `platforms` (the real-light variants are PC only) and
+gives each a mobile rank target beside its PC one.
+
+`verify`, `report` and `sheets` take a platform and build as that
+platform's would without touching the editor's build target, so the mobile
+result can be measured and looked at in seconds. An upload is different:
+the SDK builds for the editor's active target, so switch first with
+`scripts/cass.sh platform android` (Unity reimports the project the first
+time), upload, and switch back. All platforms of a variant upload to the
+same avatar id.
+
+What a mobile build does, in `net.wirenook.assets`' build plugin:
+
+- **Leaves out everything marked PC-only** (`WirenookPcOnly`), but keeps
+  the expression parameters those things declare. VRChat syncs parameters
+  by position in the list, so the list must be identical on every
+  platform; `verify` compares it against the PC build's.
+- **Cuts hidden UV tiles out of the mesh.** No mobile shader can discard
+  them, so what the PC build hides at rest (skin under clothing) is
+  removed for good, through Avatar Optimizer.
+- **Swaps every material for a VRChat mobile shader:** Toon Lit, or the
+  additive particle shader for glows. `verify` fails on any other shader.
+- **Removes audio sources,** which VRChat mutes on mobile and still ranks
+  Very Poor.
+
+What that costs on Android and iOS:
+
+| Left out | Why |
+| --- | --- |
+| Garment toggles (the Outfit menu), expressions that swap UV tiles | They work by discarding UV tiles |
+| Flight, carry seat, catch-up portal | Each needs a collider; one collider ranks a mobile avatar Very Poor |
+| Screen notices | Drawn by a custom shader |
+| Real lights | VRChat switches avatar lights off there; those variants are PC only |
+| All sound | Audio sources are muted and rank Very Poor |
+
+| Variant | Mobile rank | Triangles | Skinned meshes | Material slots |
+| --- | --- | --- | --- | --- |
+| `cass` | Medium | 6,618 | 2 | 2 |
+| `cass-adv` | Poor | 8,356 | 2 | 4 |
+
+`cass-adv` keeps the laser pointer, megaphone, flashlight and lantern on
+mobile. Its four material slots (the avatar's palette twice, the props'
+palette, the glow) are the edge of Poor; a fifth would hide it from
+everyone on mobile.
 
 ## Checking the work
 
@@ -295,7 +346,8 @@ copy:
 | --- | --- | --- | --- | --- | --- | --- |
 | `cass` | Good | 8,202 | 2 + 0 (from 6) | 2 (from 6) | 59 | 5 of 256 |
 | `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 91 of 256 |
-| `cass-adv-lit` | Poor (one light) | 11,480 | 2 + 7 | 11 (from 18) | 65 | 157 of 256 |
+| `cass-flashlight` | Poor (one light) | 10,980 | 2 + 5 | 9 | 65 | 157 of 256 |
+| `cass-lantern` | Poor (one light) | 11,126 | 2 + 6 | 10 | 65 | 157 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the face: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -310,27 +362,36 @@ tool for it.
 
 ## Status
 
-**Two placeholder variants are uploaded and public: `cass`
-(`avtr_83eafc89-950e-4553-bb36-c37238333069`) and `cass-adv`
-(`avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9`). Both have been worn in the
-VRChat client, which is where the portal's pop-out, the notices' early
-exit and the thumbnails were found wanting; the fixes for those have not
-been tried in the client yet. `cass-adv-lit` has not been uploaded.**
-Everything below was checked in Blender, in the Unity editor, against
-VRChat's API, or headless.
+**Four placeholder variants are uploaded and public:**
+
+| Variant | Avatar id | Platforms uploaded |
+| --- | --- | --- |
+| `cass` | `avtr_83eafc89-950e-4553-bb36-c37238333069` | PC, Android, iOS |
+| `cass-adv` | `avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9` | PC, Android, iOS |
+| `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC |
+| `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC |
+
+**`cass` and `cass-adv` have been worn in the VRChat client on PC, which
+is where the portal's pop-out, the notices' early exit and the thumbnails
+were found wanting; the fixes for those have not been tried in the client
+yet. The Android and iOS builds and the two real-light variants have not
+been worn at all.** Everything below was checked in Blender, in the Unity
+editor, against VRChat's API, or headless. `docs/POSTMORTEM.md` has the
+history, the gotchas and the open issues.
 
 Checked:
 
 - The Blender export validates against the specs with no errors, and the
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- All three variants build through Modular Avatar and Avatar Optimizer and
-  pass `scripts/cass.sh verify`: the rank each is held to, the MMD mesh name and layer order
+- All four variants build through Modular Avatar and Avatar Optimizer for
+  every platform they list, and pass `scripts/cass.sh verify`: the rank each is held to, the MMD mesh name and layer order
   intact after the build, every viseme, required tracking key and MMD
   shape still present, budgets respected, no brightness floor.
 - The contact sheets render and were looked at: all fourteen expressions,
   the outfit zones, the lighting extremes, and each feature in place.
-- `cass` and `cass-adv` uploaded through `scripts/cass.sh upload`. VRChat's
+- All four uploaded through `scripts/cass.sh upload`, `cass` and `cass-adv`
+  for all three platforms with the editor switched to each. VRChat's
   records read back with the source link, the required tags (and
   `cass-adv`'s eight feature tags) and public visibility, and each
   uploaded bundle, opened again in the editor, renders correctly with both
