@@ -169,6 +169,22 @@ namespace Wirenook.Cass.Editor
             var stations = built.GetComponentsInChildren<VRCStation>(true).Length;
             if (stations > StationBudget)
                 problems.Add("Has " + stations + " stations; VRChat disables all but " + StationBudget + ".");
+
+            if (WirenookPlatform.Current == Platform.Pc) return;
+
+            // Past any one of these, VRChat removes every component of the
+            // limited kinds from a mobile avatar, whatever the viewer has
+            // chosen to show. Rank is a preference; these are not.
+            void Limit(string what, int count, int most)
+            {
+                if (count > most)
+                    problems.Add("Has " + count + " " + what + "; past " + most + " VRChat strips all dynamics from a mobile avatar.");
+            }
+
+            Limit("PhysBone components", built.GetComponentsInChildren<VRC.Dynamics.VRCPhysBoneBase>(true).Length, 8);
+            Limit("PhysBone colliders", built.GetComponentsInChildren<VRC.Dynamics.VRCPhysBoneColliderBase>(true).Length, 16);
+            Limit("contacts", built.GetComponentsInChildren<VRC.Dynamics.ContactBase>(true).Length, 16);
+            Limit("constraints", built.GetComponentsInChildren<VRC.Dynamics.VRCConstraintBase>(true).Length, 150);
         }
 
         /// <summary>VRChat refuses an Android or iOS avatar that uses any shader but its own mobile ones.</summary>

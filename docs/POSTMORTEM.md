@@ -31,8 +31,7 @@ about the machinery around them.
 - **Variants:** `cass`, `cass-adv`, and the PC-only `cass-flashlight` and
   `cass-lantern`; PC, Android and iOS builds of the first two.
 
-All four variants are uploaded and public, `cass` and `cass-adv` for all
-three platforms. Section "Status" of the top-level README lists the avatar
+All four variants are uploaded and public, for all three platforms. Section "Status" of the top-level README lists the avatar
 ids and says which of this has been seen working in the client. The short
 version: `cass` and `cass-adv` have been worn on PC; nothing has been
 tried on Android or iOS hardware, and the real-light variants have not
@@ -106,9 +105,18 @@ Things that are true of the tools and will be true again.
   compares the lists.
 - **Any light ranks an avatar Poor on PC; a second, Very Poor.** Enabled
   or not.
-- **Mobile is far stricter.** One collider or one audio source is Very
-  Poor; four material slots is the edge of Poor; only VRChat's own mobile
-  shaders are accepted, and none of them can discard UV tiles.
+- **Mobile is far stricter.** Audio sources, lights and colliders are
+  disabled outright on avatars and still rank Very Poor; four material
+  slots or two plain meshes is the edge of Poor; only VRChat's own mobile
+  shaders are accepted, and none of them can discard UV tiles. The default
+  on mobile is to hide anything worse than Medium.
+- **Mobile has hard limits besides rank** (8 PhysBone components, 16
+  contacts, 150 constraints). Past one, every such component is stripped,
+  whatever the viewer chose to show.
+- **A station without a collider gets a trigger from VRChat** when it
+  loads, which is how a station survives on mobile; nothing on the avatar
+  can switch that trigger off, so the station is scaled to nothing
+  instead.
 - **A parameter holds at most eight bits,** which is what shapes the
   synced-position encoding.
 - **A station that is disabled at upload never works;** disable its
@@ -176,10 +184,19 @@ Things that are true of the tools and will be true again.
 - Whether glowing geometry draws on mobile. It uses VRChat's additive
   particle shader on meshes without vertex colours. Opened in the PC
   editor, the Android bundle reports that shader as unsupported; that may
-  only be a PC editor reading an Android bundle, and it may not.
+  only be a PC editor reading an Android bundle, and it may not. VRChat's
+  documentation says the shader "should be used on particles". Its
+  feedback board has years of reports of it misbehaving on Quest avatars
+  (drawn as multiply, as boxes, or opaque white when a fallback tag is
+  set), and a staff reply that avatar materials using it still render with
+  transparency on Quest as of 2025.4.2. Nothing settles it for a mesh.
 - The fixes from the first round of feedback: the portal's pop-out, the
   notices' early exit.
 - Real lights and placing them (`cass-flashlight`, `cass-lantern`).
+- Stations on mobile. That they work there without a collider, and that
+  scaling one to nothing keeps it from being taken while its prop is put
+  away, rests on VRChat's documentation and on other people's
+  Quest-compatible seat prefabs, not on a headset.
 - The sending half of synced world positions: contact readings and
   weighted constraints only run in the client. The receiving half decodes
   to within 2.7 cm in the editor.
@@ -188,9 +205,10 @@ Things that are true of the tools and will be true again.
 
 ### Known limits
 
-- **Mobile builds give up** the garment toggles, flight, both stations,
-  the screen notices, real lights and all sound. `cass-adv` is Poor
-  there (four material slots, two skinned meshes); `cass` is Medium.
+- **Mobile builds give up** the garment toggles, flight, the screen
+  notices, the light in the real-light tools and all sound. `cass` is
+  Medium there. The three adventure variants keep their stations and are
+  Very Poor, by choice: they are worn in groups for the stations.
 - **Expressions that show or hide UV tiles** (anything in `gestures.json`
   with `tiles`) do nothing on mobile for the same reason the garment
   toggles do not.

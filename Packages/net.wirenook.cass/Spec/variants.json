@@ -21,7 +21,7 @@
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools.prefab"
       ],
-      "worstRankMobile": "Poor"
+      "worstRankMobile": "VeryPoor"
     },
     {
       "slug": "cass-flashlight",
@@ -33,9 +33,7 @@
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Real Flashlight).prefab"
       ],
-      "platforms": [
-        "pc"
-      ]
+      "worstRankMobile": "VeryPoor"
     },
     {
       "slug": "cass-lantern",
@@ -47,9 +45,7 @@
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Real Lantern).prefab"
       ],
-      "platforms": [
-        "pc"
-      ]
+      "worstRankMobile": "VeryPoor"
     }
   ]
 }
