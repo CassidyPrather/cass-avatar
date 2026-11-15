@@ -231,7 +231,35 @@ namespace Wirenook.Cass.Editor
             {
                 Running = false;
                 UnityEngine.Object.DestroyImmediate(instance);
+                Tidy(slug);
             }
+        }
+
+        /// <summary>
+        /// Puts the open scene back the way it was before an upload. The SDK
+        /// saves the scene while the copy it builds from is in it, so the
+        /// file on disk keeps that copy even though it is destroyed here, and
+        /// the next time the scene loads the copy stands in every picture
+        /// taken there. This removes any copy still in the scene and saves
+        /// the scene without it.
+        /// </summary>
+        /// <returns>How many copies were still in the scene.</returns>
+        public static int Tidy(string slug)
+        {
+            var prefab = CassBuild.LoadVariant(slug);
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            var leftovers = scene.GetRootGameObjects()
+                .Where(root => PrefabUtility.GetCorrespondingObjectFromSource(root) == prefab)
+                .ToList();
+            foreach (var leftover in leftovers) UnityEngine.Object.DestroyImmediate(leftover);
+            if (!string.IsNullOrEmpty(scene.path))
+            {
+                // Unity skips saving a scene it believes unchanged.
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+                UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            }
+
+            return leftovers.Count;
         }
 
         /// <summary>
