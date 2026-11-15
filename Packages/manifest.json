@@ -47,6 +47,7 @@
   "testables": [
     "net.wirenook.cass",
     "net.wirenook.assets",
-    "net.wirenook.locomotion"
+    "net.wirenook.locomotion",
+    "net.wirenook.world-sync"
   ]
 }

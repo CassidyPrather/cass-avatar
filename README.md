@@ -41,7 +41,7 @@ Spec/*.json ──────────────────────�
 | --- | --- | --- |
 | [`wirenook-assets`](https://github.com/CassidyPrather/wirenook-assets) | `net.wirenook.assets` | The shared palette, materials, menu icons, sounds and the editor helpers the others build with. |
 | [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, and collider flight. |
-| [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world. |
+| [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners. |
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat and a catch-up portal. |
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer, megaphone, flashlight, lantern, screen notices. |
 
@@ -244,7 +244,7 @@ copy:
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
 | `cass` | Good | 8,202 | 2 + 0 (from 6) | 2 (from 6) | 59 | 5 of 256 |
-| `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 20 of 256 |
+| `cass-adv` | Good | 11,568 | 2 + 4 (from 11 + 1) | 8 (from 19) | 70 | 85 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the face: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -287,9 +287,11 @@ Not checked, because only the client can:
   only animate shapes the tracker is not mapped to while one is live.
 - **MMD worlds**, beyond the mesh name and layer order.
 - **Every gadget in use**: collider flight, the carry seat, the portal's
-  station, the laser's raycast, the screen notice in a headset, dropped
-  props for late joiners. Each submodule's README says what its own
-  unknowns are.
+  station, the laser's raycast, the screen notice in a headset. Each
+  submodule's README says what its own unknowns are.
+- **Synced world positions.** The receiving half is checked in the editor
+  (a dropped prop reconstructs within 3 cm across a ±512 m world); the half
+  that measures the position on the wearer's client only runs in game.
 - **How the locomotion feels**, and how it sits with real tracking.
 - **Hand poses**: props sit in the hand pointing where the fingers point,
   and the fingers do not close around them.

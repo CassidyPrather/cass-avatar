@@ -172,6 +172,18 @@ namespace Wirenook.DevTools
             return text.ToString();
         }
 
+        /// <summary>The value of a static field or property, for constants the SDK does not document.</summary>
+        public static string Static(string typeName, string member)
+        {
+            var type = Find(typeName);
+            if (type == null) return "type not found: " + typeName;
+            const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            var field = type.GetField(member, flags);
+            if (field != null) return field.GetValue(null)?.ToString();
+            var property = type.GetProperty(member, flags);
+            return property != null ? property.GetValue(null)?.ToString() : "no static member " + member;
+        }
+
         /// <summary>Lists the open scenes and their root objects.</summary>
         public static string Scenes()
         {
