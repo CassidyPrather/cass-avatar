@@ -201,7 +201,7 @@ inherit its parent's id like any other property and replace the parent's
 avatar on upload, so the rebuild clears inherited ids, `verify` reports
 any two variants that share one, and `upload` refuses.
 
-Three things about VRChat's side that the scripts allow for:
+Four things about VRChat's side that the scripts allow for:
 
 - **A first upload comes out private.** The SDK reserves an id, then
   uploads with the record VRChat returned for the reservation rather than
@@ -213,6 +213,10 @@ Three things about VRChat's side that the scripts allow for:
   for the link.
 - **The SDK signs itself out on every script reload** and back in only
   once its control panel is drawn. The commands open the panel and wait.
+- **An unchanged thumbnail stops an update.** VRChat refuses a file
+  identical to the one it holds, and the SDK sends the picture before the
+  bundle, so the avatar itself never goes out. `upload` compares the
+  picture it would send against VRChat's and leaves it out when they match.
 
 `scripts/cass.sh bundle` opens the file the SDK built last and reports
 which vertex data each mesh kept, which shaders it carries, and a picture

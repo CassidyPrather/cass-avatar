@@ -147,6 +147,32 @@ namespace Wirenook.Cass.Editor
             return await VRCApi.GetAvatar(blueprint, true);
         }
 
+        /// <summary>
+        /// Whether the picture VRChat holds for an avatar is exactly the one
+        /// an upload would send. The SDK crops a thumbnail before sending it
+        /// and VRChat compares hashes of what arrives, so this crops the same
+        /// way first. The SDK keeps its cropping to itself, hence the
+        /// reflection; when anything here cannot be worked out the answer is
+        /// no, and the upload sends the picture as it always did.
+        /// </summary>
+        private static async Task<bool> HoldsThumbnail(VRCAvatar existing, string thumbnail)
+        {
+            if (string.IsNullOrEmpty(existing.ID) || string.IsNullOrEmpty(existing.ImageUrl)) return false;
+
+            var crop = typeof(VRC.SDKBase.VRC_EditorTools).GetMethod("CropImage", BindingFlags.Static | BindingFlags.NonPublic);
+            if (crop == null || crop.GetParameters().Length != 6) return false;
+            var sent = crop.Invoke(null, new object[] { thumbnail, 800f, 600f, true, false, false }) as string;
+            if (string.IsNullOrEmpty(sent) || !File.Exists(sent)) return false;
+
+            string hash;
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+                hash = Convert.ToBase64String(md5.ComputeHash(File.ReadAllBytes(sent)));
+
+            var file = await VRCApi.Get<VRCFile>("file/" + ApiFile.ParseFileIdFromFileAPIUrl(existing.ImageUrl), forceRefresh: true);
+            var latest = file.GetLatestVersion();
+            return latest >= 0 && file.Versions[latest]?.File?.MD5 == hash;
+        }
+
         /// <summary>Builds and uploads a variant. Needs an account signed in through the SDK control panel.</summary>
         public static async Task<string> Upload(string slug)
         {
@@ -176,6 +202,12 @@ namespace Wirenook.Cass.Editor
                 var problems = Check(record);
                 if (problems.Count > 0)
                     throw new InvalidOperationException("Upload refused by the upload policy:\n  " + string.Join("\n  ", problems));
+
+                // VRChat refuses a file identical to the one it holds, and the
+                // SDK sends the picture before the bundle, so an unchanged
+                // picture would stop the upload before the avatar itself
+                // went out. Left out, VRChat keeps the picture it has.
+                if (await HoldsThumbnail(existing, thumbnail)) thumbnail = null;
 
                 await builder.BuildAndUpload(instance, record, thumbnail);
 
