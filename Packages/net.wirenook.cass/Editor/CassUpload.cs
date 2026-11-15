@@ -152,6 +152,14 @@ namespace Wirenook.Cass.Editor
         {
             var builder = await SignedIn();
 
+            // Uploading to an id replaces whatever avatar holds it.
+            CassPrefabs.SeparateBlueprints();
+            var sharing = CassPrefabs.SharesBlueprintWith(slug);
+            if (sharing != null)
+                throw new InvalidOperationException(
+                    slug + " and " + sharing + " hold the same avatar id, so uploading one would replace the other. " +
+                    "Clear the blueprint id on whichever variant prefab has not been uploaded.");
+
             var thumbnail = Thumbnail(slug, out var report);
 
             var prefab = CassBuild.LoadVariant(slug);
@@ -260,6 +268,9 @@ namespace Wirenook.Cass.Editor
             {
                 PrefabUtility.UnloadPrefabContents(root);
             }
+
+            // Variants that extend this one have just inherited the new id.
+            CassPrefabs.SeparateBlueprints();
         }
     }
 

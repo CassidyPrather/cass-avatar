@@ -77,6 +77,10 @@ def main():
     if response.get("result"):
         print(response["result"])
     if response.get("error"):
+        # Keep the error last when both streams go down one pipe: stdout is
+        # buffered there, and a failure printed above a page of log lines
+        # is the first thing `tail` throws away.
+        sys.stdout.flush()
         print(response["error"], file=sys.stderr)
     return 0 if response.get("ok") else 1
 

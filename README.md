@@ -190,7 +190,16 @@ not locks: the policy is `Runtime/Core/UploadGuard.cs`, and removing the
 upload profile from an avatar switches the check off.
 
 VRChat asks whoever uploads to confirm they hold the rights to the
-content. That dialog is left to you.
+content. That dialog is left to you. It can come up as a window of its
+own ("Copyright ownership agreement") that blocks the whole editor, and
+`upload` waits behind it without saying so; if an upload seems stuck,
+look at Unity.
+
+Each variant uploads to its own avatar id, kept on its prefab once the
+first upload has reserved one. A variant that extends another would
+inherit its parent's id like any other property and replace the parent's
+avatar on upload, so the rebuild clears inherited ids, `verify` reports
+any two variants that share one, and `upload` refuses.
 
 Three things about VRChat's side that the scripts allow for:
 
@@ -221,6 +230,10 @@ what came out: the performance rank against the variant's target, that
 `Body` and the gesture layers are still where MMD worlds expect them, that
 the optimiser kept every viseme, tracking and MMD shape, the synced
 parameter and station budgets, and that no material has a brightness floor.
+With the SDK control panel open it also runs the SDK's own upload
+validation on the result. Anything that fails stops an upload after the
+build, so it is cheaper to hear about it here (it is how sound effects
+that did not load in the background were found).
 
 `scripts/cass.sh sheets <slug>` photographs the built avatar in
 `Assets/Scenes/Validation.unity` and writes eight labelled contact sheets to

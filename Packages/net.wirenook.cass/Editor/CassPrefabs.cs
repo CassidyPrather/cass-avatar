@@ -41,6 +41,45 @@ namespace Wirenook.Cass.Editor
                 EnsureVariantOf(parent, VariantPath(variant.Slug));
                 Edit(VariantPath(variant.Slug), root => ConfigureVariant(root, variant, spec));
             }
+
+            SeparateBlueprints();
+        }
+
+        /// <summary>
+        /// Gives every variant its own avatar id. A variant that extends
+        /// another inherits its parent's blueprint id like any other
+        /// property, and uploading it would then replace the parent's avatar
+        /// on VRChat. Wherever a variant holds the same id as the one it
+        /// extends, the id is cleared, so its first upload reserves a new one.
+        /// </summary>
+        public static void SeparateBlueprints()
+        {
+            // The spec lists a variant after the one it extends, so a cleared
+            // id is what the next level down is compared against.
+            foreach (var variant in CassSpec.Variants().Variants.Where(variant => variant.Extends != null))
+            {
+                var inherited = BlueprintOf(variant.Extends);
+                if (string.IsNullOrEmpty(inherited) || BlueprintOf(variant.Slug) != inherited) continue;
+                Edit(VariantPath(variant.Slug), root => root.GetComponent<PipelineManager>().blueprintId = "");
+            }
+        }
+
+        /// <summary>The avatar id a variant uploads to; empty until its first upload.</summary>
+        public static string BlueprintOf(string slug)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(VariantPath(slug));
+            var pipeline = prefab != null ? prefab.GetComponent<PipelineManager>() : null;
+            return pipeline != null ? pipeline.blueprintId ?? "" : "";
+        }
+
+        /// <summary>Another variant holding the same avatar id as this one, or null.</summary>
+        public static string SharesBlueprintWith(string slug)
+        {
+            var blueprint = BlueprintOf(slug);
+            if (string.IsNullOrEmpty(blueprint)) return null;
+            return CassSpec.Variants().Variants
+                .Select(variant => variant.Slug)
+                .FirstOrDefault(other => other != slug && BlueprintOf(other) == blueprint);
         }
 
         private static void EnsureVariantOf(string parentPath, string path)

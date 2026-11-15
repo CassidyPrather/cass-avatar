@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using nadena.dev.ndmf;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
+using VRC.SDK3A.Editor;
 using VRC.SDKBase.Validation.Performance;
 using Wirenook.Assets.Core;
 
@@ -35,11 +37,16 @@ namespace Wirenook.Cass.Editor
             try
             {
                 Policy(slug, report, problems, notes);
+                var sharing = CassPrefabs.SharesBlueprintWith(slug);
+                if (sharing != null)
+                    problems.Add("It holds the same avatar id as " + sharing + ", so uploading one would replace the other. " +
+                                 "Run a rebuild, which clears ids a variant inherited from the one it extends.");
                 Rank(slug, report, problems);
                 MmdContract(built, problems);
                 Blendshapes(built, problems);
                 Budgets(built, report, problems);
                 Brightness(built, problems);
+                SdkValidation(built, problems, notes);
             }
             finally
             {
@@ -151,6 +158,54 @@ namespace Wirenook.Cass.Editor
         }
 
         /// <summary>No lit material may keep a brightness floor: in the dark the avatar should be dark.</summary>
+        /// <summary>
+        /// Runs the checks the SDK panel runs on the built avatar before it
+        /// will upload one. Anything it lists as an error stops an upload
+        /// after the build, with the avatar id already reserved, so it is
+        /// worth hearing about here first. The SDK offers no public way to
+        /// ask, hence the reflection; if a later SDK moves these members the
+        /// check reports that it was skipped instead of failing.
+        /// </summary>
+        private static void SdkValidation(GameObject built, List<string> problems, List<string> notes)
+        {
+            const string skipped = "The VRChat SDK's own upload validation was skipped: ";
+            if (!VRCSdkControlPanel.TryGetBuilder<IVRCSdkAvatarBuilderApi>(out var api))
+            {
+                notes.Add(skipped + "its control panel is not open.");
+                return;
+            }
+
+            const BindingFlags hidden = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+            FieldInfo panelField = null;
+            MethodInfo check = null;
+            for (var type = api.GetType(); type != null; type = type.BaseType)
+            {
+                panelField ??= type.GetField("_builder", hidden);
+                check ??= type.GetMethod("OnGUIAvatarCheck", hidden);
+            }
+
+            var descriptor = built.GetComponent<VRCAvatarDescriptor>();
+            if (!(panelField?.GetValue(api) is VRCSdkControlPanel panel) || check == null || descriptor == null)
+            {
+                notes.Add(skipped + "this SDK version keeps it somewhere this check does not know.");
+                return;
+            }
+
+            panel.ResetIssues();
+            try
+            {
+                check.Invoke(api, new object[] { descriptor });
+                foreach (var issue in panel.GetGuiErrorsOrIssuesForItem(descriptor))
+                    problems.Add("VRChat SDK: " + issue.issueText.Replace('\n', ' '));
+            }
+            finally
+            {
+                // The panel lists issues for whatever is selected in it; leave
+                // it to collect its own again.
+                panel.ResetIssues();
+            }
+        }
+
         private static void Brightness(GameObject built, List<string> problems)
         {
             var floored = built.GetComponentsInChildren<Renderer>(true)
