@@ -10,6 +10,8 @@ using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 using VRC.SDKBase;
+using nadena.dev.modular_avatar.core;
+using Wirenook.Assets;
 using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
 
@@ -150,6 +152,14 @@ namespace Wirenook.Cass.Editor
             foreach (var chain in skeleton.ChainRoots()) ConfigurePhysBone(Find(root, chain.Name));
             UnifyRenderers(root, skeleton);
             ConfigureOptimizer(root);
+
+            // First among the children, so "Outfit" comes before whatever
+            // the variants' features add to the menu.
+            var outfit = FeaturePrefab.Child(root, "Outfit Menu");
+            outfit.transform.SetSiblingIndex(0);
+            Ensure<ModularAvatarMenuInstaller>(outfit).menuToAppend =
+                AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(CassMenus.OutfitEntryPath);
+            Ensure<WirenookPcOnly>(outfit);
         }
 
         /// <summary>

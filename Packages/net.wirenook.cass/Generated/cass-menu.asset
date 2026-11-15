@@ -24,13 +24,3 @@ MonoBehaviour:
     subMenu: {fileID: 0}
     subParameters: []
     labels: []
-  - name: Outfit
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
-    type: 103
-    parameter:
-      name: 
-    value: 1
-    style: 0
-    subMenu: {fileID: 11400000, guid: 7dbe3a42d727cc047b8682c1247c818d, type: 2}
-    subParameters: []
-    labels: []

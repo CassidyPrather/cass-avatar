@@ -1,5 +1,67 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8483563115889223123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5692559425830163905}
+  - component: {fileID: 1127725730593046729}
+  - component: {fileID: 8618555395406698455}
+  m_Layer: 0
+  m_Name: Outfit Menu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5692559425830163905
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8483563115889223123}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 794809305061706975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1127725730593046729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8483563115889223123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef83cb0c23d4d7c9d41021e544a1978, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  menuToAppend: {fileID: 11400000, guid: 5e9bb2700d643724086ec7b4b84edbe3, type: 2}
+  installTargetMenu: {fileID: 0}
+--- !u!114 &8618555395406698455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8483563115889223123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee1467e0dd24a5b4781552a7a0a1d130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &904383117758671668
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -275,7 +337,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7257520d3213ec14f83834461f061e4e,
+        type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 5692559425830163905}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7257520d3213ec14f83834461f061e4e,
         type: 3}
@@ -1619,6 +1685,12 @@ MonoBehaviour:
     skipReplaceEndBoneWithEndpointPosition: 0
     skipOptimizationWarnings: 0
     skipMirrorIgnoreOtherPhysBonesToIgnoreTransform: 0
+--- !u!4 &794809305061706975 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7257520d3213ec14f83834461f061e4e,
+    type: 3}
+  m_PrefabInstance: {fileID: 904383117758671668}
+  m_PrefabAsset: {fileID: 0}
 --- !u!137 &1886089895104706150 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 1630794972795428178, guid: 7257520d3213ec14f83834461f061e4e,

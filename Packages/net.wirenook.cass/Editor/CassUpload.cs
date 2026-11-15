@@ -11,6 +11,7 @@ using VRC.Core;
 using VRC.SDK3A.Editor;
 using VRC.SDKBase.Editor;
 using VRC.SDKBase.Editor.Api;
+using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
 
 namespace Wirenook.Cass.Editor
@@ -176,6 +177,15 @@ namespace Wirenook.Cass.Editor
         /// <summary>Builds and uploads a variant. Needs an account signed in through the SDK control panel.</summary>
         public static async Task<string> Upload(string slug)
         {
+            // The SDK builds for the editor's active target, whatever a build
+            // has been told to pretend.
+            WirenookPlatform.Pretend("");
+            var platform = WirenookPlatform.Active;
+            var spec = CassSpec.Variants().Variants.First(candidate => candidate.Slug == slug);
+            if (!spec.Platforms.Contains(platform))
+                throw new InvalidOperationException(slug + " is not built for " + WirenookPlatform.Name(platform) +
+                                                    " (Spec/variants.json lists its platforms). Switch with scripts/cass.sh platform.");
+
             var builder = await SignedIn();
 
             // Uploading to an id replaces whatever avatar holds it.
@@ -222,7 +232,7 @@ namespace Wirenook.Cass.Editor
                 var live = await VRCApi.GetAvatar(assigned, true);
                 if (Check(live).Count > 0) live = await SendRecord(instance, assigned);
                 var drift = Check(live);
-                return "Uploaded " + slug + " as " + assigned + " (" + report.performanceRank + ")." +
+                return "Uploaded " + slug + " for " + WirenookPlatform.Name(platform) + " as " + assigned + " (" + report.performanceRank + ")." +
                        (drift.Count == 0
                            ? " VRChat's record matches the upload policy."
                            : " But VRChat's record does not match the upload policy:\n  " + string.Join("\n  ", drift));

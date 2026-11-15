@@ -1,5 +1,5 @@
 {
-  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to; the checks fail if it ranks lower.",
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. Features that cannot work on mobile say so themselves and are left out of those builds.",
   "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar",
   "variants": [
     {
@@ -8,7 +8,8 @@
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Locomotion.prefab"
-      ]
+      ],
+      "worstRankMobile": "Medium"
     },
     {
       "slug": "cass-adv",
@@ -19,17 +20,35 @@
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools.prefab"
-      ]
+      ],
+      "worstRankMobile": "Poor"
     },
     {
-      "slug": "cass-adv-lit",
+      "slug": "cass-flashlight",
       "extends": "cass",
-      "about": "The adventure build with a real light source in the flashlight and lantern, which can be left standing in the world. Any light on an avatar ranks it Poor, hence a variant of its own.",
+      "about": "The adventure build with one real light source: the flashlight, a spotlight, which can be left standing in the world. It replaces both of cass-adv's glowing stand-ins. Any light on an avatar ranks it Poor and a second Very Poor, hence one light and a variant of its own.",
       "worstRank": "Poor",
       "features": [
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
-        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Real Light).prefab"
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Real Flashlight).prefab"
+      ],
+      "platforms": [
+        "pc"
+      ]
+    },
+    {
+      "slug": "cass-lantern",
+      "extends": "cass",
+      "about": "The adventure build with one real light source: the lantern, a point light, which can be left standing in the world. It replaces both of cass-adv's glowing stand-ins. Any light on an avatar ranks it Poor and a second Very Poor, hence one light and a variant of its own.",
+      "worstRank": "Poor",
+      "features": [
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
+        "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Real Lantern).prefab"
+      ],
+      "platforms": [
+        "pc"
       ]
     }
   ]

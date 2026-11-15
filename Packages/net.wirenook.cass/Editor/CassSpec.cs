@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
 
 namespace Wirenook.Cass.Editor
@@ -141,6 +142,9 @@ namespace Wirenook.Cass.Editor
                     Slug = (string)token["slug"],
                     Extends = (string)token["extends"],
                     WorstRank = (string)token["worstRank"] ?? "Good",
+                    WorstRankMobile = (string)token["worstRankMobile"] ?? (string)token["worstRank"] ?? "Good",
+                    Platforms = token["platforms"]?.Select(name => WirenookPlatform.Parse((string)name)).ToList()
+                                ?? new List<Platform> { Platform.Pc, Platform.Android, Platform.Ios },
                     Features = token["features"]?.Select(path => (string)path).ToList() ?? new List<string>(),
                 });
             }
@@ -225,8 +229,16 @@ namespace Wirenook.Cass.Editor
         /// <summary>Slug of the variant this one builds on; null builds on the root prefab.</summary>
         public string Extends;
 
-        /// <summary>The worst VRChat performance rank this variant may build to.</summary>
+        /// <summary>The worst VRChat performance rank this variant may build to on PC.</summary>
         public string WorstRank;
+
+        /// <summary>The same for Android and iOS, which VRChat ranks on a much stricter scale.</summary>
+        public string WorstRankMobile;
+
+        /// <summary>The platforms this variant is built and uploaded for.</summary>
+        public List<Platform> Platforms;
+
+        public string WorstRankFor(Platform platform) => platform == Platform.Pc ? WorstRank : WorstRankMobile;
 
         /// <summary>Asset paths of the feature prefabs this variant adds.</summary>
         public List<string> Features;

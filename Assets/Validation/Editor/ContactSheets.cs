@@ -33,7 +33,11 @@ namespace Wirenook.Validation.Editor
         /// <returns>The folder the sheets were written to.</returns>
         public static string Render(string slug)
         {
-            var folder = Path.Combine(OutputFolder, slug);
+            // A mobile build looks different enough to keep its own pictures.
+            var platform = Wirenook.Assets.Editor.WirenookPlatform.Current;
+            var folder = Path.Combine(OutputFolder, platform == Wirenook.Assets.Editor.Platform.Pc
+                ? slug
+                : slug + "-" + Wirenook.Assets.Editor.WirenookPlatform.Name(platform));
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
 
             var previous = SceneManager.GetActiveScene();

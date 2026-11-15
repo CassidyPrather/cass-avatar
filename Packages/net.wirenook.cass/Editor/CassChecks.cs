@@ -10,6 +10,7 @@ using VRC.SDK3.Avatars.Components;
 using VRC.SDK3A.Editor;
 using VRC.SDKBase.Validation.Performance;
 using Wirenook.Assets.Core;
+using Wirenook.Assets.Editor;
 
 namespace Wirenook.Cass.Editor
 {
@@ -33,6 +34,11 @@ namespace Wirenook.Cass.Editor
         {
             var problems = new List<string>();
             var notes = new List<string>();
+            var platform = WirenookPlatform.Current;
+            var variant = CassSpec.Variants().Variants.First(candidate => candidate.Slug == slug);
+            if (!variant.Platforms.Contains(platform))
+                return slug + " (" + WirenookPlatform.Name(platform) + "): not built for this platform" + System.Environment.NewLine + "ok";
+
             var report = CassBuild.Measure(slug, out var built);
             try
             {
@@ -47,6 +53,12 @@ namespace Wirenook.Cass.Editor
                 Budgets(built, report, problems);
                 Brightness(built, problems);
                 RestPose(built, problems);
+                if (platform != Platform.Pc)
+                {
+                    MobileShaders(built, problems);
+                    SameParametersAsPc(slug, built, problems);
+                }
+
                 SdkValidation(built, problems, notes);
             }
             finally
@@ -55,7 +67,7 @@ namespace Wirenook.Cass.Editor
                 AvatarProcessor.CleanTemporaryAssets();
             }
 
-            var summary = slug + ": " + report.performanceRank + ", " + report.triangles + " triangles, " +
+            var summary = slug + " (" + report.platform + "): " + report.performanceRank + ", " + report.triangles + " triangles, " +
                           report.skinnedMeshes + " skinned + " + report.meshes + " static meshes, " +
                           report.materialSlots + " material slots, " + report.bones + " bones, " +
                           report.syncedParameterBits + " synced bits\n";
@@ -82,7 +94,7 @@ namespace Wirenook.Cass.Editor
 
         private static void Rank(string slug, BuildReport report, List<string> problems)
         {
-            var target = CassSpec.Variants().Variants.First(variant => variant.Slug == slug).WorstRank;
+            var target = CassSpec.Variants().Variants.First(variant => variant.Slug == slug).WorstRankFor(WirenookPlatform.Current);
             if (!Enum.TryParse<PerformanceRating>(report.performanceRank, out var actual) ||
                 !Enum.TryParse<PerformanceRating>(target, out var worst))
             {
@@ -91,7 +103,8 @@ namespace Wirenook.Cass.Editor
             }
 
             if (actual <= worst) return;
-            problems.Add("Ranks " + actual + ", but this variant must be " + worst + " or better. Worse than Excellent: " +
+            problems.Add("Ranks " + actual + " on " + WirenookPlatform.Name(WirenookPlatform.Current) +
+                         ", but this variant must be " + worst + " or better there. Worse than Excellent: " +
                          string.Join(", ", report.belowExcellent.Select(pair => pair.Key + " " + pair.Value)));
         }
 
@@ -156,6 +169,57 @@ namespace Wirenook.Cass.Editor
             var stations = built.GetComponentsInChildren<VRCStation>(true).Length;
             if (stations > StationBudget)
                 problems.Add("Has " + stations + " stations; VRChat disables all but " + StationBudget + ".");
+        }
+
+        /// <summary>VRChat refuses an Android or iOS avatar that uses any shader but its own mobile ones.</summary>
+        private static void MobileShaders(GameObject built, List<string> problems)
+        {
+            var foreign = built.GetComponentsInChildren<Renderer>(true)
+                .SelectMany(renderer => renderer.sharedMaterials)
+                .Where(material => material != null && !material.shader.name.StartsWith("VRChat/Mobile/", StringComparison.Ordinal))
+                .Select(material => material.name + " (" + material.shader.name + ")")
+                .Distinct()
+                .ToList();
+            if (foreign.Count > 0)
+                problems.Add("Materials with shaders mobile builds may not use: " + string.Join(", ", foreign));
+        }
+
+        /// <summary>
+        /// VRChat syncs expression parameters by their position in the list.
+        /// If the mobile build's list differs from the PC build's, people on
+        /// one platform see the other's toggles land on the wrong things.
+        /// </summary>
+        private static void SameParametersAsPc(string slug, GameObject built, List<string> problems)
+        {
+            var here = WirenookPlatform.Name(WirenookPlatform.Current);
+            var mobile = Parameters(built);
+            List<string> pc;
+            WirenookPlatform.Pretend("pc");
+            try
+            {
+                CassBuild.Measure(slug, out var pcBuilt);
+                pc = Parameters(pcBuilt);
+                UnityEngine.Object.DestroyImmediate(pcBuilt);
+            }
+            finally
+            {
+                WirenookPlatform.Pretend(here);
+            }
+
+            if (pc.SequenceEqual(mobile)) return;
+            var first = Enumerable.Range(0, Math.Max(pc.Count, mobile.Count))
+                .First(index => index >= pc.Count || index >= mobile.Count || pc[index] != mobile[index]);
+            problems.Add("The expression parameters differ from the PC build's, so they would sync wrongly across platforms. " +
+                         "First difference at position " + first + ": PC has " + (first < pc.Count ? pc[first] : "nothing") +
+                         ", this build has " + (first < mobile.Count ? mobile[first] : "nothing") + ".");
+        }
+
+        private static List<string> Parameters(GameObject built)
+        {
+            var asset = built.GetComponent<VRCAvatarDescriptor>().expressionParameters;
+            return asset == null
+                ? new List<string>()
+                : asset.parameters.Select(parameter => parameter.name + ":" + parameter.valueType + (parameter.networkSynced ? ":synced" : "")).ToList();
         }
 
         /// <summary>

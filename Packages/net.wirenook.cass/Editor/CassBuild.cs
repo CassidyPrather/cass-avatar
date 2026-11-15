@@ -104,13 +104,15 @@ namespace Wirenook.Cass.Editor
             AvatarProcessor.ProcessAvatar(built);
 
             var stats = new AvatarPerformanceStats(false);
-            AvatarPerformance.CalculatePerformanceStats(slug, built, stats, false);
+            // VRChat ranks Android and iOS avatars on a stricter scale.
+            AvatarPerformance.CalculatePerformanceStats(slug, built, stats, WirenookPlatform.IsMobile);
 
             var renderers = built.GetComponentsInChildren<Renderer>(true);
             var report = new BuildReport
             {
                 name = AvatarName,
                 variant = slug,
+                platform = WirenookPlatform.Name(WirenookPlatform.Current),
                 version = PackageVersion(),
                 performanceRank = stats.GetPerformanceRatingForCategory(AvatarPerformanceCategory.Overall).ToString(),
                 features = features,
@@ -183,6 +185,7 @@ namespace Wirenook.Cass.Editor
 
         public string name;
         public string variant;
+        public string platform;
         public string version;
         public string performanceRank;
         public List<Feature> features = new List<Feature>();

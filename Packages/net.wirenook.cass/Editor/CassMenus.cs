@@ -18,6 +18,13 @@ namespace Wirenook.Cass.Editor
         public const string MenuPath = CassSpec.GeneratedFolder + "/cass-menu.asset";
         public const string OutfitMenuPath = CassSpec.GeneratedFolder + "/cass-menu-outfit.asset";
 
+        /// <summary>
+        /// The "Outfit" entry on its own. It is added to the menu at build
+        /// time, from an object mobile builds leave out: the garment toggles
+        /// hide UV tiles, which no mobile shader can do.
+        /// </summary>
+        public const string OutfitEntryPath = CassSpec.GeneratedFolder + "/cass-menu-outfit-entry.asset";
+
         public static void Rebuild()
         {
             var tiles = CassSpec.Tiles();
@@ -33,10 +40,9 @@ namespace Wirenook.Cass.Editor
             outfit.controls = toggles.Select(tile => Toggle(tile.Toggle.Label, tile.Toggle.Icon, tile.Toggle.Parameter)).ToList();
             EditorUtility.SetDirty(outfit);
 
-            var menu = AssetFolders.LoadOrCreate(MenuPath, ScriptableObject.CreateInstance<VRCExpressionsMenu>);
-            menu.controls = new List<VRCExpressionsMenu.Control>
+            var entry = AssetFolders.LoadOrCreate(OutfitEntryPath, ScriptableObject.CreateInstance<VRCExpressionsMenu>);
+            entry.controls = new List<VRCExpressionsMenu.Control>
             {
-                Toggle("Face Tracking", "face-tracking", CassFx.TrackingEnabled),
                 new VRCExpressionsMenu.Control
                 {
                     name = "Outfit",
@@ -44,6 +50,13 @@ namespace Wirenook.Cass.Editor
                     type = VRCExpressionsMenu.Control.ControlType.SubMenu,
                     subMenu = outfit,
                 },
+            };
+            EditorUtility.SetDirty(entry);
+
+            var menu = AssetFolders.LoadOrCreate(MenuPath, ScriptableObject.CreateInstance<VRCExpressionsMenu>);
+            menu.controls = new List<VRCExpressionsMenu.Control>
+            {
+                Toggle("Face Tracking", "face-tracking", CassFx.TrackingEnabled),
             };
             EditorUtility.SetDirty(menu);
 
