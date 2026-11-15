@@ -38,7 +38,7 @@ namespace Wirenook.Cass.Core
 
             if (string.IsNullOrWhiteSpace(name)) problems.Add("The avatar has no name.");
 
-            var text = description ?? "";
+            var text = Plain(description);
             if (!policy.DistributionMarkers.Any(marker => text.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 problems.Add(
@@ -60,6 +60,24 @@ namespace Wirenook.Cass.Core
             }
 
             return problems;
+        }
+
+        /// <summary>
+        /// Text as it was typed. VRChat stores descriptions with punctuation
+        /// swapped for lookalike characters ("github․com⁄…"), so a record
+        /// read back from it never contains the link literally. Four of the
+        /// substitutes are replaced by name; the full-width ones (brackets,
+        /// the at sign) fold back to ASCII under compatibility normalisation.
+        /// </summary>
+        public static string Plain(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            return text
+                .Replace('\u2024', '.') // one dot leader
+                .Replace('\u2044', '/') // fraction slash
+                .Replace('\u02F8', ':') // modifier letter raised colon
+                .Replace('\u201A', ',') // single low-9 quotation mark
+                .Normalize(System.Text.NormalizationForm.FormKC);
         }
     }
 }

@@ -34,6 +34,16 @@ namespace Wirenook.Cass.Tests
         }
 
         [Test]
+        public void AcceptsTheLinkAsVRChatStoresIt()
+        {
+            // Copied from a record read back after an upload.
+            const string stored =
+                "Source\u201A licence \uFF08AGPLv3\uFF09 and downloads\u02F8 github\u2024com\u2044CassidyPrather\u2044cass-avatar";
+            var problems = UploadGuard.Check(new UploadPolicy(), "cass", stored, Tags, "public");
+            Assert.AreEqual(0, problems.Count, string.Join(" ", problems));
+        }
+
+        [Test]
         public void RejectsMissingRequiredTags()
         {
             var problems = UploadGuard.Check(new UploadPolicy(), "cass", Description, new[] { "author_tag_ai" }, "public");

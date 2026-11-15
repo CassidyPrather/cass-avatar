@@ -71,18 +71,86 @@ namespace Wirenook.Cass.Editor
             }
         }
 
-        /// <summary>Builds and uploads a variant. Needs the SDK control panel open and signed in.</summary>
-        public static async Task<string> Upload(string slug)
+        /// <summary>What VRChat currently holds for a variant that has been uploaded.</summary>
+        public static async Task<string> Live(string slug)
         {
-            if (!VRCSdkControlPanel.TryGetBuilder<IVRCSdkAvatarBuilderApi>(out var builder))
+            var pipeline = CassBuild.LoadVariant(slug).GetComponent<PipelineManager>();
+            var blueprint = pipeline != null ? pipeline.blueprintId : "";
+            if (string.IsNullOrEmpty(blueprint)) return slug + " has not been uploaded.";
+
+            await SignedIn();
+            var live = await VRCApi.GetAvatar(blueprint, true);
+            var problems = Check(live);
+            return "id: " + live.ID + "\n" +
+                   "name: " + live.Name + "\n" +
+                   "description: " + live.Description + "\n" +
+                   "tags: " + string.Join(", ", live.Tags ?? new List<string>()) + "\n" +
+                   "release: " + live.ReleaseStatus + "\n" +
+                   (problems.Count == 0 ? "policy: ok" : "policy: FAILS\n  " + string.Join("\n  ", problems));
+        }
+
+        /// <summary>
+        /// Sends a variant's name, description, tags and visibility to
+        /// VRChat without building or uploading the avatar again.
+        /// </summary>
+        public static async Task<string> Publish(string slug)
+        {
+            await SignedIn();
+
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(CassBuild.LoadVariant(slug));
+            try
             {
-                EditorApplication.ExecuteMenuItem("VRChat SDK/Show Control Panel");
-                throw new InvalidOperationException(
-                    "The VRChat SDK control panel was not open. It is open now: sign in, wait for the Builder tab, and run the upload again.");
+                var blueprint = Blueprint(instance);
+                if (string.IsNullOrEmpty(blueprint)) return slug + " has not been uploaded.";
+                await SendRecord(instance, blueprint);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
             }
 
-            if (!APIUser.IsLoggedIn)
-                throw new InvalidOperationException("Sign in to VRChat in the SDK control panel first.");
+            return await Live(slug);
+        }
+
+        /// <summary>
+        /// Waits for the SDK to be signed in. It signs itself in again after
+        /// every script reload, but only once its control panel has been
+        /// drawn, so a panel that is closed or hidden behind another tab
+        /// leaves it signed out indefinitely.
+        /// </summary>
+        private static async Task<IVRCSdkAvatarBuilderApi> SignedIn()
+        {
+            IVRCSdkAvatarBuilderApi builder = null;
+            bool Ready() => APIUser.IsLoggedIn && VRCSdkControlPanel.TryGetBuilder(out builder);
+
+            if (Ready()) return builder;
+            EditorApplication.ExecuteMenuItem("VRChat SDK/Show Control Panel");
+            for (var waited = 0; waited < 40 && !Ready(); waited++) await Task.Delay(500);
+            if (Ready()) return builder;
+
+            throw new InvalidOperationException(APIUser.IsLoggedIn
+                ? "The VRChat SDK control panel has not shown its Builder tab. Open it and run this again."
+                : "Sign in to VRChat in the SDK control panel (it is open now), then run this again.");
+        }
+
+        /// <summary>Replaces the name, description, tags and visibility VRChat holds with the variant's.</summary>
+        /// <returns>VRChat's record afterwards.</returns>
+        private static async Task<VRCAvatar> SendRecord(GameObject instance, string blueprint)
+        {
+            var live = await VRCApi.GetAvatar(blueprint, true);
+            var record = Compose(instance, live, out _);
+            var problems = Check(record);
+            if (problems.Count > 0)
+                throw new InvalidOperationException("Refused by the upload policy:\n  " + string.Join("\n  ", problems));
+
+            await VRCApi.UpdateAvatarInfo(blueprint, record);
+            return await VRCApi.GetAvatar(blueprint, true);
+        }
+
+        /// <summary>Builds and uploads a variant. Needs an account signed in through the SDK control panel.</summary>
+        public static async Task<string> Upload(string slug)
+        {
+            var builder = await SignedIn();
 
             var thumbnail = Thumbnail(slug, out var report);
 
@@ -108,7 +176,11 @@ namespace Wirenook.Cass.Editor
                 var assigned = Blueprint(instance);
                 if (assigned != blueprint) SaveBlueprint(slug, assigned);
 
+                // A first upload goes out with the record VRChat handed back
+                // when the SDK reserved the id, not the one composed here,
+                // and that one is private. Send ours once the avatar exists.
                 var live = await VRCApi.GetAvatar(assigned, true);
+                if (Check(live).Count > 0) live = await SendRecord(instance, assigned);
                 var drift = Check(live);
                 return "Uploaded " + slug + " as " + assigned + " (" + report.performanceRank + ")." +
                        (drift.Count == 0

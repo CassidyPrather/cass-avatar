@@ -82,6 +82,9 @@ scripts/cass.sh verify cass       # build the variant as an upload would, and ch
 scripts/cass.sh sheets cass       # contact sheets in dist/validation/cass/
 scripts/cass.sh preview cass      # what an upload would send to VRChat
 scripts/cass.sh upload cass       # build and upload
+scripts/cass.sh live cass         # what VRChat holds for the uploaded variant
+scripts/cass.sh publish cass      # send name, description, tags, visibility only
+scripts/cass.sh bundle            # inspect the bundle the SDK built last
 scripts/cass.sh all               # export, rebuild, verify every variant
 ```
 
@@ -189,6 +192,28 @@ upload profile from an avatar switches the check off.
 VRChat asks whoever uploads to confirm they hold the rights to the
 content. That dialog is left to you.
 
+Three things about VRChat's side that the scripts allow for:
+
+- **A first upload comes out private.** The SDK reserves an id, then
+  uploads with the record VRChat returned for the reservation rather than
+  the one it was given. `upload` reads the record back afterwards and sends
+  it again if it does not pass the policy; `publish` does only that step.
+- **Descriptions are stored with lookalike punctuation**
+  (`github․com⁄CassidyPrather⁄…`), so the link is there to read but not to
+  click, and the policy check folds those characters back before it looks
+  for the link.
+- **The SDK signs itself out on every script reload** and back in only
+  once its control panel is drawn. The commands open the panel and wait.
+
+`scripts/cass.sh bundle` opens the file the SDK built last and reports
+which vertex data each mesh kept, which shaders it carries, and a picture
+(`dist/validation/bundle.png`). Unity strips vertex channels it believes
+no shader reads when it packs a bundle, and the outfit toggles live in the
+second UV channel, so this is worth a look after anything changes in the
+materials. The build logs a shader error from lilToon
+(`unrecognized identifier 'CBUFFER_START'`); it comes from a pass that
+never draws, and the uploaded bundle renders correctly.
+
 ## Checking the work
 
 `scripts/cass.sh verify <slug>` runs the real build on a copy and checks
@@ -259,9 +284,10 @@ tool for it.
 
 ## Status
 
-**Nothing here has run in the VRChat client yet, and the avatar has not
-been uploaded.** Everything below was checked in Blender, in the Unity
-editor, or headless.
+**The placeholder `cass` is uploaded and public
+(`avtr_83eafc89-950e-4553-bb36-c37238333069`); `cass-adv` is not. Nothing
+has been worn in the VRChat client yet.** Everything below was checked in
+Blender, in the Unity editor, against VRChat's API, or headless.
 
 Checked:
 
@@ -274,9 +300,11 @@ Checked:
   shape still present, budgets respected, no brightness floor.
 - The contact sheets render and were looked at: all fourteen expressions,
   the outfit zones, the lighting extremes, and each feature in place.
-- The upload record composes and passes the policy; the thumbnail is
-  generated. The upload itself was not run.
-- Headless tests: 18 for the avatar's core logic, 18 for the thumbnail
+- `cass` uploaded through `scripts/cass.sh upload`. VRChat's record reads
+  back with the source link, both required tags and public visibility, and
+  the uploaded bundle, opened again in the editor, renders correctly with
+  both UV channels intact.
+- Headless tests: 19 for the avatar's core logic, 18 for the thumbnail
   composer, and each submodule's own suite.
 
 Not checked, because only the client can:

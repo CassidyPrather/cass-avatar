@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.18346186, g: 0.22903746, b: 0.30586788, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1124,6 +1124,50 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!1 &918876663
+GameObject:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 918876665}
+  - component: {fileID: 918876664}
+  m_Layer: 0
+  m_Name: nadena.dev.ndmf__Activator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &918876664
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 918876663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c432a5ed00a04259997c23712bcf2186, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &918876665
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 918876663}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &949524913
 GameObject:
   m_ObjectHideFlags: 0
@@ -1219,6 +1263,84 @@ MonoBehaviour:
   ambient: {r: 1.2, g: 1.2, b: 1.2, a: 1}
   looksFor: A badly lit world several times too bright. The avatar should not blow
     out to white.
+--- !u!1001 &1017327460
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4962567161519773591, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: unityVersion
+      value: 2022.3.22f1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6890539281253530657, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: blueprintId
+      value: avtr_83eafc89-950e-4553-bb36-c37238333069
+      objectReference: {fileID: 0}
+    - target: {fileID: 8317110327304041845, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_Name
+      value: cass
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2249dc0c412158a419be7e38dbde81a0, type: 3}
 --- !u!1 &1080027552
 GameObject:
   m_ObjectHideFlags: 0
@@ -2683,3 +2805,5 @@ SceneRoots:
   - {fileID: 949524914}
   - {fileID: 1791180097}
   - {fileID: 550529958}
+  - {fileID: 918876665}
+  - {fileID: 1017327460}

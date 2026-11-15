@@ -7,7 +7,10 @@
 #   scripts/cass.sh report [slug]     the same build, as JSON in dist/build-report/
 #   scripts/cass.sh sheets [slug]     contact sheets in dist/validation/<slug>/
 #   scripts/cass.sh preview [slug]    what an upload would send to VRChat
-#   scripts/cass.sh upload [slug]     build and upload (SDK panel open and signed in)
+#   scripts/cass.sh upload [slug]     build and upload (signed in through the SDK panel)
+#   scripts/cass.sh live [slug]       what VRChat holds for an uploaded variant
+#   scripts/cass.sh publish [slug]    send name, description, tags and visibility only
+#   scripts/cass.sh bundle            inspect the bundle the SDK built last (what VRChat got)
 #   scripts/cass.sh all               export, rebuild, then verify every variant
 #
 # slug defaults to "cass"; variants are listed in Packages/net.wirenook.cass/Spec/variants.json.
@@ -50,6 +53,15 @@ case "$command" in
         # Uploads take as long as the build plus the network; do not give up early.
         unity --timeout 3600 invoke Wirenook.Cass.Editor.CassUpload.Upload "$slug"
         ;;
+    live)
+        unity invoke Wirenook.Cass.Editor.CassUpload.Live "$slug"
+        ;;
+    publish)
+        unity invoke Wirenook.Cass.Editor.CassUpload.Publish "$slug"
+        ;;
+    bundle)
+        unity invoke Wirenook.Validation.Editor.BundleProbe.InspectLatest
+        ;;
     all)
         "$0" export
         "$0" rebuild
@@ -58,7 +70,7 @@ case "$command" in
         done
         ;;
     *)
-        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
         exit 2
         ;;
 esac
