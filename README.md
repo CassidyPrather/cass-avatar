@@ -93,6 +93,7 @@ scripts/cass.sh sheets cass       # contact sheets in dist/validation/cass/
 scripts/cass.sh preview cass      # what an upload would send to VRChat
 scripts/cass.sh platform android  # switch the editor to pc, android or ios
 scripts/cass.sh upload cass       # build and upload for the editor's platform
+scripts/cass.sh upload '.*' all   # every variant (a regex over slugs) for every platform
 scripts/cass.sh live cass         # what VRChat holds for the uploaded variant
 scripts/cass.sh publish cass      # send name, description, tags, visibility only
 scripts/cass.sh bundle            # inspect the bundle the SDK built last

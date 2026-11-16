@@ -9,13 +9,17 @@
 #   scripts/cass.sh sheets [slug] [platform]   contact sheets in dist/validation/<slug>/
 #   scripts/cass.sh preview [slug]    what an upload would send to VRChat
 #   scripts/cass.sh platform [name]   show, or switch, the platform the editor builds for
-#   scripts/cass.sh upload [slug]     build and upload for that platform (signed in through the SDK panel)
+#   scripts/cass.sh upload [slugs] [platforms]   build and upload (signed in through the SDK panel)
 #   scripts/cass.sh live [slug]       what VRChat holds for an uploaded variant
 #   scripts/cass.sh publish [slug]    send name, description, tags and visibility only
 #   scripts/cass.sh bundle            inspect the bundle the SDK built last (what VRChat got)
 #   scripts/cass.sh all               export, rebuild, then verify every variant on every platform
 #
 # slug defaults to "cass"; variants are listed in Packages/net.wirenook.cass/Spec/variants.json.
+# upload takes a regular expression that has to match a whole slug, so "cass" is one variant,
+# "cass-(adv|lite)" two and ".*" all of them. Without platforms it uploads for the platform the
+# editor is on; with a comma-separated list (pc,android,ios) or "all" it switches the editor to
+# each in turn and back again afterwards.
 # platform is pc, android or ios. Given to verify, report or sheets, the build
 # is made as that platform's would be without switching the editor to it.
 set -euo pipefail
@@ -42,6 +46,26 @@ as_platform() {
     "$@" || status=$?
     unity invoke Wirenook.Assets.Editor.WirenookPlatform.Pretend "" > /dev/null
     return $status
+}
+
+# The variants whose whole slug matches a regular expression, in the order the spec lists them.
+matching() {
+    python -c 'import json, re, sys; print(" ".join(v["slug"] for v in json.load(open("Packages/net.wirenook.cass/Spec/variants.json", encoding="utf-8"))["variants"] if re.fullmatch(sys.argv[1], v["slug"])))' "$1"
+}
+
+upload_matching() {
+    local found
+    found=$(matching "$1")
+    if [ -z "$found" ]; then
+        echo "cass.sh: no variant matches \"$1\"; there are: $(variants)" >&2
+        return 2
+    fi
+    local failed=0
+    for variant in $found; do
+        # Uploads take as long as the build plus the network; do not give up early.
+        unity --timeout 3600 invoke Wirenook.Cass.Editor.CassUpload.Upload "$variant" || failed=1
+    done
+    return $failed
 }
 
 verify() {
@@ -90,8 +114,20 @@ case "$command" in
         unity invoke Wirenook.Cass.Editor.CassUpload.Preview "$slug"
         ;;
     upload)
-        # Uploads take as long as the build plus the network; do not give up early.
-        unity --timeout 3600 invoke Wirenook.Cass.Editor.CassUpload.Upload "$slug"
+        if [ -z "$platform" ]; then
+            upload_matching "$slug"
+        else
+            [ "$platform" = "all" ] && platform="pc,android,ios"
+            before=$(unity invoke Wirenook.Assets.Editor.WirenookPlatform.Show | tail -1)
+            status=0
+            for target in ${platform//,/ }; do
+                "$0" platform "$target" > /dev/null
+                echo "== $target =="
+                upload_matching "$slug" || status=$?
+            done
+            "$0" platform "$before" > /dev/null
+            exit $status
+        fi
         ;;
     live)
         unity invoke Wirenook.Cass.Editor.CassUpload.Live "$slug"
@@ -112,7 +148,7 @@ case "$command" in
         done
         ;;
     *)
-        sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
         exit 2
         ;;
 esac
