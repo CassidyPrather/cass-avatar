@@ -196,8 +196,10 @@ def build_tail(ctx):
     for fraction, lean, width in TAIL_TUFTS:
         i = min(segments - 1, int(round(fraction * segments)))
         sideways = across[i] * lean if lean else outward[i]
-        start = path[i] + sideways * (radii[i] * 0.7)
-        reach = sideways * 0.022 + tangent[i] * 0.036
+        # Every tuft roots inside the tail. The tail is thinner than it is wide, so the one on
+        # top starts much nearer the centre line than the ones at the sides, and lies flatter.
+        start = path[i] + sideways * (radii[i] * (0.7 if lean else 0.25))
+        reach = sideways * (0.022 if lean else 0.010) + tangent[i] * 0.036
         sweep.strand(part, [start, start + reach * 0.55 + tangent[i] * 0.006, start + reach], [width, width * 0.75, 0.002], 0.7,
                      2, level, "hair-shade" if not lean else "hair", "ear-fur", facing=outward[i])
     obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=50.0)
