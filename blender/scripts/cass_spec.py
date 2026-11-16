@@ -14,8 +14,23 @@ PACKAGE = REPO / "Packages" / "net.wirenook.cass"
 SPEC_DIR = PACKAGE / "Spec"
 PALETTE_JSON = PACKAGE / "Textures" / "cass-palette.json"
 PALETTE_PNG = PACKAGE / "Textures" / "cass-palette.png"
+# The texture the model wears: the painted face plus the palette, baked by build_cass.py.
+ATLAS_JSON = PACKAGE / "Textures" / "cass-atlas.json"
+ATLAS_PNG = PACKAGE / "Textures" / "cass-atlas.png"
 BLEND_PATH = REPO / "blender" / "cass.blend"
+SOURCES_DIR = REPO / "blender" / "sources"
 FBX_PATH = PACKAGE / "BlenderExports" / "cass.fbx"
+
+# Fidelity levels. Both are built by the same generator from the same sources
+# and share one skeleton; `lite` uses the body base's low-polygon mesh and
+# coarser modelled parts, for mobile builds and the optimised PC variant.
+LEVELS = {
+    "full": {"blend": BLEND_PATH, "fbx": FBX_PATH, "max_triangles": 70000},
+    "lite": {"blend": REPO / "blender" / "cass-lite.blend", "fbx": PACKAGE / "BlenderExports" / "cass-lite.fbx",
+             # Before the build removes the skin under the outfit; VRChat's mobile Medium is 15,000 after it.
+             "max_triangles": 16000},
+}
+LEVEL_PROP = "wirenook_level"
 
 EXPORT_COLLECTION = "Export"
 MATERIAL_NAME = "cass"
@@ -23,8 +38,8 @@ UV_PALETTE = "UVMap"
 UV_TILE = "Tile"
 # Scene property marking a .blend as generator output that is safe to
 # regenerate; the digest detects hand edits made without clearing the flag.
-PLACEHOLDER_PROP = "wirenook_placeholder"
-PLACEHOLDER_DIGEST_PROP = "wirenook_placeholder_digest"
+GENERATED_PROP = "wirenook_generated"
+GENERATED_DIGEST_PROP = "wirenook_generated_digest"
 
 # Unity lets these humanoid bones be absent; a child then hangs off the
 # nearest mapped ancestor. Order is child -> canonical parent.
@@ -52,8 +67,8 @@ HUMANOID_REQUIRED = (
     "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot",
 )
 
-MAX_BONES = 75
-MAX_TRIANGLES = 32000
+# VRChat ranks an avatar Good on mobile up to 90 bones, and Excellent on PC up to 75.
+MAX_BONES = 90
 MAX_INFLUENCES = 4
 
 
@@ -63,7 +78,7 @@ def _load(path):
 
 def load_palette():
     """Swatch name -> (u, v) of the cell centre."""
-    return {name: tuple(entry["uv"]) for name, entry in _load(PALETTE_JSON)["swatches"].items()}
+    return {name: tuple(entry["uv"]) for name, entry in _load(ATLAS_JSON)["swatches"].items()}
 
 
 def load_tiles():

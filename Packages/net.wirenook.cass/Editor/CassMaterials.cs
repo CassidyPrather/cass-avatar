@@ -4,11 +4,15 @@ using Wirenook.Assets.Editor;
 
 namespace Wirenook.Cass.Editor
 {
-    /// <summary>Generates the avatar's materials from the palette and the tile layout.</summary>
+    /// <summary>Generates the avatar's materials from its texture atlas and the tile layout.</summary>
     public static class CassMaterials
     {
         public const string Folder = CassSpec.Package + "/Materials";
-        public const string PalettePath = CassSpec.Package + "/Textures/cass-palette.png";
+        /// <summary>
+        /// The one texture the model wears: the painted face and the flat
+        /// swatches of the palette, baked together by blender/scripts/build_cass.py.
+        /// </summary>
+        public const string AtlasPath = CassSpec.Package + "/Textures/cass-atlas.png";
 
         /// <summary>Where the generated material for a Blender material name lives.</summary>
         public static string PathFor(string blenderMaterialName)
@@ -20,14 +24,14 @@ namespace Wirenook.Cass.Editor
 
         public static void Rebuild()
         {
-            var palette = AssetDatabase.LoadAssetAtPath<Texture2D>(PalettePath);
-            if (palette == null)
-                throw new System.IO.FileNotFoundException("Bake the palette first (see README): " + PalettePath);
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
+            if (atlas == null)
+                throw new System.IO.FileNotFoundException("Build the model first (scripts/blender-build.sh bakes the atlas): " + AtlasPath);
 
             var material = AssetFolders.LoadOrCreate(PathFor("cass"), () => new Material(Shader.Find(ToonMaterial.ShaderName)));
-            // Double-sided while the model is a placeholder built from single
-            // sheets; a closed hand-made mesh should turn this off again.
-            ToonMaterial.Configure(material, palette, null, doubleSided: true);
+            // Double-sided: hair strands, the hat's brim and the open ends of
+            // garments are single sheets that are seen from both sides.
+            ToonMaterial.Configure(material, atlas, null, doubleSided: true);
 
             // Bake the resting look into the asset, so the avatar is dressed in
             // the editor and on the first frame, before any animator has run.

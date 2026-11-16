@@ -18,6 +18,22 @@ namespace Wirenook.Cass.Core
 
         /// <summary>Discard tiles the expression flips: true shows, false hides.</summary>
         public Dictionary<string, bool> Tiles = new Dictionary<string, bool>();
+
+        /// <summary>Name of the bone pose (ears, tail) held with the expression; null leaves them at rest.</summary>
+        public string Pose;
+    }
+
+    /// <summary>
+    /// How far one bone turns in a pose, in degrees about the avatar's own
+    /// axes rather than the bone's: <see cref="Forward"/> tips it towards
+    /// the way the avatar faces, <see cref="Out"/> leans it away from the
+    /// middle of the body, <see cref="Twist"/> turns it about the vertical.
+    /// </summary>
+    public struct BoneTurn
+    {
+        public float Forward;
+        public float Out;
+        public float Twist;
     }
 
     public enum Hand
@@ -41,6 +57,13 @@ namespace Wirenook.Cass.Core
         public Dictionary<int, string> Left = new Dictionary<int, string>();
         public Dictionary<int, string> Right = new Dictionary<int, string>();
         public Dictionary<string, Expression> Expressions = new Dictionary<string, Expression>();
+
+        /// <summary>
+        /// Bone poses by name. Each maps a bone to its turn; a name without a
+        /// side suffix (<c>Ear2</c>) stands for the <c>.L</c> and <c>.R</c>
+        /// bones, mirrored.
+        /// </summary>
+        public Dictionary<string, Dictionary<string, BoneTurn>> Poses = new Dictionary<string, Dictionary<string, BoneTurn>>();
 
         public Dictionary<int, string> For(Hand hand) => hand == Hand.Left ? Left : Right;
 
@@ -80,6 +103,43 @@ namespace Wirenook.Cass.Core
                 .ToList();
         }
 
+        /// <summary>
+        /// The pose held for a pair of gesture values. As with the face, the
+        /// right hand wins: its expression's pose if it has one, otherwise
+        /// the left hand's. Null means rest.
+        /// </summary>
+        public string PoseFor(int left, int right)
+        {
+            foreach (var (hand, value) in new[] { (Hand.Right, right), (Hand.Left, left) })
+            {
+                if (For(hand).TryGetValue(value, out var id) && Expressions.TryGetValue(id, out var expression) &&
+                    expression.Pose != null)
+                    return expression.Pose;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// A pose's turns with the unsided names expanded to both sides. Both
+        /// sides get the same turn; "away from the middle" is the opposite
+        /// rotation on each side, which is for whoever applies it to work out
+        /// from where the bone is. A sided entry overrides an unsided one.
+        /// </summary>
+        /// <param name="isBone">Whether a name is a bone of the skeleton as it stands.</param>
+        public Dictionary<string, BoneTurn> ExpandPose(string pose, Func<string, bool> isBone)
+        {
+            var expanded = new Dictionary<string, BoneTurn>();
+            foreach (var pair in Poses[pose].Where(pair => !isBone(pair.Key)))
+            {
+                expanded[pair.Key + ".L"] = pair.Value;
+                expanded[pair.Key + ".R"] = pair.Value;
+            }
+
+            foreach (var pair in Poses[pose].Where(pair => isBone(pair.Key))) expanded[pair.Key] = pair.Value;
+            return expanded;
+        }
+
         /// <returns>One sentence per problem; empty when the table is usable.</returns>
         public List<string> Validate(ICollection<string> knownShapes, ICollection<string> knownTiles)
         {
@@ -114,6 +174,9 @@ namespace Wirenook.Cass.Core
                     if (!knownTiles.Contains(tile))
                         problems.Add("Expression " + expression.Id + " flips the tile \"" + tile + "\", which uv-tiles.json does not define.");
                 }
+
+                if (expression.Pose != null && !Poses.ContainsKey(expression.Pose))
+                    problems.Add("Expression " + expression.Id + " holds the pose \"" + expression.Pose + "\", which gestures.json does not define.");
             }
 
             return problems;

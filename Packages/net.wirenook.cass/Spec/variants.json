@@ -1,6 +1,6 @@
 {
-  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. Features that cannot work on mobile say so themselves and are left out of those builds.",
-  "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar",
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. Features that cannot work on mobile say so themselves and are left out of those builds.",
+  "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.",
   "variants": [
     {
       "slug": "cass",
@@ -9,6 +9,15 @@
       "features": [
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Locomotion.prefab"
       ],
+      "worstRankMobile": "Medium"
+    },
+    {
+      "slug": "cass-lite",
+      "extends": "cass",
+      "model": "lite",
+      "about": "The everyday build from the low-polygon model, for PC as well: the same avatar and features at well under half the triangles.",
+      "worstRank": "Good",
+      "features": [],
       "worstRankMobile": "Medium"
     },
     {

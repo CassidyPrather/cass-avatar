@@ -3,10 +3,10 @@
     blender -b --factory-startup blender/cass.blend --python blender/scripts/validate.py
 
 Exits non-zero when any error is found. Also importable: `validate()` returns
-a Report for the currently open file (export.py and the placeholder generator
-both gate on it). The checks only assume the contracts in blender/README.md,
-never how the placeholder happens to be built, so they hold for hand-made
-content too.
+a Report for the currently open file (export.py and build_cass.py both gate
+on it). The checks only assume the contracts in blender/README.md, never how
+the generator happens to build the model, so they hold for hand-made content
+too.
 """
 
 import sys
@@ -221,7 +221,7 @@ def check_shape_keys(report, blendshapes, body, tile_ids):
         report.warn(f"shape keys left at a non-zero value (the FBX would carry it): {_few(active)}")
 
 
-def check_uvs(report, obj, palette, tiles):
+def check_uvs(report, obj, tiles):
     """Checks both UV layers; returns the tile id of each polygon (None where invalid), or None."""
     mesh = obj.data
     names = [layer.name for layer in mesh.uv_layers]
@@ -243,16 +243,13 @@ def check_uvs(report, obj, palette, tiles):
         mesh.uv_layers[name].data.foreach_get("uv", data)
         return data.reshape(-1, 2).astype(np.float64)
 
-    swatch_uv = layer_uv(cass_spec.UV_PALETTE)
-    first = swatch_uv[starts]
-    spread = np.zeros(len(mesh.polygons))
-    np.maximum.at(spread, polygon_of_loop, np.abs(swatch_uv - first[polygon_of_loop]).max(axis=1))
-    centres = np.array(list(palette.values()))
-    nearest = np.abs(first[:, None, :] - centres[None, :, :]).max(axis=2).min(axis=1)
-    bad = np.flatnonzero((spread > UV_TOLERANCE) | (nearest > UV_TOLERANCE))
+    # Colour comes from the atlas: flat faces sit on a swatch, painted ones span their artwork.
+    # Either way the texture is not tiled, so nothing may leave the unit square.
+    colour_uv = layer_uv(cass_spec.UV_PALETTE)
+    outside = ((colour_uv < -UV_TOLERANCE) | (colour_uv > 1.0 + UV_TOLERANCE)).any(axis=1)
+    bad = np.unique(polygon_of_loop[outside])
     if bad.size:
-        report.error(f"{obj.name}: {bad.size} face(s) whose '{cass_spec.UV_PALETTE}' loops are not all on one palette swatch centre "
-                     f"(faces {_few(bad)})")
+        report.error(f"{obj.name}: {bad.size} face(s) whose '{cass_spec.UV_PALETTE}' loops leave the 0..1 square (faces {_few(bad)})")
 
     tile_uv = layer_uv(cass_spec.UV_TILE)
     cell = np.floor(tile_uv)
@@ -313,13 +310,15 @@ def check_materials(report, meshes):
 
 
 def check_budget(report, meshes):
+    level = bpy.context.scene.get(cass_spec.LEVEL_PROP, "full")
+    limit = cass_spec.LEVELS[level]["max_triangles"]
     counts = {obj.name: triangle_count(obj.data) for obj in meshes}
     total = sum(counts.values())
-    report.note(f"Triangles: {total} (limit {cass_spec.MAX_TRIANGLES})")
+    report.note(f"Triangles: {total} (limit {limit} for the {level} level)")
     for name, count in counts.items():
         report.note(f"  {name}: {count}")
-    if total > cass_spec.MAX_TRIANGLES:
-        report.error(f"{total} triangles exceed the limit of {cass_spec.MAX_TRIANGLES}")
+    if total > limit:
+        report.error(f"{total} triangles exceed the limit of {limit}")
     lowest = min((v.co.z for obj in meshes for v in obj.data.vertices), default=0.0)
     if abs(lowest) > 0.01:
         report.warn(f"the lowest vertex is at Z={lowest:.3f}; the character should stand on Z=0")
@@ -330,7 +329,7 @@ def validate():
     report = Report(bpy.data.filepath or "(unsaved scene)")
     skeleton = cass_spec.load_skeleton()
     blendshapes = cass_spec.load_blendshapes()
-    palette, tiles = cass_spec.load_palette(), cass_spec.load_tiles()
+    tiles = cass_spec.load_tiles()
 
     armature, meshes = check_collection(report, skeleton, blendshapes["mesh"])
     report.note("Objects: " + ", ".join([armature.name] if armature else []) + "".join(f", {m.name}" for m in meshes))
@@ -338,7 +337,7 @@ def validate():
         check_skeleton(report, skeleton, armature)
     tile_ids = {}
     for obj in meshes:
-        tile_ids[obj.name] = check_uvs(report, obj, palette, tiles)
+        tile_ids[obj.name] = check_uvs(report, obj, tiles)
         if armature is not None:
             check_weights(report, obj, armature)
     body = next((m for m in meshes if m.name == blendshapes["mesh"]), None)

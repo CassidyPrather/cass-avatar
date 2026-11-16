@@ -1,7 +1,10 @@
-# Cass's flat colours as a swatch texture, sampled from ref/. Baked by
-# modules/wirenook-assets/tools/palette.py; the placeholder model maps every
-# face onto one of these cells. Painted detail (face, embroidery, gingham)
-# will want real textures later; the flat fills can stay here.
+# Cass's flat colours, sampled from ref/. Baked into a swatch texture by
+# modules/wirenook-assets/tools/palette.py, which the model build
+# (blender/scripts/build_cass.py) then copies into Textures/cass-atlas.png
+# beside the painted face. Every flat-coloured face of the model maps onto
+# one of these cells. The `skin` cell is replaced in the atlas by the face
+# texture's own skin tone; a few early swatches (mouth, iris, lash) are no
+# longer used now that the face is painted.
 columns = 8
 cell = 16
 
@@ -36,4 +39,10 @@ swatches = [
 [[row]]
 swatches = [
   ["tear", "#8fd0ff"], ["star", "#ffd84a"],
+]
+
+# Outfit trim.
+[[row]]
+swatches = [
+  ["sweater-stripe", "#5f8fd0"],
 ]

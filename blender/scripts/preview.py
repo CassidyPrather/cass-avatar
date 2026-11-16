@@ -8,6 +8,7 @@
     --pose test                            rotate arm, leg, finger and ear bones to exercise the skinning
     --bare                                 leave the garments out and show the skin zones they hide
     --tiles ID=0,ID=1                      override the default shown state of discard tiles
+    --shot NAME:CX,CY,CZ:DX,DY,DZ:H        an extra view: centre, direction the camera looks from, frame height (repeatable)
     --tag TEXT                             appended to the output file names
     --size N                               image height in pixels (default 1000)
 
@@ -63,6 +64,7 @@ def parse_args():
     parser.add_argument("--pose", choices=["test"])
     parser.add_argument("--bare", action="store_true")
     parser.add_argument("--tiles", default="")
+    parser.add_argument("--shot", action="append", default=[])
     parser.add_argument("--tag", default="")
     parser.add_argument("--size", type=int, default=1000)
     return parser.parse_args(argv)
@@ -218,6 +220,12 @@ def main():
             aspect = (0.8 if args.pose else 0.5) if view == "side" else 1.0
             aim(camera, BODY_VIEWS[view], centre, height, aspect, args.size)
         render(out / f"{view}{tag}.png")
+
+    for shot in args.shot:
+        name, centre, direction, height = shot.split(":")
+        aim(camera, Vector([float(c) for c in direction.split(",")]), Vector([float(c) for c in centre.split(",")]),
+            float(height), 1.0, args.size)
+        render(out / f"{name}{tag}.png")
 
     names = [b.name for b in key_blocks()[1:]] if args.each_key == "all" else list(filter(None, args.each_key.split(",")))
     if names:

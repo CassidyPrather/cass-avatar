@@ -51,13 +51,13 @@ def content_digest():
 
 
 def stamp(scene):
-    scene[cass_spec.PLACEHOLDER_PROP] = True
-    scene[cass_spec.PLACEHOLDER_DIGEST_PROP] = content_digest()
+    scene[cass_spec.GENERATED_PROP] = True
+    scene[cass_spec.GENERATED_DIGEST_PROP] = content_digest()
 
 
-def is_untouched_placeholder():
+def is_untouched():
     """True when the open file is generator output nobody has modelled in."""
     for scene in bpy.data.scenes:
-        if scene.get(cass_spec.PLACEHOLDER_PROP) and scene.get(cass_spec.PLACEHOLDER_DIGEST_PROP) == content_digest():
+        if scene.get(cass_spec.GENERATED_PROP) and scene.get(cass_spec.GENERATED_DIGEST_PROP) == content_digest():
             return True
     return False

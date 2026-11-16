@@ -1,5 +1,5 @@
 {
-  "$comment": "Cassidy's learned gesture layout. Each hand picks one expression; the right hand's layer sits above the left's, so where both touch the same blendshape the right hand wins. `shapes` are blendshape weights (0-100) from blendshapes.json; a trailing * expands to the Left and Right pair. `owns` lists the face regions the expression takes away from face tracking while it is held: with tracking live, shapes in regions it does not own are left to the tracker, so a tracked mouth keeps talking under closed gesture eyes. `tiles` flips UV discard tiles from uv-tiles.json (true = shown).",
+  "$comment": "Cassidy's learned gesture layout. Each hand picks one expression; the right hand's layer sits above the left's, so where both touch the same blendshape the right hand wins. `shapes` are blendshape weights (0-100) from blendshapes.json; a trailing * expands to the Left and Right pair. `owns` lists the face regions the expression takes away from face tracking while it is held: with tracking live, shapes in regions it does not own are left to the tracker, so a tracked mouth keeps talking under closed gesture eyes. `tiles` flips UV discard tiles from uv-tiles.json (true = shown). `pose` names an entry of `poses`, held by the ears (and any other extra bone) with the expression. A pose lists, per bone, [forward, out, twist] in degrees about the avatar's own axes: tipped towards the way it faces, leant away from the middle of the body, turned about the vertical. A bone name without .L or .R stands for both sides, mirrored. The ears pass through the hat's brim just above their roots, so poses bend them at Ear2 and Ear3 and barely move Ear1.",
   "gestureValues": {
     "neutral": 0,
     "fist": 1,
@@ -32,73 +32,96 @@
     "sleepy_content": {
       "label": "Sleepy Content",
       "owns": ["eyes"],
-      "shapes": { "なごみ": 100, "MouthCornerPull*": 35, "BrowInnerUp*": 15 }
+      "shapes": { "なごみ": 100, "MouthCornerPull*": 35, "BrowInnerUp*": 15 },
+      "pose": "relaxed"
     },
     "sleepy_sad": {
       "label": "Sleepy Sad",
       "owns": ["eyes", "brows"],
-      "shapes": { "まばたき": 100, "困る": 80, "MouthFrown*": 55, "MouthRaiserLower": 30 }
+      "shapes": { "まばたき": 100, "困る": 80, "MouthFrown*": 55, "MouthRaiserLower": 30 },
+      "pose": "droop"
     },
     "flummoxed": {
       "label": "Flummoxed",
       "owns": ["eyes", "brows"],
-      "shapes": { "はぅ": 100, "困る": 60, "MouthStretch*": 60, "JawOpen": 12, "照れ": 60 }
+      "shapes": { "はぅ": 100, "困る": 60, "MouthStretch*": 60, "JawOpen": 12, "照れ": 60 },
+      "pose": "back"
     },
     "afraid": {
       "label": "Afraid",
       "owns": ["eyes", "brows"],
       "shapes": { "びっくり": 60, "困る": 100, "JawOpen": 30, "MouthStretch*": 70, "MouthFrown*": 40 },
-      "tiles": { "face.eyes": false, "face.eyes_scribble": true }
+      "tiles": { "face.eyes": false, "face.eyes_scribble": true },
+      "pose": "back"
     },
     "angry": {
       "label": "Angry",
       "owns": ["brows"],
-      "shapes": { "怒り": 100, "EyeSquint*": 45, "NoseSneer*": 60, "MouthFrown*": 60, "MouthPress*": 40 }
+      "shapes": { "怒り": 100, "EyeSquint*": 45, "NoseSneer*": 60, "MouthFrown*": 60, "MouthPress*": 40 },
+      "pose": "back"
     },
     "hungry": {
       "label": "Hungry",
       "owns": [],
-      "shapes": { "JawOpen": 25, "TongueOut": 60, "MouthCornerPull*": 40, "EyeWide*": 30 }
+      "shapes": { "JawOpen": 25, "TongueOut": 60, "MouthCornerPull*": 40, "EyeWide*": 30 },
+      "pose": "perked"
     },
     "heart_eyes": {
       "label": "Heart Eyes",
       "owns": ["eyes"],
-      "shapes": { "はぁと": 100, "EyeWide*": 40, "MouthCornerPull*": 70, "照れ": 80 }
+      "shapes": { "はぁと": 100, "EyeWide*": 40, "MouthCornerPull*": 70, "照れ": 80 },
+      "pose": "spread"
     },
     "happy": {
       "label": "Happy",
       "owns": ["eyes"],
-      "shapes": { "笑い": 100, "MouthCornerPull*": 85, "CheekSquint*": 50, "JawOpen": 10 }
+      "shapes": { "笑い": 100, "MouthCornerPull*": 85, "CheekSquint*": 50, "JawOpen": 10 },
+      "pose": "perked"
     },
     "sleepy_happy": {
       "label": "Sleepy Happy",
       "owns": ["eyes"],
-      "shapes": { "まばたき": 100, "MouthCornerPull*": 70, "JawOpen": 15, "BrowOuterUp*": 30 }
+      "shapes": { "まばたき": 100, "MouthCornerPull*": 70, "JawOpen": 15, "BrowOuterUp*": 30 },
+      "pose": "relaxed"
     },
     "excited": {
       "label": "Excited",
       "owns": ["brows"],
-      "shapes": { "上": 80, "EyeWide*": 80, "JawOpen": 50, "MouthCornerPull*": 90, "MouthUpperUp*": 30 }
+      "shapes": { "上": 80, "EyeWide*": 80, "JawOpen": 50, "MouthCornerPull*": 90, "MouthUpperUp*": 30 },
+      "pose": "spread"
     },
     "sad": {
       "label": "Sad",
       "owns": ["brows"],
-      "shapes": { "困る": 100, "EyeSquint*": 20, "MouthFrown*": 80, "MouthRaiserLower": 40 }
+      "shapes": { "困る": 100, "EyeSquint*": 20, "MouthFrown*": 80, "MouthRaiserLower": 40 },
+      "pose": "droop"
     },
     "smug": {
       "label": "Smug",
       "owns": ["eyes", "brows"],
-      "shapes": { "じと目": 70, "真面目": 40, "MouthCornerPullLeft": 75, "MouthDimpleLeft": 40, "MouthPressRight": 20 }
+      "shapes": { "じと目": 70, "真面目": 40, "MouthCornerPullLeft": 75, "MouthDimpleLeft": 40, "MouthPressRight": 20 },
+      "pose": "cocked-left"
     },
     "wink_1": {
       "label": "Wink 1",
       "owns": ["eyes"],
-      "shapes": { "ウィンク": 100, "MouthCornerPull*": 70, "CheekSquintLeft": 50 }
+      "shapes": { "ウィンク": 100, "MouthCornerPull*": 70, "CheekSquintLeft": 50 },
+      "pose": "cocked-left"
     },
     "wink_2": {
       "label": "Wink 2",
       "owns": ["eyes"],
-      "shapes": { "ｳｨﾝｸ２右": 100, "TongueOut": 50, "MouthCornerPull*": 50, "JawOpen": 12 }
+      "shapes": { "ｳｨﾝｸ２右": 100, "TongueOut": 50, "MouthCornerPull*": 50, "JawOpen": 12 },
+      "pose": "cocked-right"
     }
+  },
+  "poses": {
+    "perked": { "Ear1": [3, -3, 0], "Ear2": [6, -4, 0], "Ear3": [2, 0, 0] },
+    "spread": { "Ear1": [4, 5, 0], "Ear2": [8, 12, 0], "Ear3": [4, 6, 0], "Tail1": [14, 0, 0] },
+    "relaxed": { "Ear1": [0, 5, 0], "Ear2": [-8, 28, 0], "Ear3": [0, 20, 0] },
+    "droop": { "Ear1": [0, 7, 0], "Ear2": [-10, 58, 0], "Ear3": [-5, 34, 0], "Tail1": [-18, 0, 0] },
+    "back": { "Ear1": [-10, 4, 0], "Ear2": [-52, 10, 0], "Ear3": [-24, 0, 0], "Tail1": [-10, 0, 0] },
+    "cocked-left": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.L": [68, 6, 0], "Ear3.L": [44, 0, 0] },
+    "cocked-right": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.R": [68, 6, 0], "Ear3.R": [44, 0, 0] }
   }
 }

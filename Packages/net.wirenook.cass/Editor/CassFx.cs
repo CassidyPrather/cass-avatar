@@ -34,6 +34,9 @@ namespace Wirenook.Cass.Editor
 
         private const float ExpressionFade = 0.1f;
 
+        /// <summary>Ears move slower than a face; they have further to go.</summary>
+        private const float PoseFade = 0.18f;
+
         /// <summary>How fast a tracked region is handed over, in set weight per second.</summary>
         private const float HandoverSpeed = 10f;
 
@@ -59,6 +62,7 @@ namespace Wirenook.Cass.Editor
             foreach (var region in GestureLayout.TrackedRegions) HandoverLayer(fx, region, gestures);
             BlinkLayer(fx, shapes.Mesh, gestures);
             OutfitLayers(fx, tiles, renderers);
+            PoseLayer(fx, gestures);
 
             fx.Save();
         }
@@ -247,6 +251,91 @@ namespace Wirenook.Cass.Editor
             resume.Or().IfFalse(UserFaceTracking).IfFalse(UserEyeTracking);
             foreach (var gesture in left) resume.NotEqual("GestureLeft", gesture);
             foreach (var gesture in right) resume.NotEqual("GestureRight", gesture);
+        }
+
+        /// <summary>
+        /// Ears and tail follow the hand gestures too, as bone poses from
+        /// gestures.json. They get a layer of their own rather than riding
+        /// in the expression clips: the two gesture layers are the ones MMD
+        /// worlds silence, and with one layer per hand a neutral right hand
+        /// would write the rest pose over whatever the left hand asked for.
+        /// Here one state machine reads both hands and the right hand wins
+        /// only when its expression has a pose.
+        ///
+        /// A pose is stored per bone as a turn about the avatar's axes; it
+        /// is converted here to the local rotation each bone needs, measured
+        /// on the model at rest. The PhysBones on these chains are marked as
+        /// animated, so physics swings around the pose instead of the rest.
+        /// </summary>
+        private static void PoseLayer(ControllerBuilder fx, GestureLayout gestures)
+        {
+            if (gestures.Poses.Count == 0) return;
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(CassSpec.ModelPath);
+            if (model == null) throw new System.IO.FileNotFoundException("Export the model from Blender first: " + CassSpec.ModelPath);
+            var skeleton = CassSpec.Skeleton();
+
+            var turns = gestures.Poses.Keys.ToDictionary(pose => pose, pose => gestures.ExpandPose(pose, skeleton.IsExtra));
+            var transforms = model.GetComponentsInChildren<Transform>(true);
+            // Every clip writes every posed bone, so no pose can leave another's bones where they were.
+            var bones = turns.Values.SelectMany(pose => pose.Keys).Distinct().OrderBy(name => name)
+                .Select(name => transforms.FirstOrDefault(transform => transform.name == name) ??
+                                throw new InvalidOperationException("The model has no bone named \"" + name + "\"."))
+                .ToList();
+
+            AnimationClip Clip(string pose) => fx.Clip("pose " + (pose ?? "rest"), clip =>
+            {
+                foreach (var bone in bones)
+                {
+                    var turn = default(BoneTurn);
+                    if (pose != null) turns[pose].TryGetValue(bone.name, out turn);
+                    var rotation = Turned(model.transform, bone, turn);
+                    var path = AnimationUtility.CalculateTransformPath(bone, model.transform);
+                    clip.Constant(path, typeof(Transform), "m_LocalRotation.x", rotation.x)
+                        .Constant(path, typeof(Transform), "m_LocalRotation.y", rotation.y)
+                        .Constant(path, typeof(Transform), "m_LocalRotation.z", rotation.z)
+                        .Constant(path, typeof(Transform), "m_LocalRotation.w", rotation.w);
+                }
+            });
+
+            var layer = fx.Layer("Poses");
+            var rest = layer.State("Rest", Clip(null));
+            var states = gestures.Expressions.Values.Select(expression => expression.Pose).Where(pose => pose != null).Distinct()
+                .OrderBy(pose => pose).ToDictionary(pose => pose, pose => layer.State(pose, Clip(pose)));
+
+            for (var right = 0; right <= 7; right++)
+            {
+                // PoseFor ignores the left hand whenever the right one has a pose.
+                var decided = gestures.PoseFor(0, right);
+                if (decided != null && gestures.For(Hand.Right).ContainsKey(right) &&
+                    gestures.Expressions[gestures.For(Hand.Right)[right]].Pose != null)
+                {
+                    layer.Any(states[decided]).Fade(PoseFade).Equal("GestureRight", right);
+                    continue;
+                }
+
+                for (var left = 0; left <= 7; left++)
+                {
+                    var pose = gestures.PoseFor(left, right);
+                    layer.Any(pose == null ? rest : states[pose]).Fade(PoseFade)
+                        .Equal("GestureRight", right).Equal("GestureLeft", left);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The local rotation that turns a bone, from where it rests, about
+        /// the avatar's axes. "Out" leans away from the middle of the body,
+        /// so it and the twist change sign with the side the bone is on.
+        /// </summary>
+        private static Quaternion Turned(Transform root, Transform bone, BoneTurn turn)
+        {
+            // Unity avatars face +Z with their left at -X; a bone on the centre line counts as left.
+            var side = root.InverseTransformPoint(bone.position).x > 1e-4f ? -1f : 1f;
+            var delta = Quaternion.AngleAxis(turn.Twist * side, Vector3.up) *
+                        Quaternion.AngleAxis(turn.Out * side, Vector3.forward) *
+                        Quaternion.AngleAxis(turn.Forward, Vector3.right);
+            var rest = Quaternion.Inverse(root.rotation) * bone.rotation;
+            return bone.localRotation * (Quaternion.Inverse(rest) * delta * rest);
         }
 
         /// <summary>

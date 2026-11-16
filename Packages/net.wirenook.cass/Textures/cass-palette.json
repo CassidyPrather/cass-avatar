@@ -276,6 +276,14 @@
         0.4375
       ],
       "emissive": false
+    },
+    "sweater-stripe": {
+      "color": "#5f8fd0",
+      "uv": [
+        0.0625,
+        0.3125
+      ],
+      "emissive": false
     }
   }
 }

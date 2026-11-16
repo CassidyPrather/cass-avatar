@@ -48,23 +48,26 @@ namespace Wirenook.Validation.Editor
         // round toward +X. Heights are fractions of Height.
         private static readonly Shot[] Shots =
         {
-            new Shot("Front", 0.5f, 0f, 0f, 5.0f),
-            new Shot("Three-Quarter", 0.5f, 35f, 6f, 5.0f),
-            new Shot("Left", 0.5f, 90f, 0f, 5.0f),
-            new Shot("Three-Quarter Back", 0.5f, 145f, 6f, 5.0f),
-            new Shot("Back", 0.5f, 180f, 0f, 5.0f),
-            new Shot("Right", 0.5f, -90f, 0f, 5.0f),
-            new Shot("High", 0.5f, 25f, 50f, 5.2f),
-            new Shot("Low", 0.5f, 25f, -35f, 5.2f),
-            new Shot("Upper Body", 0.76f, 15f, 4f, 2.6f),
+            // Full-figure shots aim above the middle and stand back far
+            // enough to keep the ears and the hat in frame.
+            new Shot("Front", 0.57f, 0f, 0f, 5.6f),
+            new Shot("Three-Quarter", 0.57f, 35f, 6f, 5.6f),
+            new Shot("Left", 0.57f, 90f, 0f, 5.6f),
+            new Shot("Three-Quarter Back", 0.57f, 145f, 6f, 5.6f),
+            new Shot("Back", 0.57f, 180f, 0f, 5.6f),
+            new Shot("Right", 0.57f, -90f, 0f, 5.6f),
+            new Shot("High", 0.57f, 25f, 50f, 5.8f),
+            new Shot("Low", 0.57f, 25f, -35f, 5.8f),
+            new Shot("Upper Body", 0.80f, 15f, 4f, 3.1f),
             new Shot("Lower Body", 0.27f, 15f, 4f, 2.8f),
             new Shot("Feet", 0.06f, 30f, 25f, 1.5f),
-            new Shot("Face", 0.9f, 0f, 0f, 1.25f, 20f),
-            new Shot("Face Three-Quarter", 0.9f, 40f, 4f, 1.25f, 20f),
-            new Shot("Face Profile", 0.9f, 90f, 0f, 1.25f, 20f),
-            new Shot("Face From Below", 0.9f, 15f, -40f, 1.25f, 20f),
+            // The head is drawn large: about 0.3 m tall, wider with its hair.
+            new Shot("Face", 0.92f, 0f, 0f, 1.75f, 20f),
+            new Shot("Face Three-Quarter", 0.92f, 40f, 4f, 1.75f, 20f),
+            new Shot("Face Profile", 0.92f, 90f, 0f, 1.75f, 20f),
+            new Shot("Face From Below", 0.92f, 15f, -40f, 1.75f, 20f),
             // As close as a friend leaning in: checks near-plane clipping.
-            new Shot("Nose To Nose", 0.9f, 8f, 0f, 0.22f, 60f),
+            new Shot("Nose To Nose", 0.91f, 8f, 0f, 0.30f, 60f),
         };
 
         [MenuItem("Tools/Wirenook/Validation/Rebuild Scene")]

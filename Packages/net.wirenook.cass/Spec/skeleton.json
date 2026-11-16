@@ -1,5 +1,5 @@
 {
-  "$comment": "Bone contract for the shared armature: `humanoid` maps UnityEngine.HumanBodyBones names to the bone names in the exported FBX, `extra` lists the non-humanoid bones (ear physics chains) with their parents. Blender validates the armature against it on export; Unity configures the humanoid rig from it by name. The FBX rest pose is the T-pose.",
+  "$comment": "Bone contract for the shared armature: `humanoid` maps UnityEngine.HumanBodyBones names to the bone names in the exported FBX, `extra` lists the non-humanoid bones with their parents. Blender validates the armature against it on export; Unity configures the humanoid rig from it by name. The FBX rest pose is the T-pose. An extra bone with `twist` is a twist helper: Unity gives it a rotation constraint that follows `source` about the bone's own long axis at `weight` (the body base's own setup). An extra bone with `physics` is the root of a chain; the value names the PhysBone settings Unity gives it (see CassPrefabs).",
   "armature": "Armature",
   "humanoid": {
     "Hips": "Hips",
@@ -57,11 +57,30 @@
     "RightLittleDistal": "Little3.R"
   },
   "extra": [
-    { "name": "Ear1.L", "parent": "Head" },
+    { "name": "UpperArmTwist.L", "parent": "UpperArm.L", "twist": { "source": "LowerArm.L", "weight": 0.7 }
+    },
+    { "name": "LowerArmTwist.L", "parent": "LowerArm.L", "twist": { "source": "Hand.L", "weight": 0.5 }
+    },
+    { "name": "UpperArmTwist.R", "parent": "UpperArm.R", "twist": { "source": "LowerArm.R", "weight": 0.7 }
+    },
+    { "name": "LowerArmTwist.R", "parent": "LowerArm.R", "twist": { "source": "Hand.R", "weight": 0.5 }
+    },
+    { "name": "Ear1.L", "parent": "Head", "physics": "ears" },
     { "name": "Ear2.L", "parent": "Ear1.L" },
     { "name": "Ear3.L", "parent": "Ear2.L" },
-    { "name": "Ear1.R", "parent": "Head" },
+    { "name": "Ear1.R", "parent": "Head", "physics": "ears" },
     { "name": "Ear2.R", "parent": "Ear1.R" },
-    { "name": "Ear3.R", "parent": "Ear2.R" }
+    { "name": "Ear3.R", "parent": "Ear2.R" },
+    { "name": "Tail1", "parent": "Hips", "physics": "tail" },
+    { "name": "Tail2", "parent": "Tail1" },
+    { "name": "HairRoot", "parent": "Head", "physics": "hair" },
+    { "name": "HairSide1.L", "parent": "HairRoot" },
+    { "name": "HairSide2.L", "parent": "HairSide1.L" },
+    { "name": "HairSide1.R", "parent": "HairRoot" },
+    { "name": "HairSide2.R", "parent": "HairSide1.R" },
+    { "name": "HairBack1.L", "parent": "HairRoot" },
+    { "name": "HairBack2.L", "parent": "HairBack1.L" },
+    { "name": "HairBack1.R", "parent": "HairRoot" },
+    { "name": "HairBack2.R", "parent": "HairBack1.R" }
   ]
 }

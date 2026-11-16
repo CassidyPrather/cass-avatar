@@ -1,8 +1,9 @@
 """Validates a .blend and exports its `Export` collection as the FBX Unity imports.
 
-    blender -b --factory-startup --python blender/scripts/export.py -- [--blend PATH] [--output PATH]
+    blender -b --factory-startup --python blender/scripts/export.py -- [--level full|lite] [--blend PATH] [--output PATH]
 
-Defaults: blender/cass.blend -> Packages/net.wirenook.cass/BlenderExports/cass.fbx.
+Defaults: blender/cass.blend -> Packages/net.wirenook.cass/BlenderExports/cass.fbx, and with
+--level lite blender/cass-lite.blend -> BlenderExports/cass-lite.fbx.
 The export is refused when validate.py reports an error. Afterwards the FBX is
 checked twice against the source scene: once as stored (node transforms, bind
 matrices and vertices parsed straight from the file, which is how Unity reads
@@ -68,9 +69,12 @@ LENGTH_TOLERANCE = 1e-3
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     parser = argparse.ArgumentParser(prog="export.py", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("--blend", help="the .blend to export (default: the open file, else blender/cass.blend)")
-    parser.add_argument("--output", default=str(cass_spec.FBX_PATH))
-    return parser.parse_args(argv)
+    parser.add_argument("--level", choices=sorted(cass_spec.LEVELS), default="full")
+    parser.add_argument("--blend", help="the .blend to export (default: the open file, else the level's .blend)")
+    parser.add_argument("--output", help="where to write the FBX (default: the level's file in BlenderExports/)")
+    args = parser.parse_args(argv)
+    args.output = args.output or str(cass_spec.LEVELS[args.level]["fbx"])
+    return args
 
 
 def _bounds(points):
@@ -347,7 +351,7 @@ def main():
     args = parse_args()
     blend = pathlib.Path(args.blend).resolve() if args.blend else None
     if blend is None and not bpy.data.filepath:
-        blend = cass_spec.BLEND_PATH
+        blend = cass_spec.LEVELS[args.level]["blend"]
     if blend is not None:
         bpy.ops.wm.open_mainfile(filepath=str(blend))
 

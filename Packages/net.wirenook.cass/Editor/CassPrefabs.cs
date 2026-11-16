@@ -8,6 +8,7 @@ using VRC.Core;
 using VRC.Dynamics;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
+using VRC.SDK3.Dynamics.Constraint.Components;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 using VRC.SDKBase;
 using nadena.dev.modular_avatar.core;
@@ -28,6 +29,12 @@ namespace Wirenook.Cass.Editor
     public static class CassPrefabs
     {
         public const string RootPath = CassSpec.PrefabFolder + "/cass-root.prefab";
+
+        /// <summary>How far the eye bones turn at the edges of the gaze, in degrees.</summary>
+        private const float EyeUp = 8f, EyeDown = 10f, EyeSide = 10f;
+
+        /// <summary>A blendshape that moves the irises and nothing else, used to find where the eyes are.</summary>
+        private const string IrisShape = "瞳小";
 
         public static string VariantPath(string slug) => CassSpec.PrefabFolder + "/Variants/" + slug + ".prefab";
 
@@ -135,10 +142,7 @@ namespace Wirenook.Cass.Editor
 
             var leftEye = Bone(root, skeleton, HumanBodyBones.LeftEye);
             var rightEye = Bone(root, skeleton, HumanBodyBones.RightEye);
-            // Between the eyes, nudged forward so the camera sits on the face
-            // rather than inside the head.
-            var between = (leftEye.position + rightEye.position) * 0.5f;
-            descriptor.ViewPosition = root.transform.InverseTransformPoint(between) + new Vector3(0f, 0f, 0.035f);
+            descriptor.ViewPosition = ViewPoint(root, body);
 
             ConfigureLayers(descriptor);
             ConfigureEyes(descriptor, leftEye, rightEye);
@@ -149,7 +153,9 @@ namespace Wirenook.Cass.Editor
             descriptor.autoLocomotion = true;
             descriptor.autoFootsteps = true;
 
-            foreach (var chain in skeleton.ChainRoots()) ConfigurePhysBone(Find(root, chain.Name));
+            foreach (var chain in skeleton.ChainRoots()) ConfigurePhysBone(Find(root, chain.Name), chain.Physics);
+            foreach (var twist in skeleton.TwistBones())
+                ConfigureTwist(Find(root, twist.Name), Find(root, twist.TwistSource), twist.TwistWeight);
             UnifyRenderers(root, skeleton);
             ConfigureOptimizer(root);
 
@@ -251,15 +257,16 @@ namespace Wirenook.Cass.Editor
             eyes.eyeMovement = new VRCAvatarDescriptor.CustomEyeLookSettings.EyeMovements { confidence = 0.5f, excitement = 0.5f };
             eyes.leftEye = leftEye;
             eyes.rightEye = rightEye;
-            // The gaze turns the eye bones. The irises are flat decals on the
-            // face, so a few degrees is all they can travel before sliding
-            // off the eye white; the limits were measured on the model.
+            // The gaze turns the eye bones. The irises are shells over the
+            // face that slide across the eye whites, pivoting on bones deep
+            // inside the head, so a few degrees carries them a long way; the
+            // limits were measured on the model (blender/README.md).
             eyes.eyeGazeMode = VRCAvatarDescriptor.CustomEyeLookSettings.EyeGazeMode.BoneRotation;
             eyes.eyesLookingStraight = Rotations(Quaternion.identity);
-            eyes.eyesLookingUp = Rotations(Quaternion.Euler(-3f, 0f, 0f));
-            eyes.eyesLookingDown = Rotations(Quaternion.Euler(3f, 0f, 0f));
-            eyes.eyesLookingLeft = Rotations(Quaternion.Euler(0f, -3.5f, 0f));
-            eyes.eyesLookingRight = Rotations(Quaternion.Euler(0f, 3.5f, 0f));
+            eyes.eyesLookingUp = Rotations(Quaternion.Euler(-EyeUp, 0f, 0f));
+            eyes.eyesLookingDown = Rotations(Quaternion.Euler(EyeDown, 0f, 0f));
+            eyes.eyesLookingLeft = Rotations(Quaternion.Euler(0f, -EyeSide, 0f));
+            eyes.eyesLookingRight = Rotations(Quaternion.Euler(0f, EyeSide, 0f));
             // Eyelids come from the tracker when one is live and from the FX
             // blink layer otherwise; see CassFx.
             eyes.eyelidType = VRCAvatarDescriptor.EyelidType.FaceTracking;
@@ -328,27 +335,136 @@ namespace Wirenook.Cass.Editor
             };
         }
 
-        /// <summary>Soft, grabbable, posable and stretchy: these are for friends to play with.</summary>
-        private static void ConfigurePhysBone(Transform chainRoot)
+        /// <summary>
+        /// Where the wearer looks out from: between the irises, on the
+        /// surface of the eyes. The eye bones cannot say, since they pivot
+        /// from inside the head, so the irises are found by the vertices
+        /// that the small-pupil blendshape moves.
+        /// </summary>
+        private static Vector3 ViewPoint(GameObject root, SkinnedMeshRenderer body)
+        {
+            var mesh = body.sharedMesh;
+            var index = mesh.GetBlendShapeIndex(IrisShape);
+            if (index < 0) throw new InvalidOperationException(mesh.name + " has no \"" + IrisShape + "\" blendshape to find the irises by.");
+            var deltas = new Vector3[mesh.vertexCount];
+            mesh.GetBlendShapeFrameVertices(index, 0, deltas, null, null);
+            var vertices = mesh.vertices;
+            var found = false;
+            var bounds = new Bounds();
+            for (var i = 0; i < vertices.Length; i++)
+            {
+                if (deltas[i].sqrMagnitude < 1e-10f) continue;
+                var point = root.transform.InverseTransformPoint(body.transform.TransformPoint(vertices[i]));
+                if (found) bounds.Encapsulate(point);
+                else bounds = new Bounds(point, Vector3.zero);
+                found = true;
+            }
+
+            if (!found) throw new InvalidOperationException("\"" + IrisShape + "\" moves no vertex of " + mesh.name + ".");
+            return new Vector3(0f, bounds.center.y, bounds.max.z);
+        }
+
+        /// <summary>
+        /// PhysBone settings by the name a chain root carries in skeleton.json.
+        /// Everything here stays inside what mobile allows in total (see
+        /// CassChecks): one component per ear, one for the tail and one for
+        /// all of the hair.
+        /// </summary>
+        private static void ConfigurePhysBone(Transform chainRoot, string physics)
         {
             var bone = Ensure<VRCPhysBone>(chainRoot.gameObject);
             bone.rootTransform = chainRoot;
             bone.integrationType = VRCPhysBoneBase.IntegrationType.Simplified;
-            bone.pull = 0.25f;
-            bone.spring = 0.55f;
-            bone.stiffness = 0.25f;
-            bone.gravity = 0.03f;
-            bone.immobile = 0f;
-            bone.radius = 0.03f;
             bone.limitType = VRCPhysBoneBase.LimitType.Angle;
-            bone.maxAngleX = 70f;
             bone.allowCollision = VRCPhysBoneBase.AdvancedBool.True;
-            bone.allowGrabbing = VRCPhysBoneBase.AdvancedBool.True;
-            bone.allowPosing = VRCPhysBoneBase.AdvancedBool.True;
-            bone.grabMovement = 0.6f;
-            bone.maxStretch = 0.5f;
-            bone.maxSquish = 0.3f;
-            bone.stretchMotion = 0.4f;
+            bone.multiChildType = VRCPhysBoneBase.MultiChildType.Ignore;
+            bone.isAnimated = false;
+
+            switch (physics)
+            {
+                case "ears":
+                    // Soft, grabbable, posable and stretchy: these are for friends to play with.
+                    bone.pull = 0.25f;
+                    bone.spring = 0.55f;
+                    bone.stiffness = 0.25f;
+                    bone.gravity = 0.03f;
+                    bone.immobile = 0f;
+                    bone.radius = 0.03f;
+                    bone.maxAngleX = 70f;
+                    Touchable(bone, true);
+                    bone.grabMovement = 0.6f;
+                    bone.maxStretch = 0.5f;
+                    bone.maxSquish = 0.3f;
+                    bone.stretchMotion = 0.4f;
+                    // The gesture poses turn these bones (CassFx.PoseLayer);
+                    // physics has to swing around the pose, not the rest.
+                    bone.isAnimated = true;
+                    break;
+                case "tail":
+                    // Short and springy; it should flick, not dangle.
+                    bone.pull = 0.35f;
+                    bone.spring = 0.6f;
+                    bone.stiffness = 0.35f;
+                    bone.gravity = 0f;
+                    bone.immobile = 0f;
+                    bone.radius = 0.035f;
+                    bone.maxAngleX = 40f;
+                    Touchable(bone, true);
+                    bone.grabMovement = 0.5f;
+                    bone.maxStretch = 0.2f;
+                    bone.maxSquish = 0.2f;
+                    bone.stretchMotion = 0.2f;
+                    bone.isAnimated = true;
+                    break;
+                case "hair":
+                    // The root does not move; each chain under it swings on its own.
+                    // Mostly follows the head, with enough lag to read as hair.
+                    bone.pull = 0.18f;
+                    bone.spring = 0.35f;
+                    bone.stiffness = 0.15f;
+                    bone.gravity = 0.12f;
+                    bone.immobile = 0.35f;
+                    bone.radius = 0.025f;
+                    bone.maxAngleX = 35f;
+                    Touchable(bone, false);
+                    bone.maxStretch = 0f;
+                    bone.maxSquish = 0f;
+                    bone.stretchMotion = 0f;
+                    break;
+                default:
+                    throw new InvalidDataException("skeleton.json: \"" + physics + "\" (on " + chainRoot.name + ") is not a known set of physics settings.");
+            }
+        }
+
+        private static void Touchable(VRCPhysBone bone, bool touchable)
+        {
+            var allow = touchable ? VRCPhysBoneBase.AdvancedBool.True : VRCPhysBoneBase.AdvancedBool.False;
+            bone.allowGrabbing = allow;
+            bone.allowPosing = allow;
+        }
+
+        /// <summary>
+        /// The body base's arm twist helpers. Each sits on its parent and
+        /// carries the skin around the middle of the limb; it follows part
+        /// of how far the next joint has turned about the bone's length, so
+        /// a turned wrist winds the forearm gradually instead of pinching it
+        /// at the joint. The sources and weights are the base's own.
+        /// </summary>
+        private static void ConfigureTwist(Transform helper, Transform source, float weight)
+        {
+            var constraint = Ensure<VRCRotationConstraint>(helper.gameObject);
+            constraint.ClearSources();
+            constraint.AddSource(new VRCConstraintSource { SourceTransform = source, Weight = 1f });
+            constraint.GlobalWeight = weight;
+            constraint.SolveInLocalSpace = true;
+            // Bones are exported with Y along their length.
+            constraint.AffectsRotationX = false;
+            constraint.AffectsRotationY = true;
+            constraint.AffectsRotationZ = false;
+            constraint.FreezeToWorld = false;
+            constraint.RebakeOffsetsWhenUnfrozen = false;
+            // Measures the rest offset between the two bones, then locks and switches on.
+            constraint.ActivateConstraint();
         }
 
         /// <summary>
@@ -376,6 +492,10 @@ namespace Wirenook.Cass.Editor
             var profile = Ensure<AvatarUploadProfile>(root);
             profile.avatarName = variant.Slug;
             profile.description = spec.Description;
+
+            var lite = root.GetComponent<CassLiteModel>();
+            if (variant.Lite) Ensure<CassLiteModel>(root);
+            else if (lite != null) UnityEngine.Object.DestroyImmediate(lite, true);
 
             foreach (var path in variant.Features)
             {

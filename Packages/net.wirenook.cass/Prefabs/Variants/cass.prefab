@@ -174,7 +174,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   avatarName: cass
-  description: Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar
+  description: 'Cassidy''s avatar. AGPLv3. github.com/CassidyPrather/cass-avatar
+    Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.'
   extraTags: []
 --- !u!4 &8658064087365775311 stripped
 Transform:

@@ -70,3 +70,6 @@ __pycache__/
 
 # Blender's automatic backups
 *.blend1
+
+# Third-party source archives; blender/scripts/intake.py trims them into blender/sources/
+ref/*.zip

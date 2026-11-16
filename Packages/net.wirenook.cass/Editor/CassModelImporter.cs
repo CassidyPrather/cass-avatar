@@ -14,7 +14,7 @@ namespace Wirenook.Cass.Editor
     public sealed class CassModelImporter : AssetPostprocessor
     {
         /// <summary>Bump to make Unity re-import the models after these rules change.</summary>
-        public override uint GetVersion() => 6;
+        public override uint GetVersion() => 7;
 
         private bool Applies => assetPath.Replace('\\', '/').StartsWith(CassSpec.ExportFolder + "/", StringComparison.Ordinal);
 
@@ -66,6 +66,10 @@ namespace Wirenook.Cass.Editor
                     limit = new HumanLimit { useDefaultValues = true },
                 })
                 .ToArray();
+            // Unity keeps the bone positions it measured on the first import and
+            // warns when a later export no longer matches them. The model is the
+            // only authority on where its bones are, so measure afresh every time.
+            description.skeleton = Array.Empty<SkeletonBone>();
             // Unity's stock muscle settings; an empty description would zero them.
             description.upperArmTwist = 0.5f;
             description.lowerArmTwist = 0.5f;

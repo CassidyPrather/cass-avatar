@@ -17,11 +17,11 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 ## Repo Map
 
 - `Packages/net.wirenook.cass/Spec/` — the contracts, read by both Blender and Unity: `blendshapes.json`, `skeleton.json`, `uv-tiles.json`, `gestures.json`, `variants.json`, `proportions.json`.
-- `Packages/net.wirenook.cass/BlenderExports/` — the only place Blender exports land. Import settings are applied in code (`Editor/CassModelImporter.cs`).
+- `Packages/net.wirenook.cass/BlenderExports/` — the only place Blender exports land: `cass.fbx` and `cass-lite.fbx`, the same avatar at two fidelity levels. Import settings are applied in code (`Editor/CassModelImporter.cs`). `Editor/CassBuildPlugin.cs` exchanges the meshes for the lite ones at build time on mobile and for variants with `"model": "lite"`.
 - `Packages/net.wirenook.cass/Editor/` — generators (`CassMaterials`, `CassFx`, `CassMenus`, `CassPrefabs`), entry points (`CassBuild`), post-build checks (`CassChecks`), upload automation (`CassUpload`, `CassThumbnail`).
 - `Packages/net.wirenook.cass/Runtime/Core/` — engine-free logic (upload policy, tile rules, gesture rules), unit-tested headless.
 - `Packages/net.wirenook.cass/{Generated,Materials,Prefabs}/` — generator output, committed. `Prefabs/cass-root.prefab` is the single root avatar prefab (a variant of the model); `Prefabs/Variants/*.prefab` are the upload variants.
-- `blender/` — `cass.blend` and the headless scripts that build the placeholder, validate and export. See `blender/README.md`.
+- `blender/` — `sources/` (the trimmed CC0 body base and face), `scripts/build_cass.py` and `scripts/kitbash/` (the generator that assembles them with the modelled hair, ears, tail and outfit), the two outputs `cass.blend` and `cass-lite.blend`, and the headless scripts that validate and export. See `blender/README.md`.
 - `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`. Each is its own repository with its own README, SKILL.md, CI and version.
 - `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer. Harness only; not shipped.
 - `Assets/DevTools/UnityBridge/` — the file bridge that lets scripts drive the open editor.
@@ -32,7 +32,7 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 ## Commands
 
 ```bash
-scripts/cass.sh export|rebuild|verify|report|sheets|preview|upload [slug]   # see the script header
+scripts/cass.sh build|export|rebuild|verify|report|sheets|preview|upload [slug]   # see the script header
 scripts/compile-check.py <package dir>...   # type-check C# without touching the editor
 scripts/unity-refresh.sh                    # recompile the open editor, once everything type-checks
 scripts/unity-bridge.py invoke Namespace.Type.Method [string args...]
@@ -59,11 +59,15 @@ python tools/thumbnail/test_thumbnail.py
 - **Write Defaults is ON everywhere** (`ControllerBuilder.WriteDefaults`).
 - **`Runtime/Core/` and `Tests/` compile with plain dotnet in CI**: no `UnityEngine` there, classic NUnit asserts only.
 - Blendshape, bone and tile names live in `Spec/`. Add a name there first; Blender's validation and Unity's generators both read it.
+- **Both fidelity levels must export the same mesh names, bones, blendshapes and UV tiles.** The lite meshes are swapped in by name.
+- **`blender/cass.blend` and `cass-lite.blend` are generator output.** Change the generator and run `scripts/cass.sh build`; a hand-edited file is detected by its stamp and not overwritten without `--force`.
+- **`Textures/cass-atlas.png` and `.json` are written by the model build**, not by hand. Colours are added in `cass-palette.toml`.
+- **Poses in `gestures.json` may only turn extra bones**, never humanoid ones, and should leave `Ear1` nearly still: the ears stand in holes in the hat's brim.
 - Performance is checked on the **built** avatar (`scripts/cass.sh verify`), not the prefab. Every component counts for rank even when disabled.
 
 ## House Rules
 
-- Every third-party asset gets a `CREDITS.md` line at intake — source, author, licence, URL. Nothing proprietary and nothing licence-incompatible enters the repository; draw, model or synthesise it instead.
+- Every third-party asset gets a `CREDITS.md` line at intake — source, author, licence, URL. Model assets are also credited in the avatar description (`Spec/variants.json`) as "name by author". Nothing proprietary and nothing licence-incompatible enters the repository; draw, model or synthesise it instead.
 - Unity editor stays on 2022.3.22f1, the version VRChat supports.
 - Version lives in `package.json`; a release publishes every package whose version matches the tag.
 - The linking exception in `LICENSE_ADDENDUM` is load-bearing legal text. Don't reword it casually.

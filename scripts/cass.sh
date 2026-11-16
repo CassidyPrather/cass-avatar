@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The avatar's day-to-day commands, run against the open Unity editor.
 #
-#   scripts/cass.sh export            Blender -> BlenderExports/cass.fbx (validated)
+#   scripts/cass.sh build             sources and modelled parts -> blender/cass.blend and cass-lite.blend
+#   scripts/cass.sh export            Blender -> BlenderExports/cass.fbx and cass-lite.fbx (validated)
 #   scripts/cass.sh rebuild           regenerate materials, animators, menus and prefabs
 #   scripts/cass.sh verify [slug] [platform]   build a variant as an upload would and check it
 #   scripts/cass.sh report [slug] [platform]   the same build, as JSON in dist/build-report/
@@ -52,8 +53,13 @@ slug=${2:-cass}
 platform=${3:-}
 
 case "$command" in
+    build)
+        scripts/blender-build.sh --level full
+        scripts/blender-build.sh --level lite
+        ;;
     export)
-        scripts/blender-export.sh
+        scripts/blender-export.sh --level full
+        scripts/blender-export.sh --level lite
         scripts/unity-refresh.sh
         ;;
     rebuild)
@@ -106,7 +112,7 @@ case "$command" in
         done
         ;;
     *)
-        sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
         exit 2
         ;;
 esac

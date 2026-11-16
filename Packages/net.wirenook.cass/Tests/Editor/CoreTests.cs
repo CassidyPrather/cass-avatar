@@ -217,5 +217,61 @@ namespace Wirenook.Cass.Tests
             var problems = layout.Validate(known, new string[0]);
             Assert.AreEqual(5, problems.Count, string.Join(" ", problems));
         }
+
+        private static GestureLayout Posed()
+        {
+            var layout = Layout();
+            layout.Poses["droop"] = new Dictionary<string, BoneTurn>
+            {
+                { "Ear2", new BoneTurn { Forward = -10, Out = 50 } },
+                { "Ear2.R", new BoneTurn { Forward = 60 } },
+                { "Tail1", new BoneTurn { Forward = -15 } },
+            };
+            layout.Poses["back"] = new Dictionary<string, BoneTurn> { { "Ear1", new BoneTurn { Forward = -40 } } };
+            layout.Expressions["sleepy"].Pose = "droop";
+            return layout;
+        }
+
+        [Test]
+        public void TheRightHandsPoseWinsOnlyWhenItHasOne()
+        {
+            var layout = Posed();
+            Assert.IsNull(layout.PoseFor(0, 0));
+            Assert.AreEqual("droop", layout.PoseFor(1, 0));
+            // Left 3 is "angry", which has no pose; right 2 is "sleepy".
+            Assert.AreEqual("droop", layout.PoseFor(3, 2));
+            Assert.IsNull(layout.PoseFor(3, 0));
+
+            layout.Expressions["angry"].Pose = "back";
+            Assert.AreEqual("back", layout.PoseFor(3, 0));
+            Assert.AreEqual("droop", layout.PoseFor(3, 2));
+            // A right-hand gesture with no expression leaves the left hand's pose alone.
+            Assert.AreEqual("back", layout.PoseFor(3, 5));
+        }
+
+        [Test]
+        public void PosesExpandToBothSidesAndSidedEntriesOverride()
+        {
+            var bones = new[] { "Ear2.L", "Ear2.R", "Tail1" };
+            var pose = Posed().ExpandPose("droop", name => bones.Contains(name));
+
+            CollectionAssert.AreEquivalent(bones, pose.Keys.ToList());
+            Assert.AreEqual(50f, pose["Ear2.L"].Out);
+            Assert.AreEqual(-10f, pose["Ear2.L"].Forward);
+            Assert.AreEqual(60f, pose["Ear2.R"].Forward);
+            Assert.AreEqual(0f, pose["Ear2.R"].Out);
+            Assert.AreEqual(-15f, pose["Tail1"].Forward);
+        }
+
+        [Test]
+        public void ValidatesThatAnExpressionsPoseExists()
+        {
+            var layout = Posed();
+            var known = new[] { "EyeClosedLeft", "EyeClosedRight", "MouthSmile", "Blush", "BrowDown", "MouthFrown" };
+            Assert.AreEqual(0, layout.Validate(known, new string[0]).Count);
+
+            layout.Expressions["angry"].Pose = "missing";
+            Assert.AreEqual(1, layout.Validate(known, new string[0]).Count);
+        }
     }
 }

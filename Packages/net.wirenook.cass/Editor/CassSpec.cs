@@ -18,6 +18,13 @@ namespace Wirenook.Cass.Editor
         public const string Package = "Packages/net.wirenook.cass";
         public const string ExportFolder = Package + "/BlenderExports";
         public const string ModelPath = ExportFolder + "/cass.fbx";
+
+        /// <summary>
+        /// The same avatar at its low-polygon level: the same object names
+        /// on the same skeleton. Mobile builds and variants that ask for it
+        /// take their meshes from here (see <see cref="CassBuildPlugin"/>).
+        /// </summary>
+        public const string LiteModelPath = ExportFolder + "/cass-lite.fbx";
         public const string GeneratedFolder = Package + "/Generated";
         public const string PrefabFolder = Package + "/Prefabs";
 
@@ -107,7 +114,27 @@ namespace Wirenook.Cass.Editor
 
                 foreach (var tile in (JObject)entry.Value["tiles"] ?? new JObject())
                     expression.Tiles[tile.Key] = (bool)tile.Value;
+                expression.Pose = (string)entry.Value["pose"];
                 layout.Expressions[expression.Id] = expression;
+            }
+
+            var skeleton = Skeleton();
+            foreach (var entry in (JObject)json["poses"] ?? new JObject())
+            {
+                var turns = new Dictionary<string, BoneTurn>();
+                foreach (var bone in (JObject)entry.Value)
+                {
+                    var degrees = bone.Value.Select(value => (float)value).ToList();
+                    if (degrees.Count != 3)
+                        throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" needs [forward, out, twist] for " + bone.Key + ".");
+                    var sided = skeleton.IsExtra(bone.Key);
+                    if (!sided && !(skeleton.IsExtra(bone.Key + ".L") && skeleton.IsExtra(bone.Key + ".R")))
+                        throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" turns \"" + bone.Key +
+                                                       "\", which is not an extra bone in skeleton.json. Poses may not move humanoid bones.");
+                    turns[bone.Key] = new BoneTurn { Forward = degrees[0], Out = degrees[1], Twist = degrees[2] };
+                }
+
+                layout.Poses[entry.Key] = turns;
             }
 
             var shapes = Blendshapes();
@@ -127,7 +154,18 @@ namespace Wirenook.Cass.Editor
             }
 
             foreach (var token in json["extra"] ?? new JArray())
-                spec.Extra.Add(new ExtraBone { Name = (string)token["name"], Parent = (string)token["parent"] });
+            {
+                var twist = token["twist"];
+                spec.Extra.Add(new ExtraBone
+                {
+                    Name = (string)token["name"],
+                    Parent = (string)token["parent"],
+                    Physics = (string)token["physics"],
+                    TwistSource = twist == null ? null : (string)twist["source"],
+                    TwistWeight = twist == null ? 0f : (float)twist["weight"],
+                });
+            }
+
             return spec;
         }
 
@@ -141,6 +179,7 @@ namespace Wirenook.Cass.Editor
                 {
                     Slug = (string)token["slug"],
                     Extends = (string)token["extends"],
+                    Lite = (string)token["model"] == "lite",
                     WorstRank = (string)token["worstRank"] ?? "Good",
                     WorstRankMobile = (string)token["worstRankMobile"] ?? (string)token["worstRank"] ?? "Good",
                     Platforms = token["platforms"]?.Select(name => WirenookPlatform.Parse((string)name)).ToList()
@@ -200,18 +239,28 @@ namespace Wirenook.Cass.Editor
         /// <summary>Bones outside the humanoid rig, such as the ear chains.</summary>
         public List<ExtraBone> Extra = new List<ExtraBone>();
 
-        /// <summary>The first bone of every extra chain: the ones physics components attach to.</summary>
-        public IEnumerable<ExtraBone> ChainRoots()
-        {
-            var extras = new HashSet<string>(Extra.Select(bone => bone.Name));
-            return Extra.Where(bone => !extras.Contains(bone.Parent));
-        }
+        /// <summary>The bones physics components attach to, each the first of a chain.</summary>
+        public IEnumerable<ExtraBone> ChainRoots() => Extra.Where(bone => bone.Physics != null);
+
+        /// <summary>The helpers that follow a neighbour's twist.</summary>
+        public IEnumerable<ExtraBone> TwistBones() => Extra.Where(bone => bone.TwistSource != null);
+
+        public bool IsExtra(string name) => Extra.Any(bone => bone.Name == name);
     }
 
     public sealed class ExtraBone
     {
         public string Name;
         public string Parent;
+
+        /// <summary>On the first bone of a chain: which PhysBone settings it gets. Null elsewhere.</summary>
+        public string Physics;
+
+        /// <summary>On a twist helper: the bone whose turn about its length it follows. Null elsewhere.</summary>
+        public string TwistSource;
+
+        /// <summary>How much of the source's twist a twist helper takes, 0 to 1.</summary>
+        public float TwistWeight;
     }
 
     public sealed class VariantSpec
@@ -228,6 +277,9 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Slug of the variant this one builds on; null builds on the root prefab.</summary>
         public string Extends;
+
+        /// <summary>Builds from the low-polygon model on every platform, not only on mobile.</summary>
+        public bool Lite;
 
         /// <summary>The worst VRChat performance rank this variant may build to on PC.</summary>
         public string WorstRank;
