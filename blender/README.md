@@ -11,8 +11,8 @@ It is built at two fidelity levels from the same generator, on one skeleton:
 
 | Level | File | Export | Body mesh | Triangles |
 | --- | --- | --- | --- | --- |
-| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 47,000 |
-| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 16,500 |
+| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 49,000 |
+| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 16,600 |
 
 Both have the same objects, bones, shape keys and UV tiles, which is what
 lets Unity exchange one for the other at build time. The garments cut from
@@ -198,7 +198,7 @@ outfit is a new set of functions there, on its own discard tiles.
 - At most 70,000 triangles at the full level and 17,000 at lite, before the
   build removes anything. What binds the lite level is VRChat's 15,000 for
   Medium on mobile after the build, which `scripts/cass.sh verify cass android`
-  checks; it currently has 148 to spare.
+  checks; it currently has 64 to spare.
 - Each vertex has one to four bone weights that sum to 1.
 
 ### UV layers

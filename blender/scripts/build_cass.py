@@ -54,7 +54,7 @@ DECAL_KEYS = ("照れ", "涙")
 
 # How finely the modelled parts are divided at each level.
 DETAIL = {"full": 1.0, "lite": 0.5}
-PARTS = (garments.build_sweater, garments.build_shorts, garments.build_boots,
+PARTS = (garments.build_shorts, garments.build_sweater, garments.build_boots,
          hair.build_hair, extras.build_ears, extras.build_tail, hat.build_hat)
 
 
@@ -104,7 +104,7 @@ def assemble(level, collection):
 
     skeleton = cass_spec.load_skeleton()
     armature = rig.adopt(source_rig, skeleton["armature"], collection)
-    skin_uv = body.prepare(skin)
+    body.prepare(skin)
     rig.rename_groups(skin)
 
     head_joint = rig.head_of(armature, "Head")
@@ -150,9 +150,13 @@ def assemble(level, collection):
     skin.name = skin.data.name = SKIN_MESH
     # The body is flat skin colour, but keeps its own UVs, moved into a skin-coloured region
     # of the atlas, so that the body base's normal map (in the normal atlas) lands on it.
+    # The first UV layer is the one the base's normal map is drawn for (the rest are for its
+    # nail textures). It is read here, from the mesh as it now is: trimming the neck re-orders
+    # the mesh's corners, and UVs read before that would land on the wrong ones.
     skin.data.uv_layers[0].name = cass_spec.UV_PALETTE
+    own_uv = common.get_uv(skin.data, cass_spec.UV_PALETTE)
     common.ensure_uv_layers(skin.data)
-    common.set_uv(skin.data, cass_spec.UV_PALETTE, atlas.body_uv(skin_uv, level))
+    common.set_uv(skin.data, cass_spec.UV_PALETTE, atlas.body_uv(own_uv, level))
     common.finish_mesh(skin, collection, armature, material, tiles, body.zones(skin.data))
 
     crown = common.coords(mesh)[:, 2].max()

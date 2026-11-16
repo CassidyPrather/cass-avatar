@@ -129,8 +129,8 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   placeholder; the body base's own proportions now stand in for them.
 
 The model exists at two fidelity levels with the same objects, bones,
-blendshapes and UV tiles: `cass.fbx` (about 47,000 triangles) and
-`cass-lite.fbx` (about 16,500), which uses the body base's low-polygon mesh
+blendshapes and UV tiles: `cass.fbx` (about 49,000 triangles) and
+`cass-lite.fbx` (about 16,600), which uses the body base's low-polygon mesh
 and coarser modelled parts. The prefabs hold the full one; a build takes the
 lite meshes instead for Android and iOS, and for any variant that asks.
 
@@ -326,15 +326,16 @@ What that costs on Android and iOS:
 
 | Variant | Mobile rank | Triangles | Skinned + static meshes | Material slots |
 | --- | --- | --- | --- | --- |
-| `cass`, `cass-lite` | Medium | 14,852 | 2 + 0 | 2 |
-| `cass-adv` | Very Poor | 17,884 | 2 + 3 | 7 |
-| `cass-flashlight` | Very Poor | 17,296 | 2 + 4 | 8 |
-| `cass-lantern` | Very Poor | 17,442 | 2 + 5 | 9 |
+| `cass`, `cass-lite` | Medium | 14,936 | 2 + 0 | 2 |
+| `cass-adv` | Very Poor | 17,968 | 2 + 3 | 7 |
+| `cass-flashlight` | Very Poor | 17,380 | 2 + 4 | 8 |
+| `cass-lantern` | Very Poor | 17,526 | 2 + 5 | 9 |
 
-`cass` is 148 triangles under Medium's limit of 15,000, so anything added to
+`cass` is 64 triangles under Medium's limit of 15,000, so anything added to
 the lite level has to be paid for there. The face is 8,500 of them, because
 it is the same mesh at both levels; the stitched details are left out of
-the lite level altogether.
+the lite level altogether, as are the folded edges of the waistband,
+hems and collar.
 
 The three adventure variants keep the carry seat and the catch-up portal
 on mobile, which is what they are worn for, and pay for it in rank: the
@@ -410,11 +411,11 @@ copy:
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 47,320 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-lite` | Good | 16,534 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-adv` | Good | 50,686 | 2 + 4 | 8 | 80 | 91 of 256 |
-| `cass-flashlight` | Poor (one light) | 50,098 | 2 + 5 | 9 | 75 | 157 of 256 |
-| `cass-lantern` | Poor (one light) | 50,244 | 2 + 6 | 10 | 75 | 157 of 256 |
+| `cass` | Good | 48,812 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
+| `cass-lite` | Good | 16,618 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
+| `cass-adv` | Good | 52,178 | 2 + 4 | 8 | 80 | 91 of 256 |
+| `cass-flashlight` | Poor (one light) | 51,590 | 2 + 5 | 9 | 75 | 157 of 256 |
+| `cass-lantern` | Poor (one light) | 51,736 | 2 + 6 | 10 | 75 | 157 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the head: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -508,6 +509,9 @@ Known gaps:
 - Under the chin, the face texture's painted shadow is stretched where the
   head's neck was narrowed to meet the body's.
 - The human ears of the face mesh are still there, under the side hair.
+- The hair is fitted under the hat, so with the hat switched off it is a
+  little flattened where the hat sits. Where the fringe's strands meet at
+  the parting they still run into each other.
 - Nothing fades or dithers out as a viewer comes close; lilToon's Clipping
   Canceller pushes near geometry back instead.
 - Held tools have no hand poses of their own.

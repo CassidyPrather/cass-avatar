@@ -31,12 +31,15 @@ EAR_JOINTS = (0.085, 0.36, 0.66, 1.0)     # fractions of the path where Ear1, Ea
 # Cross-sections as (across, towards the back) on a unit half-width. The back is a dome,
 # the front has a rolled rim at each edge and is hollow between them.
 EAR_PROFILES = {
+    # The rim rolls forward past the edge, then steps down a wall into the hollow: that step is
+    # the crease that keeps the front from reading as a flat card.
     "full": [(-1.0, 0.10), (-0.80, 0.62), (-0.36, 0.94), (0.36, 0.94), (0.80, 0.62), (1.0, 0.10),
-             (0.86, -0.10), (0.60, 0.16), (0.0, 0.46), (-0.60, 0.16), (-0.86, -0.10)],
-    "lite": [(-1.0, 0.10), (-0.55, 0.85), (0.55, 0.85), (1.0, 0.10), (0.78, -0.08), (0.0, 0.42), (-0.78, -0.08)],
+             (0.93, -0.20), (0.70, -0.16), (0.56, 0.26), (0.0, 0.58), (-0.56, 0.26), (-0.70, -0.16), (-0.93, -0.20)],
+    "lite": [(-1.0, 0.10), (-0.55, 0.85), (0.55, 0.85), (1.0, 0.10), (0.80, -0.14), (0.0, 0.50), (-0.80, -0.14)],
 }
-# Sides of each profile (by the index of their first point) that are the hollow inside.
-EAR_INSIDE = {"full": (7, 8), "lite": (4, 5)}
+# Sides of each profile (by the index of their first point): the hollow inside, and the walls down into it.
+EAR_INSIDE = {"full": (8, 9), "lite": (4, 5)}
+EAR_WALLS = {"full": (7, 10), "lite": ()}
 
 # The tail's centre line from where it roots on the back (x left, y back, z up), and its radius along it.
 TAIL_GUIDE = np.array(((0.0, -0.024, -0.010), (0.0, 0.040, 0.000), (0.0, 0.088, 0.026), (0.0, 0.122, 0.066), (0.0, 0.138, 0.110)))
@@ -110,7 +113,12 @@ def build_ears(ctx):
         def swatch(r, s):
             t = stations[r]
             # The pink starts above the root and stops short of the tip; the ear narrows there, so it ends in a point.
-            return "ear-inner" if s in inside and 0.12 < t < 0.88 else "hair"
+            if 0.12 < t < 0.88:
+                if s in inside:
+                    return "ear-inner"
+                if s in EAR_WALLS[level]:
+                    return "hair-shade"
+            return "hair"
 
         part.loft(rings, swatch, flip=sign < 0)
         tip = part.vert(path[-1])
@@ -126,13 +134,14 @@ def build_ears(ctx):
         for k in range(tufts):
             angle = 2.0 * math.pi * (k + 0.5) / tufts
             out = across[0] * math.cos(angle) + outward[0] * math.sin(angle)
-            start = root + lean * 0.016 + out * 0.014
-            end = start + lean * (0.040 + 0.010 * math.sin(k * 2.4)) + out * 0.014
+            # Kept short and leaning out, so the tufts stay under the hat's brim.
+            start = root + lean * 0.004 + out * 0.016
+            end = start + lean * (0.018 + 0.006 * math.sin(k * 2.4)) + out * 0.026
             before = len(part.co)
             sweep.strand(part, [start, (start + end) / 2 + out * 0.006, end], [0.011, 0.010, 0.002], 0.7,
                          3 if level == "full" else 2, level, "hair", "hair-shade", facing=out)
             fractions.append([(side, 0.0)] * (len(part.co) - before))
-    obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=60.0)
+    obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=42.0)
 
     flat = [entry for group in fractions for entry in group]
     count = len(obj.data.vertices)

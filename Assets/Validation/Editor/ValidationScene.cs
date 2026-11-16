@@ -33,8 +33,12 @@ namespace Wirenook.Validation.Editor
             public readonly float Distance;
             public readonly float FieldOfView;
 
-            public Shot(string name, float targetHeight, float yaw, float pitch, float distance, float fieldOfView = 24f)
+            /// <summary>Metres the target sits off the centre line, towards the avatar's left.</summary>
+            public readonly float Side;
+
+            public Shot(string name, float targetHeight, float yaw, float pitch, float distance, float fieldOfView = 24f, float side = 0f)
             {
+                Side = side;
                 Name = name;
                 TargetHeight = targetHeight;
                 Yaw = yaw;
@@ -66,6 +70,15 @@ namespace Wirenook.Validation.Editor
             new Shot("Face Three-Quarter", 0.92f, 40f, 4f, 1.75f, 20f),
             new Shot("Face Profile", 0.92f, 90f, 0f, 1.75f, 20f),
             new Shot("Face From Below", 0.92f, 15f, -40f, 1.75f, 20f),
+            // Close looks at where shading and seams go wrong first.
+            new Shot("Neck", 0.83f, 30f, 5f, 0.75f, 20f),
+            new Shot("Collar", 0.81f, -20f, 35f, 0.7f, 20f),
+            new Shot("Nape", 0.83f, 160f, 15f, 0.8f, 20f),
+            new Shot("Hand", 0.46f, -75f, 10f, 0.55f, 20f, 0.24f),
+            new Shot("Back Of Legs", 0.24f, 165f, 5f, 1.5f, 20f),
+            new Shot("Seat", 0.56f, 165f, 10f, 0.9f, 20f),
+            new Shot("Top Of Head", 0.97f, 20f, 65f, 1.5f, 20f),
+            new Shot("Heels", 0.03f, 150f, 12f, 0.8f, 20f),
             // As close as a friend leaning in: checks near-plane clipping.
             new Shot("Nose To Nose", 0.91f, 8f, 0f, 0.30f, 60f),
         };
@@ -183,7 +196,8 @@ namespace Wirenook.Validation.Editor
                 // render them one at a time instead.
                 camera.enabled = false;
 
-                var target = new Vector3(0f, shot.TargetHeight * Height, 0f);
+                // Unity avatars have their left at -X.
+                var target = new Vector3(-shot.Side, shot.TargetHeight * Height, 0f);
                 // The avatar faces +Z, so its front is seen from +Z.
                 var offset = Quaternion.Euler(-shot.Pitch, shot.Yaw, 0f) * Vector3.forward * shot.Distance;
                 cameraObject.transform.position = target + offset;

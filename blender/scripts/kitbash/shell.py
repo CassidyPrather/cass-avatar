@@ -76,6 +76,27 @@ class Shell:
                 vertex.co = vertex.co + normal * (clearance - height)
         self.bm.normal_update()
 
+    def clear_of(self, tree, clearance):
+        """The same for another part worn underneath, given as its BVH: the shorts under the sweater's hem."""
+        for vertex in self.bm.verts:
+            location, normal, _index, distance = tree.find_nearest(vertex.co)
+            if distance > clearance * 4.0:
+                continue
+            height = (vertex.co - location).dot(normal)
+            if height < clearance:
+                vertex.co = vertex.co + normal * (clearance - height)
+        self.bm.normal_update()
+
+    def smooth_loop(self, loop, repeat=3):
+        """Eases the kinks out of an open loop by moving each vertex towards its two neighbours on the loop."""
+        members = set(loop)
+        neighbours = {v: [e.other_vert(v) for e in v.link_edges if e.is_boundary and e.other_vert(v) in members] for v in loop}
+        for _ in range(repeat):
+            moved = {v: (v.co + sum((n.co for n in near), v.co * 0.0) / len(near)) / 2.0 for v, near in neighbours.items() if len(near) == 2}
+            for vertex, position in moved.items():
+                vertex.co = position
+        self.bm.normal_update()
+
     # --- bands ---
 
     def swatch_id(self, name):

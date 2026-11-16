@@ -34,6 +34,53 @@ def _place(local, centre):
     return centre + SEAT + np.array((x, y * c - z * s, y * s + z * c))
 
 
+def _unplace(point, centre):
+    x, y, z = np.asarray(point, dtype=np.float64) - centre - SEAT
+    c, s = math.cos(-TILT), math.sin(-TILT)
+    return np.array((x, y * c + z * s, -y * s + z * c))
+
+
+def _brim_lift(q, angle):
+    return BRIM_CURL * q ** 1.7 * math.sin(angle) ** 2 - BRIM_DROOP * q * math.cos(angle) ** 2
+
+
+def tuck(points, centre):
+    """Moves points that would poke through the hat to just inside it.
+
+    Hair is modelled as it grows and then fitted to the hat, the way hair
+    is: whatever stands above the brim outside the crown is laid down under
+    the brim, and whatever is inside the crown is drawn in clear of its
+    wall. With the hat switched off this leaves the hair a little flattened
+    where the hat sits.
+    """
+    w, d = CROWN
+    out = np.array(points, dtype=np.float64)
+    for index, point in enumerate(out):
+        x, y, z = _unplace(point, centre)
+        angle = math.atan2(x, -y)
+        crown = math.hypot(x / w, y / d)
+        if crown < 1.0:
+            # Inside the crown's footprint: fine below the band, drawn in above it.
+            limit = 0.80 - 0.16 * max(0.0, math.cos(angle)) * min(1.0, max(0.0, z) / (CROWN_HEIGHT * 0.6))
+            if z > -0.004 and crown > limit:
+                x, y = x * limit / crown, y * limit / crown
+            z = min(z, CROWN_HEIGHT * 0.70)
+        elif math.hypot(x / BRIM[0], y / BRIM[1]) < 1.03:
+            low, high = 0.0, 1.0
+            for _ in range(14):
+                q = (low + high) / 2.0
+                if math.hypot(x / (w + (BRIM[0] - w) * q), y / (d + (BRIM[1] - d) * q)) > 1.0:
+                    low = q
+                else:
+                    high = q
+            ceiling = _brim_lift(q, angle) - BRIM_THICKNESS - 0.006
+            z = min(z, ceiling)
+        else:
+            continue
+        out[index] = _place((x, y, z), centre)
+    return out
+
+
 def build_hat(ctx):
     armature, detail = ctx["armature"], ctx["detail"]
     centre = hair.skull_centre(armature)
@@ -70,7 +117,7 @@ def build_hat(ctx):
     steps = max(3, int(round(7 * detail)))
 
     def lift(q):
-        return lambda angle: BRIM_CURL * q ** 1.7 * math.sin(angle) ** 2 - BRIM_DROOP * q * math.cos(angle) ** 2
+        return lambda angle: _brim_lift(q, angle)
 
     first_face = len(part.faces)
     top = [crown[0][0]]

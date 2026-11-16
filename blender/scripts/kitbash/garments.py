@@ -101,10 +101,31 @@ def build_sweater(ctx):
     shell.reshape(lambda co: bend(co, 1.0))
     collar = shell.cut_within(shell.loop_where(lambda c: abs(c[0]) < 0.05 and c[2] > neck[2] - 0.05), nape, opening)
     shell.reshape(lambda co: bend(co, -1.0))
+    shell.smooth_loop(collar, 6)
     shell.relax(_relaxed(16, detail))
     # Relaxing draws the sleeves and the tube in again, most of all on a coarse shell; put the room back.
     shell.reshape(drape)
     shell.clear_skin(0.008)
+
+    # The hem hangs over the shorts. It is grown straight down from this rim, so a hem as wide
+    # as the widest part of what it has to pass (the seat) stays outside the shorts all round.
+    axis = (0.0, centre_y)
+    if ctx.get("shorts_tree") is not None:
+        rim = np.array([v.co[:] for v in hem])
+        angles = np.arctan2(rim[:, 0], -(rim[:, 1] - centre_y))
+        for vertex, position, angle in zip(hem, rim, angles):
+            direction = Vector((math.sin(angle), -math.cos(angle), 0.0))
+            needed = 0.0
+            for drop in np.linspace(0.02, 0.11, 6):
+                origin = Vector((0.0, centre_y, position[2] - drop))
+                found = ctx["shorts_tree"].ray_cast(origin + direction * 0.5, -direction, 0.5)
+                if found[0] is not None:
+                    needed = max(needed, 0.5 - found[3] + 0.010)
+            radius = math.hypot(position[0], position[1] - centre_y)
+            if needed > radius:
+                vertex.co.x = direction.x * needed
+                vertex.co.y = centre_y + direction.y * needed
+        shell.smooth_loop(hem, 4)
 
     for sign, cuff in cuffs.items():
         a, b = shoulder * (sign, 1, 1), wrist * (sign, 1, 1)
@@ -115,11 +136,10 @@ def build_sweater(ctx):
             (lambda co, a=a, b=b: ring_to_radius(co, a, b, 0.041, 0.016), "sweater-shade"),
         ])
 
-    axis = (0.0, centre_y)
     shell.band(hem, [
         (lambda co: ring_scaled(co, axis, 1.0, -0.030), "sweater"),
         (lambda co: ring_scaled(co, axis, 1.0, -0.030), "sweater"),
-        (lambda co: ring_scaled(co, axis, 0.965, -0.012), "sweater-shade"),
+        (lambda co: ring_scaled(co, axis, 0.99, -0.012), "sweater-shade"),
         (lambda co: ring_scaled(co, axis, 1.0, -0.016), "sweater-stripe"),
         (lambda co: ring_scaled(co, axis, 1.0, -0.020), "sweater-shade"),
     ])
@@ -129,10 +149,17 @@ def build_sweater(ctx):
         out[:, :2] = middle[:2] + (out[:, :2] - middle[:2]) * draw
         return out
 
-    shell.band(collar, [
-        (lambda co: rib(co, 0.009, 0.985), "sweater-shade"),
-        (lambda co: rib(co, 0.009, 0.975), "sweater-shade"),
-    ])
+    ribbing = [
+        (lambda co: rib(co, 0.008, 0.99), "sweater-shade"),
+        (lambda co: rib(co, 0.008, 0.98), "sweater-shade"),
+    ]
+    if detail >= 1.0:
+        # Rolled over: the rib turns in and down, so the neckline has an edge with some depth to it.
+        ribbing += [
+            (lambda co: rib(co, 0.000, 0.955), "sweater-shade"),
+            (lambda co: rib(co, -0.012, 0.975), "sweater-shade"),
+        ]
+    shell.band(collar, ribbing)
     obj = shell.to_object("Outfit_Sweater", "outfit.default.top", ctx["collection"], armature, ctx["material"],
                           ctx["palette"], ctx["tiles"])
 
@@ -182,11 +209,18 @@ def build_shorts(ctx):
 
     for sign, loop in legs.items():
         centre = np.mean([v.co[:] for v in loop], axis=0)[:2]
-        shell.band(loop, [
+        hem = [
             (lambda co, centre=centre: ring_scaled(co, centre, 1.035, -0.012), "denim"),
             (lambda co, centre=centre: ring_scaled(co, centre, 1.0, -0.004), "denim-stitch"),
             (lambda co, centre=centre: ring_scaled(co, centre, 1.02, -0.022), "denim-shade"),
-        ])
+        ]
+        if detail >= 1.0:
+            # The turn-up has an underside.
+            hem += [
+                (lambda co, centre=centre: ring_scaled(co, centre, 0.955, -0.002), "denim-shade"),
+                (lambda co, centre=centre: ring_scaled(co, centre, 0.99, 0.020), "denim-shade"),
+            ]
+        shell.band(loop, hem)
 
     centre = np.mean([v.co[:] for v in waist], axis=0)[:2]
     top = shell.band(waist, [
@@ -194,8 +228,17 @@ def build_shorts(ctx):
         (lambda co: ring_scaled(co, centre, 1.0, 0.034), "denim-shade"),
     ])
     band_top = float(np.mean([v.co.z for v in top]))
+    # The waistband is a folded strip: it turns over at the top and comes back down inside.
+    # The lite level makes do with the turn.
+    fold = [(lambda co: ring_scaled(co, centre, 0.955, -0.003), "denim-shade")]
+    if detail >= 1.0:
+        fold = [(lambda co: ring_scaled(co, centre, 0.985, 0.004), "denim-shade")] + fold + [
+            (lambda co: ring_scaled(co, centre, 0.985, -0.026), "denim-shade")]
+    shell.band(top, fold)
     obj = shell.to_object("Outfit_Shorts", "outfit.default.bottom", ctx["collection"], armature, ctx["material"],
                           ctx["palette"], ctx["tiles"])
+    # What is worn over the shorts keeps clear of the cloth itself, not of the stitching on it.
+    ctx["shorts_tree"] = common.bvh_of(obj)
 
     if detail >= 1.0:
         surface = Surface(obj)
@@ -285,6 +328,19 @@ def _boot_path(armature, count):
     return points, tangents, ankle, ball, tip
 
 
+def _hull(points):
+    """Convex hull of 2D points, counter-clockwise."""
+    points = sorted(map(tuple, np.round(points, 5)))
+    def half(sequence):
+        chain = []
+        for p in sequence:
+            while len(chain) >= 2 and (chain[-1][0] - chain[-2][0]) * (p[1] - chain[-2][1]) - (chain[-1][1] - chain[-2][1]) * (p[0] - chain[-2][0]) <= 0:
+                chain.pop()
+            chain.append(p)
+        return chain[:-1]
+    return np.array(half(points) + half(reversed(points)))
+
+
 def build_boots(ctx):
     """Mid-calf cowboy boots: stitched shafts with pull straps, a tapering toe, and a stacked heel."""
     armature, skin, detail = ctx["armature"], ctx["skin"], ctx["detail"]
@@ -354,16 +410,27 @@ def build_boots(ctx):
         part.loft(ring_ids, swatch, flip=sign < 0)
         part.fan(ring_ids[-1], toe_point * (sign, 1.0, 1.0), "boot-shade", flip=sign < 0)
 
-        # The stacked heel: a block under the heel, a little narrower at the ground than at the boot.
-        back = ankle[1] + 0.058
-        cx = ankle[0] * sign
-        top = [(cx - 0.036, heel_front, HEEL_HEIGHT), (cx + 0.036, heel_front, HEEL_HEIGHT),
-               (cx + 0.038, back - 0.012, HEEL_HEIGHT), (cx + 0.022, back, HEEL_HEIGHT),
-               (cx - 0.022, back, HEEL_HEIGHT), (cx - 0.038, back - 0.012, HEEL_HEIGHT)]
-        ground = [(cx + (x - cx) * 0.86, heel_front + 0.010 + (y - heel_front - 0.010) * 0.90, 0.0) for x, y, _z in top]
-        upper, lower = part.verts(top), part.verts(ground)
-        part.loft([upper, lower], "boot-sole")
-        part.face(lower, "boot-sole")
+        # The stacked heel. Its top is the outline of the boot's own heel, so the two meet edge to
+        # edge; below that it steps in twice, as layers of leather do, and is cut square at the front.
+        seat = shape[(shape[..., 1] > heel_front) & (shape[..., 2] < HEEL_HEIGHT + 0.014)]
+        outline = _hull(seat[:, :2] * (sign, 1.0))
+        if len(outline) < 6:
+            # A coarse boot has too few points under the heel to give an outline; use a plain one.
+            cx, back = ankle[0] * sign, ankle[1] + 0.058
+            outline = np.array([(cx - 0.036, heel_front), (cx + 0.036, heel_front), (cx + 0.038, back - 0.012),
+                                (cx + 0.022, back), (cx - 0.022, back), (cx - 0.038, back - 0.012)])
+        middle = outline.mean(axis=0)
+        layers = []
+        steps = ((HEEL_HEIGHT + 0.002, 1.03, 0.0), (HEEL_HEIGHT * 0.62, 1.03, 0.0), (HEEL_HEIGHT * 0.60, 0.95, 0.004),
+                 (HEEL_HEIGHT * 0.30, 0.94, 0.005), (HEEL_HEIGHT * 0.28, 0.87, 0.009), (0.0, 0.85, 0.011))
+        if detail < 1.0:
+            steps = (steps[0], steps[-1])
+        for height, inset, forward in steps:
+            ring = middle + (outline - middle) * inset
+            ring[:, 1] = np.maximum(ring[:, 1], heel_front + forward)
+            layers.append(part.verts([(x, y, height) for x, y in ring]))
+        part.loft(layers, lambda r, i: "boot-shade" if r in (1, 3) else "boot-sole")
+        part.face(layers[-1], "boot-sole")
     obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=50.0)
     common.set_weights(obj, common.SkinSource(skin).sample(common.coords(obj.data)))
 
@@ -391,9 +458,12 @@ def build_boots(ctx):
             for at in (90.0, -90.0):
                 for scale in (1.0, 0.55):
                     line([(at + a * scale, 0.215 + 0.075 * (1 - scale) + zz * scale) for a, zz in dense], closed=True)
-            # A seam down the front and the back.
-            for at in (0.0, 180.0):
-                line([(at, z) for z in np.linspace(rim - 0.024, ankle[2] + 0.075, 7)], width=0.003)
+            # A seam down the front, and one down the back that runs on to the heel.
+            line([(0.0, z) for z in np.linspace(rim - 0.024, ankle[2] + 0.075, 7)], width=0.003)
+            line([(180.0, z) for z in np.linspace(rim - 0.024, HEEL_HEIGHT + 0.012, 12)], width=0.003)
+            # The heel counter: a stitched cup round the back of the heel, from one side of the ankle to the other.
+            line([(180.0 + a, HEEL_HEIGHT + 0.022 + 0.062 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-100.0, 100.0, 15)])
+            line([(180.0 + a, HEEL_HEIGHT + 0.034 + 0.062 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-92.0, 92.0, 15)], width=0.0026)
             # Pull straps: a flat loop standing over the rim at each side.
             for at in (90.0, -90.0):
                 a = math.radians(at)

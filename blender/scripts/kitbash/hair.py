@@ -29,31 +29,33 @@ STRAND_OFFSET = 0.016
 # Hairline height (z from the skull centre) by how far back a point is (y from the skull centre).
 HAIRLINE = ((-0.20, 0.074), (-0.08, 0.068), (-0.04, 0.036), (0.0, 0.024), (0.060, 0.024), (0.090, -0.060), (0.16, -0.100))
 
-# Fringe, from a parting just right of centre. (control points, half-widths). The first point of
-# each is its root, which is set down on the scalp; later strands lie over earlier ones.
+# Fringe, from a parting just right of centre: (control points, half-widths, height). The first
+# point of each is its root, which is set down on the scalp. The height is how far above the
+# head the rest of the strand rides; pieces that cross are a strand's thickness apart in
+# height, so one lies over the other instead of cutting through it.
 FRINGE = [
     # Short pieces under everything else, so no forehead shows between the longer ones.
     ([(-0.020, -0.090, 0.130), (0.020, -0.150, 0.090), (0.040, -0.156, 0.058), (0.050, -0.156, 0.036)],
-     [0.020, 0.030, 0.024, 0.003]),
+     [0.020, 0.030, 0.024, 0.003], 0.017),
     ([(-0.045, -0.085, 0.128), (-0.082, -0.128, 0.088), (-0.100, -0.126, 0.056), (-0.106, -0.124, 0.030)],
-     [0.018, 0.028, 0.022, 0.003]),
+     [0.018, 0.028, 0.022, 0.003], 0.017),
     ([(0.030, -0.080, 0.132), (0.090, -0.118, 0.092), (0.118, -0.108, 0.058), (0.130, -0.100, 0.030)],
-     [0.018, 0.028, 0.022, 0.003]),
+     [0.018, 0.028, 0.022, 0.003], 0.017),
     # The long sweep across the forehead to the character's left, flicking out at the temple.
     ([(-0.020, -0.075, 0.138), (0.030, -0.140, 0.100), (0.085, -0.135, 0.050), (0.128, -0.100, 0.008), (0.168, -0.070, -0.012)],
-     [0.020, 0.036, 0.034, 0.026, 0.004]),
+     [0.020, 0.036, 0.034, 0.026, 0.004], 0.040),
     ([(-0.025, -0.080, 0.136), (0.005, -0.150, 0.090), (0.045, -0.150, 0.045), (0.082, -0.135, 0.012), (0.105, -0.128, -0.014)],
-     [0.018, 0.030, 0.028, 0.020, 0.003]),
+     [0.018, 0.030, 0.028, 0.020, 0.003], 0.028),
     # To the right of the parting: shorter pieces that fall towards the right temple.
     ([(-0.030, -0.078, 0.137), (-0.060, -0.135, 0.095), (-0.100, -0.115, 0.050), (-0.128, -0.085, 0.000), (-0.142, -0.080, -0.045)],
-     [0.018, 0.032, 0.030, 0.022, 0.003]),
+     [0.018, 0.032, 0.030, 0.022, 0.003], 0.028),
     ([(-0.028, -0.082, 0.135), (-0.040, -0.150, 0.088), (-0.062, -0.150, 0.048), (-0.070, -0.146, 0.018)],
-     [0.014, 0.024, 0.020, 0.003]),
+     [0.014, 0.024, 0.020, 0.003], 0.040),
     # Locks in front of each ear, down to the jaw.
     ([(0.060, -0.060, 0.128), (0.118, -0.075, 0.070), (0.140, -0.062, 0.000), (0.136, -0.066, -0.075), (0.150, -0.075, -0.125)],
-     [0.016, 0.026, 0.026, 0.020, 0.003]),
+     [0.016, 0.026, 0.026, 0.020, 0.003], 0.018),
     ([(-0.065, -0.060, 0.126), (-0.120, -0.070, 0.070), (-0.141, -0.058, 0.000), (-0.138, -0.064, -0.070), (-0.128, -0.078, -0.118)],
-     [0.016, 0.026, 0.026, 0.020, 0.003]),
+     [0.016, 0.026, 0.026, 0.020, 0.003], 0.018),
 ]
 
 FRINGE_UNDERLAYER = 3     # how many of the first FRINGE entries are the short pieces underneath
@@ -250,9 +252,7 @@ def build_hair(ctx):
     guides = []
     # The lite level leaves out the short underlayer of the fringe.
     fringe = FRINGE if level == "full" else FRINGE[FRINGE_UNDERLAYER:]
-    for layer, (points, widths) in enumerate(fringe):
-        # Each strand rides a little higher than the one before, so they overlap instead of cutting through each other.
-        clearance = 0.010 + 0.0055 * layer
+    for points, widths, clearance in fringe:
         lifted = [skull.settle(points[0], 0.002)] + [skull.lift(p, clearance) for p in points[1:]]
         guides.append((lifted, widths))
     fringe_count = len(guides)
@@ -267,11 +267,15 @@ def build_hair(ctx):
     for index, (points, widths) in enumerate(guides):
         world = [centre + p for p in points]
         is_inner = index >= outer_count
-        sweep.strand(part, world, widths, 0.46 if index < fringe_count else 0.42,
+        sweep.strand(part, world, widths, 0.26 if index < fringe_count else 0.36,
                      segments if index >= fringe_count else max(5, segments - 4), level,
                      "hair-inner" if is_inner else "hair", "hair-inner" if is_inner else "hair-shade",
                      away_from=centre, root_cap=is_inner)
     _store_guides(guides, centre)
+
+    # Fit the hair to the hat: nothing may stand through the crown or the brim.
+    from . import hat
+    part.co = [tuple(position) for position in hat.tuck(part.co, centre)]
 
     removed = trim_scalp(ctx["head"], centre)
     print(f"hair: {len(guides)} strands; removed {removed} hidden scalp faces from the head")
