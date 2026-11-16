@@ -34,6 +34,8 @@ SOURCES = {
     "face": (cass_spec.SOURCES_DIR / "henge-face.blend", "henge-face", "henge-armature"),
 }
 FACE_TEXTURE = cass_spec.SOURCES_DIR / "henge-face.png"
+FACE_NORMAL = cass_spec.SOURCES_DIR / "henge-face-normal.png"
+BODY_NORMALS = {level: cass_spec.SOURCES_DIR / f"siroino-normal-{level}.png" for level in cass_spec.LEVELS}
 
 SKIN_MESH = "Skin"
 
@@ -42,8 +44,10 @@ SKIN_MESH = "Skin"
 # in Spec/proportions.json.
 HEAD_SCALE = 1.15
 # Radius of the neck where head and body meet, in the body base's own units.
-NECK_SEAM_RADIUS = 0.0310
-NECK_OVERLAP = 0.012
+NECK_SEAM_RADIUS = 0.0345
+# How far the head is set down onto the neck, and how far the body's neck carries on up inside it.
+HEAD_DROP = 0.008
+NECK_OVERLAP = 0.030
 # Shape keys that show modelled marks (kitbash/decals.py) instead of moving the face.
 DECAL_KEYS = ("照れ", "涙")
 
@@ -100,23 +104,27 @@ def assemble(level, collection):
 
     skeleton = cass_spec.load_skeleton()
     armature = rig.adopt(source_rig, skeleton["armature"], collection)
-    body.prepare(skin)
+    skin_uv = body.prepare(skin)
     rig.rename_groups(skin)
 
     head_joint = rig.head_of(armature, "Head")
+    head_joint.z -= HEAD_DROP
     eyes = face.prepare(head, head_rig, head_joint, HEAD_SCALE)
     loop, centre, radius = face.neck_opening(head, below=head_joint.z + 0.03 * HEAD_SCALE)
     pairs = face.overlay_pairs(head)
     face.narrow_neck(head, loop, centre, radius, NECK_SEAM_RADIUS, reach=0.022 * HEAD_SCALE)
     body.fit_neck(skin, centre, NECK_SEAM_RADIUS - 0.0012, NECK_OVERLAP)
+    face.seal_neck(head, loop, skin)
 
     # The body's flat skin colour is the face texture's own skin tone.
     mesh = head.data
     source_uv = common.get_uv(mesh, mesh.uv_layers[0].name)
     skin_loops = face.face_classes(mesh)[common.loop_polygons(mesh)] == face.SKIN
-    skin_uv = source_uv[skin_loops][::7]
+    tone_uv = source_uv[skin_loops][::7]
     palette = atlas.build(FACE_TEXTURE, cass_spec.PALETTE_PNG, cass_spec.PALETTE_JSON,
-                          cass_spec.ATLAS_PNG, cass_spec.ATLAS_JSON, pairs, skin_uv)
+                          cass_spec.ATLAS_PNG, cass_spec.ATLAS_JSON, pairs, tone_uv)
+
+    atlas.build_normal(FACE_NORMAL, BODY_NORMALS, cass_spec.ATLAS_NORMAL_PNG)
 
     blendshapes = cass_spec.load_blendshapes()
     missing = face.rebuild_shape_keys(head, blendshapes["all"], blend_width=0.006 * HEAD_SCALE)
@@ -140,8 +148,11 @@ def assemble(level, collection):
     common.finish_mesh(head, collection, armature, material, tiles,
                        ["face.eyes" if c != face.SKIN else "always" for c in classes])
     skin.name = skin.data.name = SKIN_MESH
+    # The body is flat skin colour, but keeps its own UVs, moved into a skin-coloured region
+    # of the atlas, so that the body base's normal map (in the normal atlas) lands on it.
+    skin.data.uv_layers[0].name = cass_spec.UV_PALETTE
     common.ensure_uv_layers(skin.data)
-    common.set_swatches(skin.data, palette, ["skin"] * len(skin.data.polygons))
+    common.set_uv(skin.data, cass_spec.UV_PALETTE, atlas.body_uv(skin_uv, level))
     common.finish_mesh(skin, collection, armature, material, tiles, body.zones(skin.data))
 
     crown = common.coords(mesh)[:, 2].max()

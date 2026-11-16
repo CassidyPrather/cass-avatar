@@ -267,6 +267,40 @@ def narrow_neck(obj, loop, centre, radius, target, reach):
     common.set_coords(mesh, basis + delta)
 
 
+def seal_neck(obj, loop, skin):
+    """Sets the head's open neck loop down onto the body's neck, so nothing shows between them.
+
+    The loop is slanted and not quite round, and the body's neck is neither
+    straight nor centred under it, so matching radii alone leaves gaps to
+    look through from below. Each loop vertex goes to the nearest point of
+    the body's neck, a hair proud of it; the ring above follows half way.
+    """
+    mesh = obj.data
+    source = common.SkinSource(skin)
+    blocks = mesh.shape_keys.key_blocks
+    basis = common.key_coords(blocks["Basis"])
+    delta = np.zeros_like(basis)
+    for index in loop:
+        location, normal, _face, _distance = source.nearest(basis[index])
+        outward = basis[index] - np.array(location)
+        outward[2] = 0.0
+        length = np.linalg.norm(outward)
+        outward = outward / length if length > 1e-9 else np.array(normal)
+        delta[index] = np.array(location) + outward * 0.0008 - basis[index]
+    neighbours = {}
+    members = set(loop)
+    for edge in mesh.edges:
+        a, b = edge.vertices
+        for inner, outer in ((a, b), (b, a)):
+            if inner in members and outer not in members:
+                neighbours.setdefault(outer, []).append(inner)
+    for vertex, ring in neighbours.items():
+        delta[vertex] = 0.5 * np.mean([delta[i] for i in ring], axis=0)
+    for block in blocks:
+        common.set_key_coords(block, common.key_coords(block) + delta)
+    common.set_coords(mesh, basis + delta)
+
+
 def _lip_line(basis, deltas):
     """Height of the line between the lips: the top of what the jaw carries, near the front."""
     jaw = np.linalg.norm(deltas["jawOpen"], axis=1)

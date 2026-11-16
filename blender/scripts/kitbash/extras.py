@@ -1,12 +1,14 @@
 """Rabbit ears and tail.
 
-The ears are long, upright and open to the front, on three-bone chains that
-physics and the gesture expressions both move. They root on the upper sides
-of the skull, wide enough apart to pass the hat's crown and come up through
-its brim (hat.py cuts the holes from `ear_axes`).
+The ears are long, upright and cupped: a thick rounded back in the hair's
+colour, a rolled rim, and a hollow pink inside that ends in a rounded point
+short of the tip. A ring of fur tufts hides where each one roots. They sit
+on three-bone chains that physics and the gesture expressions both move,
+wide enough apart to pass the hat's crown and come up through its brim
+(hat.py cuts the holes from `ear_axes`).
 
-The tail is a scut: short, tapered and turned up, pale underneath, ending in
-a few tufts. Not a pom-pom.
+The tail is a scut: short, tapered and turned up, darker on top and pale
+underneath, with tufts breaking its outline. Not a pom-pom.
 """
 
 import math
@@ -18,20 +20,30 @@ from . import common, hair, rig, sweep
 from .common import smoothstep
 
 # Left ear, in metres from the skull's centre: where it roots, and the path to its tip.
-EAR_ROOT = np.array((0.110, 0.014, 0.098))
-EAR_GUIDE = np.array(((-0.004, -0.001, -0.022), (0.0, 0.0, 0.0), (0.012, 0.005, 0.095), (0.034, 0.016, 0.200), (0.058, 0.032, 0.300)))
-EAR_WIDTHS = (0.021, 0.025, 0.042, 0.040, 0.013)
-EAR_THICKNESS = 0.34
+EAR_ROOT = np.array((0.128, 0.012, 0.086))
+EAR_GUIDE = np.array(((-0.012, -0.002, -0.030), (0.0, 0.0, 0.0), (0.014, 0.006, 0.115), (0.040, 0.020, 0.245), (0.070, 0.040, 0.360)))
+EAR_HALF_WIDTH = 0.052
+EAR_DEPTH = 0.50            # how thick the ear is front to back, as a fraction of its half-width
 # The ear's open side faces this way (left ear); the right ear mirrors it.
 EAR_FRONT = np.array((0.30, -0.95, 0.0))
 EAR_JOINTS = (0.085, 0.36, 0.66, 1.0)     # fractions of the path where Ear1, Ear2, Ear3 start, and the tip
 
+# Cross-sections as (across, towards the back) on a unit half-width. The back is a dome,
+# the front has a rolled rim at each edge and is hollow between them.
+EAR_PROFILES = {
+    "full": [(-1.0, 0.10), (-0.80, 0.62), (-0.36, 0.94), (0.36, 0.94), (0.80, 0.62), (1.0, 0.10),
+             (0.86, -0.10), (0.60, 0.16), (0.0, 0.46), (-0.60, 0.16), (-0.86, -0.10)],
+    "lite": [(-1.0, 0.10), (-0.55, 0.85), (0.55, 0.85), (1.0, 0.10), (0.78, -0.08), (0.0, 0.42), (-0.78, -0.08)],
+}
+# Sides of each profile (by the index of their first point) that are the hollow inside.
+EAR_INSIDE = {"full": (7, 8), "lite": (4, 5)}
+
 # The tail's centre line from where it roots on the back (x left, y back, z up), and its radius along it.
-TAIL_GUIDE = np.array(((0.0, -0.022, -0.012), (0.0, 0.034, 0.004), (0.0, 0.066, 0.050), (0.0, 0.078, 0.108), (0.0, 0.070, 0.160)))
-TAIL_RADII = (0.020, 0.036, 0.040, 0.028, 0.008)
-TAIL_FLATTEN = (1.30, 0.62)     # wider than it is thick
+TAIL_GUIDE = np.array(((0.0, -0.024, -0.010), (0.0, 0.040, 0.000), (0.0, 0.088, 0.026), (0.0, 0.122, 0.066), (0.0, 0.138, 0.110)))
+TAIL_RADII = (0.020, 0.037, 0.042, 0.030, 0.008)
+TAIL_FLATTEN = (1.25, 0.66)     # wider than it is thick
 # Tufts that break up the outline: (fraction along the tail, sideways lean, half-width).
-TAIL_TUFTS = ((0.50, 1.0, 0.020), (0.50, -1.0, 0.020), (0.76, 0.75, 0.018), (0.76, -0.75, 0.018))
+TAIL_TUFTS = ((0.46, 1.0, 0.021), (0.46, -1.0, 0.021), (0.72, 0.8, 0.019), (0.72, -0.8, 0.019), (0.60, 0.0, 0.020))
 
 
 def _mirror(points, sign):
@@ -51,6 +63,13 @@ def ear_axes(armature):
     return axes
 
 
+def _ear_width(fraction):
+    """Half-width along the ear, as a fraction of its widest: narrow at the root, a rounded tip."""
+    rise = 0.52 + 0.48 * smoothstep(0.0, 0.40, fraction)
+    fall = np.sqrt(np.clip(1.0 - (np.clip(fraction - 0.45, 0.0, None) / 0.55) ** 2.2, 0.0, 1.0))
+    return rise * fall
+
+
 def _ear_bones(armature):
     rows = []
     for side, sign in (("L", 1.0), ("R", -1.0)):
@@ -65,34 +84,60 @@ def _ear_bones(armature):
 def build_ears(ctx):
     armature, level, detail = ctx["armature"], ctx["level"], ctx["detail"]
     rig.add_bones(armature, _ear_bones(armature))
-    segments = max(6, int(round(11 * detail)))
+    segments = max(8, int(round(18 * detail)))
     part = common.Part("Ears", "always")
-    profile = sweep.PROFILES[level]
+    profile = EAR_PROFILES[level]
+    inside = EAR_INSIDE[level]
+    n = len(profile)
     fractions = []
     for side, sign in (("L", 1.0), ("R", -1.0)):
         path = sweep.spline(ear_guide(armature, sign), segments)
-        half = sweep.resample(EAR_WIDTHS, segments)
+        # Stations bunch towards the tip, where the outline curves fastest.
+        stations = [1.0 - (1.0 - i / segments) ** 1.5 for i in range(segments)]
         back = -_mirror(EAR_FRONT, sign)
         _tangent, across, outward = sweep.frames(path, facing=back)
-        rings = [part.verts([path[i] + across[i] * (a * half[i]) + outward[i] * (o * half[i] * EAR_THICKNESS) for a, o in profile])
-                 for i in range(segments + 1)]
-        n = len(profile)
-        # The domed back is fur. On the open front, only the middle is the pink inner ear,
-        # and only above the root, where the ear has opened up.
+        rings = []
+        for t in stations:
+            at = t * segments
+            i, f = min(int(at), segments - 1), at - min(int(at), segments - 1)
+            centre = path[i] * (1 - f) + path[i + 1] * f
+            a = across[i] * (1 - f) + across[i + 1] * f
+            o = outward[i] * (1 - f) + outward[i + 1] * f
+            half = EAR_HALF_WIDTH * float(_ear_width(t))
+            rings.append(part.verts([centre + a * (x * half * sign) + o * (y * half * EAR_DEPTH) for x, y in profile]))
+            fractions.append([(side, t)] * n)
+
         def swatch(r, s):
-            inner = s == (4 if level == "full" else None) or (level == "lite" and s in (2, 3))
-            return "ear-inner" if inner and 0 < r < segments - 1 else "ear-fur"
+            t = stations[r]
+            # The pink starts above the root and stops short of the tip; the ear narrows there, so it ends in a point.
+            return "ear-inner" if s in inside and 0.12 < t < 0.88 else "hair"
+
         part.loft(rings, swatch, flip=sign < 0)
-        tip = part.vert(path[-1] + (path[-1] - path[-2]) * 0.45)
+        tip = part.vert(path[-1])
+        fractions.append([(side, 1.0)])
         for s in range(n):
             triangle = (rings[-1][s], rings[-1][(s + 1) % n], tip)
-            part.face(triangle[::-1] if sign < 0 else triangle, "ear-fur")
-        fractions.extend([(side, i / segments)] * n for i in range(segments + 1))
-        fractions.append([(side, 1.0)])
-    obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=45.0)
+            part.face(triangle[::-1] if sign < 0 else triangle, "hair")
+
+        # Fur at the root: a ring of short tufts leaning out from the base of the ear.
+        root, lean = path[0], path[2] - path[0]
+        lean = lean / np.linalg.norm(lean)
+        tufts = 7 if level == "full" else 3
+        for k in range(tufts):
+            angle = 2.0 * math.pi * (k + 0.5) / tufts
+            out = across[0] * math.cos(angle) + outward[0] * math.sin(angle)
+            start = root + lean * 0.016 + out * 0.014
+            end = start + lean * (0.040 + 0.010 * math.sin(k * 2.4)) + out * 0.014
+            before = len(part.co)
+            sweep.strand(part, [start, (start + end) / 2 + out * 0.006, end], [0.011, 0.010, 0.002], 0.7,
+                         3 if level == "full" else 2, level, "hair", "hair-shade", facing=out)
+            fractions.append([(side, 0.0)] * (len(part.co) - before))
+    obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=60.0)
 
     flat = [entry for group in fractions for entry in group]
     count = len(obj.data.vertices)
+    if len(flat) != count:
+        raise RuntimeError(f"ears: {count} vertices but {len(flat)} weights")
     table = {"Head": np.zeros(count)}
     for side in "LR":
         for i in range(3):
@@ -119,11 +164,12 @@ def build_tail(ctx):
         raise RuntimeError("tail: could not find the back of the hips")
     root = np.array(hit[0])
     guide = root + TAIL_GUIDE
-    segments = max(4, int(round(7 * detail)))
-    around = max(6, int(round(10 * detail / 2)) * 2)
+    segments = max(5, int(round(9 * detail)))
+    around = max(6, int(round(12 * detail / 2)) * 2)
     path = sweep.spline(guide, segments)
     radii = sweep.resample(TAIL_RADII, segments)
-    _tangent, across, outward = sweep.frames(path, facing=(0.0, -1.0, 0.25))
+    # "Outward" is the tail's upper side.
+    tangent, across, outward = sweep.frames(path, facing=(0.0, -0.45, 1.0))
 
     part = common.Part("Tail", "always")
     rings = []
@@ -134,17 +180,17 @@ def build_tail(ctx):
             ring.append(path[i] + across[i] * (math.cos(angle) * radii[i] * TAIL_FLATTEN[0])
                         + outward[i] * (math.sin(angle) * radii[i] * TAIL_FLATTEN[1]))
         rings.append(part.verts(ring))
-    # The side towards the body is fur-coloured and the side shown to whoever follows is white, as on a rabbit.
-    part.loft(rings, lambda r, k: "ear-fur" if k < around // 2 else "highlight")
+    # Darker on top, in the hair's shade; pale underneath, as on a rabbit.
+    part.loft(rings, lambda r, k: "hair-shade" if k < around // 2 else "ear-fur")
     tip = path[-1] + (path[-1] - path[-2]) * 0.6
     part.fan(rings[-1], tip, "ear-fur")
-    tangent = _tangent
     for fraction, lean, width in TAIL_TUFTS:
         i = min(segments - 1, int(round(fraction * segments)))
-        start = path[i] + across[i] * (lean * radii[i] * 0.7)
-        reach = across[i] * (lean * 0.020) + tangent[i] * 0.034
+        sideways = across[i] * lean if lean else outward[i]
+        start = path[i] + sideways * (radii[i] * 0.7)
+        reach = sideways * 0.022 + tangent[i] * 0.036
         sweep.strand(part, [start, start + reach * 0.55 + tangent[i] * 0.006, start + reach], [width, width * 0.75, 0.002], 0.7,
-                     2, level, "ear-fur", "highlight", facing=outward[i])
+                     2, level, "hair-shade" if not lean else "hair", "ear-fur", facing=outward[i])
     obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=50.0)
 
     middle = path[len(path) // 2]

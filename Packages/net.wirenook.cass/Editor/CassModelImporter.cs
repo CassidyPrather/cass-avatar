@@ -14,9 +14,18 @@ namespace Wirenook.Cass.Editor
     public sealed class CassModelImporter : AssetPostprocessor
     {
         /// <summary>Bump to make Unity re-import the models after these rules change.</summary>
-        public override uint GetVersion() => 7;
+        public override uint GetVersion() => 8;
 
         private bool Applies => assetPath.Replace('\\', '/').StartsWith(CassSpec.ExportFolder + "/", StringComparison.Ordinal);
+
+        private void OnPreprocessTexture()
+        {
+            if (assetPath.Replace('\\', '/') != CassMaterials.NormalPath) return;
+            var importer = (TextureImporter)assetImporter;
+            importer.textureType = TextureImporterType.NormalMap;
+            importer.sRGBTexture = false;
+            importer.mipmapEnabled = true;
+        }
 
         private void OnPreprocessModel()
         {
@@ -41,6 +50,8 @@ namespace Wirenook.Cass.Editor
             // recalculating their normals makes expressions flicker in shade.
             importer.importBlendShapeNormals = ModelImporterNormals.None;
             importer.importNormals = ModelImporterNormals.Import;
+            // The face is shaded through a normal map.
+            importer.importTangents = ModelImporterTangents.CalculateMikk;
             importer.skinWeights = ModelImporterSkinWeights.Standard;
 
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;

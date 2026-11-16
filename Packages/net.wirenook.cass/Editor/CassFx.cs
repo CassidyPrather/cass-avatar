@@ -100,17 +100,28 @@ namespace Wirenook.Cass.Editor
                 if (!mapped.ContainsKey(value)) toNeutral.Or().Equal(parameter, value);
             }
 
+            // One expression at a time. Two recipes laid over each other
+            // make a face neither of them meant, so while the right hand
+            // holds an expression the left hand's layer rests.
+            var yieldsTo = hand == Hand.Left
+                ? gestures.For(Hand.Right).Keys.OrderBy(value => value).ToList()
+                : new List<int>();
+            foreach (var value in yieldsTo) toNeutral.Or().Equal("GestureRight", value);
+
             foreach (var pair in mapped.OrderBy(entry => entry.Key))
             {
                 var expression = gestures.Expressions[pair.Value];
                 var full = layer.State(expression.Label, ExpressionClip(fx, expression, false, shapes, tiles, renderers));
                 var tracked = layer.State(expression.Label + " (tracked)", ExpressionClip(fx, expression, true, shapes, tiles, renderers));
 
-                layer.Any(tracked).Fade(ExpressionFade)
+                var toTracked = layer.Any(tracked).Fade(ExpressionFade)
                     .Equal(parameter, pair.Key).IfTrue(TrackingEnabled).IfTrue(UserFaceTracking);
-                layer.Any(full).Fade(ExpressionFade)
-                    .Equal(parameter, pair.Key).IfFalse(TrackingEnabled)
-                    .Or().Equal(parameter, pair.Key).IfFalse(UserFaceTracking);
+                foreach (var value in yieldsTo) toTracked.NotEqual("GestureRight", value);
+                var toFull = layer.Any(full).Fade(ExpressionFade)
+                    .Equal(parameter, pair.Key).IfFalse(TrackingEnabled);
+                foreach (var value in yieldsTo) toFull.NotEqual("GestureRight", value);
+                toFull.Or().Equal(parameter, pair.Key).IfFalse(UserFaceTracking);
+                foreach (var value in yieldsTo) toFull.NotEqual("GestureRight", value);
             }
         }
 

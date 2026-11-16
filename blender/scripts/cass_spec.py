@@ -17,6 +17,7 @@ PALETTE_PNG = PACKAGE / "Textures" / "cass-palette.png"
 # The texture the model wears: the painted face plus the palette, baked by build_cass.py.
 ATLAS_JSON = PACKAGE / "Textures" / "cass-atlas.json"
 ATLAS_PNG = PACKAGE / "Textures" / "cass-atlas.png"
+ATLAS_NORMAL_PNG = PACKAGE / "Textures" / "cass-atlas-normal.png"
 BLEND_PATH = REPO / "blender" / "cass.blend"
 SOURCES_DIR = REPO / "blender" / "sources"
 FBX_PATH = PACKAGE / "BlenderExports" / "cass.fbx"
@@ -27,8 +28,9 @@ FBX_PATH = PACKAGE / "BlenderExports" / "cass.fbx"
 LEVELS = {
     "full": {"blend": BLEND_PATH, "fbx": FBX_PATH, "max_triangles": 70000},
     "lite": {"blend": REPO / "blender" / "cass-lite.blend", "fbx": PACKAGE / "BlenderExports" / "cass-lite.fbx",
-             # Before the build removes the skin under the outfit; VRChat's mobile Medium is 15,000 after it.
-             "max_triangles": 16000},
+             # Before the build removes the skin under the outfit; VRChat's mobile Medium is 15,000 after it,
+             # and `scripts/cass.sh verify <slug> android` is what holds the build to that.
+             "max_triangles": 17000},
 }
 LEVEL_PROP = "wirenook_level"
 

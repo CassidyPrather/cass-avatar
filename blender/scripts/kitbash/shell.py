@@ -59,6 +59,23 @@ class Shell:
             bmesh.ops.smooth_vert(self.bm, verts=interior, factor=factor, use_axis_x=True, use_axis_y=True, use_axis_z=True)
         self.bm.normal_update()
 
+    def clear_skin(self, clearance):
+        """Lifts every vertex that has sunk to within `clearance` of the skin back out to that distance.
+
+        Relaxing a tube draws it in, and a shell that started a centimetre
+        off the body can end up under it in places. This runs after the
+        shaping is done, so the cloth is smooth where it is loose and still
+        never lets the skin through.
+        """
+        if not hasattr(self, "_skin_tree"):
+            self._skin_tree = common.bvh_of(self.skin)
+        for vertex in self.bm.verts:
+            location, normal, _index, _distance = self._skin_tree.find_nearest(vertex.co)
+            height = (vertex.co - location).dot(normal)
+            if height < clearance:
+                vertex.co = vertex.co + normal * (clearance - height)
+        self.bm.normal_update()
+
     # --- bands ---
 
     def swatch_id(self, name):
@@ -97,47 +114,60 @@ class Shell:
             raise RuntimeError(f"expected one open loop, found {len(found)}")
         return found[0]
 
-    def level(self, loop, direction=None):
-        """Puts an open loop in one plane by sliding its vertices along `direction`.
+    def cut(self, point, normal, centre=None, reach=None):
+        """Cuts the shell with a plane and discards what lies on the side `normal` points to.
 
-        Without a direction the loop settles onto its own best-fit plane,
-        which suits a rim that is not square to any axis, such as a collar.
-
-        Segments of a triangulated body meet on saw-toothed edges; a garment
-        wants a clean rim before a band is grown from it.
+        Segments of a triangulated body meet on saw-toothed edges. A garment
+        gets its rims by being cut straight a little inside those edges, so
+        every rim is a clean line with new vertices on it. With `centre` and
+        `reach`, only geometry within that distance of the centre is cut,
+        which keeps a collar's plane from also slicing the shoulders.
+        Returns the new rim as a list of vertices.
         """
-        points = np.array([v.co[:] for v in loop], dtype=np.float64)
-        centre = points.mean(axis=0)
-        normal = np.linalg.svd(points - centre)[2][-1]
-        if direction is None:
-            direction = normal
+        normal = np.asarray(normal, dtype=np.float64)
+        normal = normal / np.linalg.norm(normal)
+        point = np.asarray(point, dtype=np.float64)
+        if centre is None:
+            geometry = self.bm.verts[:] + self.bm.edges[:] + self.bm.faces[:]
+        else:
+            centre = np.asarray(centre, dtype=np.float64)
+            near = {v for v in self.bm.verts if np.linalg.norm(np.array(v.co[:]) - centre) < reach}
+            # Any face that reaches into the region is cut whole, or its far part would be left standing.
+            faces = [f for f in self.bm.faces if any(v in near for v in f.verts)]
+            edges = {e for f in faces for e in f.edges}
+            geometry = list({v for f in faces for v in f.verts}) + list(edges) + faces
+        result = bmesh.ops.bisect_plane(self.bm, geom=geometry, dist=1e-6, plane_co=point, plane_no=normal, clear_outer=True)
+        self.bm.normal_update()
+        made = {g for g in result["geom_cut"] if isinstance(g, bmesh.types.BMVert) and g.is_valid and g.is_boundary}
+        if len(made) < 3:
+            raise RuntimeError("a cut produced no rim; its plane misses the garment")
+        # The whole of each open loop the cut made, so a band grown from it has no gaps.
+        rim = [v for loop in self.open_loops() if any(v in made for v in loop) for v in loop]
+        stray = [v for v in rim if abs((np.array(v.co[:]) - point) @ normal) > 1e-4]
+        if stray:
+            worst = max(abs((np.array(v.co[:]) - point) @ normal) for v in stray)
+            raise RuntimeError(f"a cut left {len(stray)} vertex(es) of the old edge on its rim, up to {worst:.4f} m off the plane; cut deeper")
+        return rim
+
+    def cut_rim(self, loop, direction, margin=0.004):
+        """Cuts off a saw-toothed open loop: a plane square to `direction`, just inside the loop's deepest tooth."""
         direction = np.asarray(direction, dtype=np.float64)
         direction = direction / np.linalg.norm(direction)
-        # A loop far from square to the sliding direction is levelled across it instead.
-        if abs(normal @ direction) < 0.5:
-            normal = direction
-        slide = ((centre - points) @ normal) / (direction @ normal)
-        for vertex, position in zip(loop, points + slide[:, None] * direction):
-            vertex.co = position
-        self.bm.normal_update()
+        points = np.array([v.co[:] for v in loop], dtype=np.float64)
+        centre = points.mean(axis=0)
+        depth = ((points - centre) @ direction).min() - margin
+        reach = np.linalg.norm(points - centre, axis=1).max() * 1.5
+        return self.cut(centre + direction * depth, direction, centre, reach)
 
-    def even_out(self, loop, centre_xy, window=7):
-        """Smooths how far a roughly horizontal loop stands from a vertical axis, going round it.
-
-        Levelling straightens a saw-toothed rim along the axis; this takes
-        the teeth out of its outline as well.
-        """
-        centre = np.asarray(centre_xy, dtype=np.float64)
-        offsets = np.array([v.co[:2] for v in loop], dtype=np.float64) - centre
-        order = np.argsort(np.arctan2(offsets[:, 1], offsets[:, 0]))
-        radii = np.linalg.norm(offsets[order], axis=1)
-        half = window // 2
-        padded = np.concatenate([radii[-half:], radii, radii[:half]])
-        smooth = np.convolve(padded, np.ones(window) / window, mode="valid")
-        for index, radius, target in zip(order, radii, smooth):
-            loop[index].co.x = centre[0] + offsets[index][0] / radius * target
-            loop[index].co.y = centre[1] + offsets[index][1] / radius * target
-        self.bm.normal_update()
+    def cut_within(self, loop, point, normal, margin=0.004):
+        """Cuts with a given plane, moved in as far as it must be to clear every tooth of an open loop."""
+        normal = np.asarray(normal, dtype=np.float64)
+        normal = normal / np.linalg.norm(normal)
+        points = np.array([v.co[:] for v in loop], dtype=np.float64)
+        centre = points.mean(axis=0)
+        needed = ((points - np.asarray(point)) @ normal).min() - margin
+        reach = np.linalg.norm(points - centre, axis=1).max() * 2.2
+        return self.cut(np.asarray(point) + normal * min(0.0, needed), normal, centre, reach)
 
     def band(self, loop, steps):
         """Extrudes an open loop through `steps`, a list of (function(co) -> co, swatch).

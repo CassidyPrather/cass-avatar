@@ -27,10 +27,18 @@ from .common import smoothstep
 CAP_OFFSET = 0.011
 STRAND_OFFSET = 0.016
 # Hairline height (z from the skull centre) by how far back a point is (y from the skull centre).
-HAIRLINE = ((-0.20, 0.090), (-0.08, 0.082), (-0.04, 0.040), (0.0, 0.024), (0.060, 0.024), (0.090, -0.060), (0.16, -0.100))
+HAIRLINE = ((-0.20, 0.074), (-0.08, 0.068), (-0.04, 0.036), (0.0, 0.024), (0.060, 0.024), (0.090, -0.060), (0.16, -0.100))
 
-# Fringe, from a parting just right of centre. (control points, half-widths)
+# Fringe, from a parting just right of centre. (control points, half-widths). The first point of
+# each is its root, which is set down on the scalp; later strands lie over earlier ones.
 FRINGE = [
+    # Short pieces under everything else, so no forehead shows between the longer ones.
+    ([(-0.020, -0.090, 0.130), (0.020, -0.150, 0.090), (0.040, -0.156, 0.058), (0.050, -0.156, 0.036)],
+     [0.020, 0.030, 0.024, 0.003]),
+    ([(-0.045, -0.085, 0.128), (-0.082, -0.128, 0.088), (-0.100, -0.126, 0.056), (-0.106, -0.124, 0.030)],
+     [0.018, 0.028, 0.022, 0.003]),
+    ([(0.030, -0.080, 0.132), (0.090, -0.118, 0.092), (0.118, -0.108, 0.058), (0.130, -0.100, 0.030)],
+     [0.018, 0.028, 0.022, 0.003]),
     # The long sweep across the forehead to the character's left, flicking out at the temple.
     ([(-0.020, -0.075, 0.138), (0.030, -0.140, 0.100), (0.085, -0.135, 0.050), (0.128, -0.100, 0.008), (0.168, -0.070, -0.012)],
      [0.020, 0.036, 0.034, 0.026, 0.004]),
@@ -48,8 +56,10 @@ FRINGE = [
      [0.016, 0.026, 0.026, 0.020, 0.003]),
 ]
 
+FRINGE_UNDERLAYER = 3     # how many of the first FRINGE entries are the short pieces underneath
+
 # Back and side strands: azimuths in degrees from straight ahead, per level (mirrored, plus one at 180).
-AZIMUTHS = {"full": (68, 90, 112, 134, 157), "lite": (70, 105, 142)}
+AZIMUTHS = {"full": (64, 82, 100, 118, 136, 153, 168), "lite": (70, 105, 142)}
 INNER_AZIMUTHS = {"full": (118, 150), "lite": (125,)}
 WHORL = (0.0, 0.030, 0.146)
 LENGTH = 0.235            # how far below the skull centre the tips hang
@@ -75,6 +85,10 @@ class Skull:
         direction = direction / np.linalg.norm(direction)
         hit = self.tree.ray_cast(Vector(self.centre + direction * 0.4), Vector(-direction), 0.4)
         return 0.4 - hit[3] if hit[0] is not None else 0.0
+
+    def settle(self, point, clearance):
+        """`point` (relative to the centre) set down at `clearance` above the surface, wherever it was."""
+        return self.on_surface(point, clearance)
 
     def lift(self, point, clearance):
         """`point` (relative to the centre) pushed out to at least `clearance` above the surface."""
@@ -143,15 +157,17 @@ def _hanging_guide(skull, azimuth, index, inner=False):
     equator = skull.on_surface(flat + np.array((0.0, 0.0, 0.05)), clearance)
     reach = np.linalg.norm(equator[:2])
     points.append(equator)
-    widths.append(0.050 if inner else 0.046)
-    length = LENGTH * (0.94 if inner else 1.0 + 0.06 * vary)
-    # Hang, with a soft wave, then flick outwards at the tip.
-    for fraction, bulge, width in ((0.40, 0.985, 0.046), (0.72, 1.03 + 0.03 * vary, 0.038), (0.92, 1.10, 0.022), (1.0, 1.20 + 0.05 * vary, 0.003)):
+    widths.append(0.050 if inner else 0.042)
+    length = LENGTH * (0.94 if inner else 1.0 + 0.10 * vary)
+    turn = 1.0 if index % 2 else -1.0
+    # Hang with a soft wave, then curl outwards and up at the tip, each strand turning its own way.
+    for fraction, bulge, width, curl in ((0.36, 0.985, 0.042, 0.0), (0.66, 1.02 + 0.03 * vary, 0.038, 0.0), (0.86, 1.08, 0.030, 0.1),
+                                         (0.96, 1.17, 0.019, 0.5), (1.0, 1.22 + 0.04 * vary, 0.003, 1.0)):
         if inner:
-            bulge = 0.90 + 0.06 * fraction
-            width *= 1.25
-        swirl = _direction(azimuth + 7.0 * vary * fraction)
-        points.append(np.array((swirl[0] * reach * bulge, swirl[1] * reach * bulge, -length * fraction)))
+            bulge, curl = 0.90 + 0.06 * fraction, 0.0
+            width *= 1.3
+        swirl = _direction(azimuth + turn * (4.0 * fraction + 9.0 * curl))
+        points.append(np.array((swirl[0] * reach * bulge, swirl[1] * reach * bulge, -length * fraction + 0.016 * curl)))
         widths.append(width)
     return points, widths
 
@@ -229,11 +245,16 @@ def build_hair(ctx):
 
     part = common.Part("Hair", "always")
     _cap(part, skull, detail)
-    segments = max(5, int(round(10 * detail)))
+    segments = max(6, int(round(16 * detail * detail + 2)))
 
     guides = []
-    for points, widths in FRINGE:
-        guides.append(([skull.lift(p, STRAND_OFFSET) for p in points], widths))
+    # The lite level leaves out the short underlayer of the fringe.
+    fringe = FRINGE if level == "full" else FRINGE[FRINGE_UNDERLAYER:]
+    for layer, (points, widths) in enumerate(fringe):
+        # Each strand rides a little higher than the one before, so they overlap instead of cutting through each other.
+        clearance = 0.010 + 0.0055 * layer
+        lifted = [skull.settle(points[0], 0.002)] + [skull.lift(p, clearance) for p in points[1:]]
+        guides.append((lifted, widths))
     fringe_count = len(guides)
     azimuths = [180.0] + [sign * a for a in AZIMUTHS[level] for sign in (1.0, -1.0)]
     for index, azimuth in enumerate(azimuths):
@@ -246,8 +267,8 @@ def build_hair(ctx):
     for index, (points, widths) in enumerate(guides):
         world = [centre + p for p in points]
         is_inner = index >= outer_count
-        sweep.strand(part, world, widths, 0.42 if index < fringe_count else 0.36,
-                     segments if index >= fringe_count else max(4, segments - 2), level,
+        sweep.strand(part, world, widths, 0.46 if index < fringe_count else 0.42,
+                     segments if index >= fringe_count else max(5, segments - 4), level,
                      "hair-inner" if is_inner else "hair", "hair-inner" if is_inner else "hair-shade",
                      away_from=centre, root_cap=is_inner)
     _store_guides(guides, centre)

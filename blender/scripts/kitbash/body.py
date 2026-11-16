@@ -13,16 +13,18 @@ import numpy as np
 
 from . import common
 
-# The base's size preset, and how much of its flat-chest key is mixed in.
+# The base's size preset, and how much of its flat-chest key is mixed in (the design is flat-chested).
 SIZE_KEY = "All_M"
 FLATTEN_KEY = "Breasts_flat"
-FLATTEN = 0.75
+FLATTEN = 1.0
 
 # Body segment (the stem of its _OFF key) -> skin zone. Garments are cut from the same segments.
 SEGMENT_ZONE = {
     "Neck": "always", "Hand": "always", "Wrist": "always",
-    "Chest_01": "body.torso", "Chest_02": "body.torso", "Spine": "body.torso",
-    "Shoulder": "body.arms", "UpperArm": "body.arms", "Elbow": "body.arms", "LowerArm": "body.arms",
+    # The collarbones and the tops of the shoulders show in an open neckline, so they are never hidden.
+    "Chest_01": "always", "Shoulder": "always",
+    "Chest_02": "body.torso", "Spine": "body.torso",
+    "UpperArm": "body.arms", "Elbow": "body.arms", "LowerArm": "body.arms",
     "Hips": "body.hips",
     "UpperLeg_01": "body.legs", "UpperLeg_02": "body.legs", "Knee": "body.legs", "LowerLeg_01": "body.legs",
     "LowerLeg_02": "body.feet", "Foot": "body.feet", "Toe": "body.feet",
@@ -32,8 +34,10 @@ SEGMENT_ATTRIBUTE = "segment"
 
 
 def prepare(obj):
-    """Bakes the presets, drops the shape keys and records each face's body segment."""
+    """Bakes the presets, drops the shape keys and records each face's body segment. Returns the body's own UVs per loop."""
     mesh = obj.data
+    # The first UV layer is the one the base's normal map is drawn for; the rest are for its nail textures.
+    own_uv = common.get_uv(mesh, mesh.uv_layers[0].name)
     blocks = mesh.shape_keys.key_blocks
     basis = common.key_coords(blocks["Basis"])
     moved = np.stack([np.linalg.norm(common.key_coords(blocks[f"{name}_OFF"]) - basis, axis=1) for name in SEGMENTS], axis=1)
@@ -57,7 +61,7 @@ def prepare(obj):
         face_segment[polygon.index] = np.bincount(corners[corners >= 0]).argmax()
     attribute = mesh.attributes.new(SEGMENT_ATTRIBUTE, "INT", "FACE")
     attribute.data.foreach_set("value", face_segment)
-    return face_segment
+    return own_uv
 
 
 def face_segments(mesh):
@@ -97,6 +101,12 @@ def fit_neck(obj, seam_centre, seam_radius, overlap):
     centre = np.array(seam_centre[:2])
     moved = co.copy()
     moved[neck, :2] = centre + (co[neck, :2] - centre) * factor[neck, None]
+    common.set_coords(mesh, moved)
+
+    # Above the seam the neck is a straight tube of the seam's radius, hidden inside the head.
+    above = neck & (moved[:, 2] > top)
+    offsets = moved[above, :2] - centre
+    moved[above, :2] = centre + offsets / np.maximum(np.linalg.norm(offsets, axis=1, keepdims=True), 1e-9) * seam_radius
     common.set_coords(mesh, moved)
 
     bm = bmesh.new()

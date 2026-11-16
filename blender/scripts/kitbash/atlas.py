@@ -10,6 +10,16 @@ Layout of Textures/cass-atlas.png (UV space, origin bottom-left):
                      a swatch's UV here is its palette UV divided by PALETTE_SHRINK.
 
 The rest is filled with the skin colour and is free for painted detail later.
+
+    u 0.50 .. 1.00, v 0 .. 0.50   skin colour; the full-level body keeps its own UVs here,
+    u 0.25 .. 0.50, v 0 .. 0.25   and the lite-level body here (BODY_REGIONS). Flat in
+                                  colour, but the normal atlas has the body's normal map.
+
+A second texture, cass-atlas-normal.png, has the same layout: the face's
+normal map in the face strip, each body level's normal map in its region,
+and a flat normal everywhere else. The face
+mesh is coarse around the mouth and nose, and its author shades it through
+this map; without it, toon shadow falls in creases there.
 The `skin` swatch is not taken from the palette: it is the face texture's
 own skin tone, so the flat-coloured body and the painted head match.
 """
@@ -25,6 +35,11 @@ OVERLAY_SHIFT = 0.45
 HEART_COLOUR, HEART_RIM = (1.0, 0.31, 0.55), (1.0, 0.86, 0.92)
 STAR_COLOUR, STAR_RIM = (1.0, 0.85, 0.29), (1.0, 0.97, 0.75)
 PALETTE_SHRINK = 4.0
+# Where each body level's own UV square sits in the atlas: (u, v) of its corner, and its size.
+BODY_REGIONS = {"full": (0.5, 0.0, 0.5), "lite": (0.25, 0.0, 0.25)}
+# The face's author uses its normal map at half strength and the body's at full; the
+# material has one strength, so the face's map is flattened by this much as it is baked.
+FACE_NORMAL_STRENGTH = 0.5
 
 # What the source's pink eyes and red-brown lashes become.
 EYE_HUE_SHIFT = -135.0 / 360.0
@@ -158,6 +173,50 @@ def _resample(image, rect, height, width):
     c = image[y0 + 1][:, x0]
     d = image[y0 + 1][:, x0 + 1]
     return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
+
+
+def body_uv(uv, level):
+    """A body level's own UVs moved into its region of the atlas."""
+    u, v, size = BODY_REGIONS[level]
+    return np.array((u, v)) + np.asarray(uv) * size
+
+
+def _weaken(normal_rgb, strength):
+    """Scales a tangent-space normal map's tilt and renormalises it."""
+    vector = normal_rgb * 2.0 - 1.0
+    vector[..., :2] *= strength
+    vector /= np.maximum(np.linalg.norm(vector, axis=-1, keepdims=True), 1e-6)
+    return vector * 0.5 + 0.5
+
+
+def build_normal(face_normal_png, body_normal_pngs, out_png):
+    """Writes the normal atlas: flat, except under the face and under each body level's UVs."""
+    source = _load(face_normal_png)[..., :3]
+    if source.shape[0] != SIZE:
+        raise RuntimeError("the face normal map is expected to be 2048 x 2048")
+    atlas = np.empty((SIZE, SIZE, 3))
+    atlas[:] = (0.5, 0.5, 1.0)
+    strip = _rows(FACE_STRIP_V, 1.0)
+    atlas[strip] = _weaken(source[strip], FACE_NORMAL_STRENGTH)
+    for level, path in body_normal_pngs.items():
+        u, v, size = BODY_REGIONS[level]
+        pixels = int(round(size * SIZE))
+        body = _load(path)[..., :3]
+        if body.shape[0] % pixels:
+            raise RuntimeError(f"{path} is {body.shape[0]} px, which does not divide into its {pixels} px region")
+        factor = body.shape[0] // pixels
+        body = body.reshape(pixels, factor, pixels, factor, 3).mean(axis=(1, 3))
+        y, x = int(round(v * SIZE)), int(round(u * SIZE))
+        atlas[y:y + pixels, x:x + pixels] = body
+    image = bpy.data.images.new("cass-atlas-normal-bake", SIZE, SIZE, alpha=False)
+    image.colorspace_settings.name = "Non-Color"
+    rgba = np.ones((SIZE, SIZE, 4), dtype=np.float32)
+    rgba[..., :3] = atlas
+    image.pixels.foreach_set(rgba.ravel())
+    image.filepath_raw = str(out_png)
+    image.file_format = "PNG"
+    image.save()
+    bpy.data.images.remove(image)
 
 
 def build(face_png, palette_png, palette_json, out_png, out_json, overlays, skin_uvs):

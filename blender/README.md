@@ -11,13 +11,14 @@ It is built at two fidelity levels from the same generator, on one skeleton:
 
 | Level | File | Export | Body mesh | Triangles |
 | --- | --- | --- | --- | --- |
-| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 38,000 |
-| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 15,600 |
+| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 47,000 |
+| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 16,500 |
 
 Both have the same objects, bones, shape keys and UV tiles, which is what
 lets Unity exchange one for the other at build time. The garments cut from
 the body follow its level; hair, ears, tail, boots and hat are divided more
-coarsely in `lite`. The face is the same mesh in both.
+coarsely in `lite`, which also leaves out the stitched details and the
+short underlayer of the fringe. The face is the same mesh in both.
 
 ## Files
 
@@ -38,9 +39,10 @@ coarsely in `lite`. The face is the same mesh in both.
 | `kitbash/body.py` | The skin below the neck, with the size preset baked in and each face tagged with its body segment. |
 | `kitbash/face.py` | The head: fitted to the body's neck, re-keyed to the spec's shape key names. |
 | `kitbash/decals.py` | Blush strokes, tears and the scribbled eyes, as geometry on the face. |
-| `kitbash/atlas.py` | The one texture, `Textures/cass-atlas.png`: the painted face beside the palette. |
+| `kitbash/atlas.py` | The texture, `Textures/cass-atlas.png` (the painted face beside the palette), and its normal map. |
 | `kitbash/rig.py` | The armature: the body base's skeleton under the spec's names, plus added bones. |
 | `kitbash/shell.py`, `garments.py` | Sweater and shorts cut from the body's own mesh; boots lofted around the leg. |
+| `kitbash/detail.py` | Stitching, seams, pockets, lacing and trims laid onto finished parts as geometry. |
 | `kitbash/sweep.py`, `hair.py`, `extras.py`, `hat.py` | Swept strands; the hair; ears and tail; the hat. |
 | `kitbash/stamp.py` | Marks a `.blend` as generator output and detects hand edits. |
 
@@ -88,23 +90,26 @@ them.
 | --- | --- | --- |
 | `sources/siroino-body.blend` | SiroinoSotai 1.0, both FBX files | The body at both levels, its weights and its skeleton. |
 | `sources/henge-face.blend` | Mizunashi Hiyori, `CC0_FBX/mizunashi2024.fbx`, face mesh only | The head, its weights and its 122 shape keys. |
-| `sources/henge-face.png` | Mizunashi Hiyori, `CC0_Textures/` face albedo | The painted part of the atlas. |
+| `sources/henge-face.png`, `henge-face-normal.png` | Mizunashi Hiyori, `CC0_Textures/` face albedo and normal map | The painted part of the atlas, and of its normal map. |
+| `sources/siroino-normal-full.png`, `siroino-normal-lite.png` | SiroinoSotai 1.0, the 1k normal map of each level | The body's part of the normal atlas. |
 
 To take a new version of either, replace the archive in `ref/` and run
 `blender -b --factory-startup --python blender/scripts/intake.py`.
 
 What the build changes about them:
 
-- **Body.** The `All_M` size preset and three quarters of `Breasts_flat`
-  are baked into the rest shape and every other shape key is dropped. The
+- **Body.** The `All_M` size preset and `Breasts_flat` are baked into the
+  rest shape and every other shape key is dropped. The
   base's `<Part>_OFF` keys are read first: the vertices each one moves are a
   body segment bounded by edge loops, and those segments become the skin
   zones and the pieces garments are cut from. Its breast bones are folded
-  into the chest. Its normal maps are not used.
-- **Head.** Scaled by 1.15 and seated on the body's head joint. Its neck is
-  far thicker than the body's, so the stub is drawn in and the top of the
-  body's neck flared until they meet; the body's neck ends a little way
-  inside the head's. The expression overlays that need a transparent
+  into the chest. It keeps its own UVs, moved into a skin-coloured region
+  of the atlas, so that its normal map applies.
+- **Head.** Scaled by 1.15 and seated just below the body's head joint. Its
+  neck is far thicker than the body's, so the stub is drawn in and the top
+  of the body's neck flared until they meet; the head's open loop is then
+  set down onto the body's neck vertex by vertex, and the body's neck
+  carries on up inside the head. The expression overlays that need a transparent
   material (manga marks, tear and blush cards) are deleted, and the scalp
   under the hair is removed. The source's pink eyes are recoloured blue and
   its lashes and brows brown in the atlas; heart and star pupils are drawn
@@ -131,8 +136,10 @@ and Spec files give the same model.
 
 To change how something looks, the numbers are at the top of its module:
 the hairstyle is the `FRINGE` guides and the azimuth lists in `hair.py`, the
-ears and tail are the guides in `extras.py`, the hat's dimensions are in
-`hat.py`, and each garment's cut is its function in `garments.py`. A new
+ears and tail are the guides and profiles in `extras.py`, the hat's
+dimensions are in `hat.py`, and each garment's cut and its stitched details
+are its function in `garments.py` (`NECKLINE` switches the sweater between
+a scoop and a crew neck). A new
 outfit is a new set of functions there, on its own discard tiles.
 
 ## Modelling contracts
@@ -188,8 +195,10 @@ outfit is a new set of functions there, on its own discard tiles.
   Both levels must have the same mesh names.
 - One material slot per mesh, the same material everywhere, named `cass`. Its
   base colour is `Textures/cass-atlas.png`.
-- At most 70,000 triangles at the full level and 16,000 at lite, before the
-  build removes anything.
+- At most 70,000 triangles at the full level and 17,000 at lite, before the
+  build removes anything. What binds the lite level is VRChat's 15,000 for
+  Medium on mobile after the build, which `scripts/cass.sh verify cass android`
+  checks; it currently has 148 to spare.
 - Each vertex has one to four bone weights that sum to 1.
 
 ### UV layers
@@ -199,7 +208,7 @@ Every mesh has exactly two UV layers, in this order.
 1. `UVMap` selects the colour from the atlas and must stay inside the unit
    square. A flat-coloured face has all its loops on the centre of one
    swatch (`common.set_swatches`); the head keeps the face texture's own
-   UVs. Swatch UVs are in `Textures/cass-atlas.json`. To add a colour,
+   UVs, and the body its own, moved into its skin-coloured region. Swatch UVs are in `Textures/cass-atlas.json`. To add a colour,
    append a swatch to `cass-palette.toml`, re-bake with
    `python modules/wirenook-assets/tools/palette.py Packages/net.wirenook.cass/Textures/cass-palette.toml`
    and rebuild; the build bakes the palette into the atlas and reassigns
@@ -214,9 +223,9 @@ checked):
 
 | Faces | Tile |
 | --- | --- |
-| Head, neck, wrists, hands, hair, ears, tail, blush and tear marks | `always` |
-| Skin of the chest and waist (segments `Chest_01`, `Chest_02`, `Spine`) | `body.torso` |
-| Skin from the shoulders to the forearms (`Shoulder` to `LowerArm`) | `body.arms` |
+| Head, neck, collarbones and shoulder tops (`Chest_01`, `Shoulder`), wrists, hands, hair, ears, tail, blush and tear marks | `always` |
+| Skin of the chest and waist (segments `Chest_02`, `Spine`) | `body.torso` |
+| Skin from the upper arms to the forearms (`UpperArm` to `LowerArm`) | `body.arms` |
 | Skin of the pelvis (`Hips`) | `body.hips` |
 | Skin from the top of the thigh to mid-calf (`UpperLeg_01` to `LowerLeg_01`) | `body.legs` |
 | Skin from mid-calf down (`LowerLeg_02`, `Foot`, `Toe`) | `body.feet` |
@@ -227,8 +236,10 @@ checked):
 Unity discards the zones listed under a garment's `hides` while the garment
 is worn, so the garment has to reach past the border of those zones. The
 body is triangulated, so those borders are saw-toothed by a centimetre or
-two; the sweater's collar and cuffs, the waistband and legs of the shorts
-and the boot shafts are each long enough to cover theirs.
+two. A garment's own rims are never those edges: each is cut straight with
+a plane (`Shell.cut`), and bands are grown from the cut. Cloth that has
+been relaxed is lifted clear of the skin again (`Shell.clear_skin`), since
+skin that is not hidden (collarbones, thighs) would otherwise show through.
 
 Blender shows all tiles at once, so the scribbled eyes cover the normal eyes
 in the viewport. `preview.py` deletes the faces Unity would discard before it

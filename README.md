@@ -129,8 +129,8 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   placeholder; the body base's own proportions now stand in for them.
 
 The model exists at two fidelity levels with the same objects, bones,
-blendshapes and UV tiles: `cass.fbx` (about 38,000 triangles) and
-`cass-lite.fbx` (about 15,600), which uses the body base's low-polygon mesh
+blendshapes and UV tiles: `cass.fbx` (about 47,000 triangles) and
+`cass-lite.fbx` (about 16,500), which uses the body base's low-polygon mesh
 and coarser modelled parts. The prefabs hold the full one; a build takes the
 lite meshes instead for Android and iOS, and for any variant that asks.
 
@@ -146,12 +146,27 @@ and brows) and, beside it, the flat colours of
 `Textures/cass-palette.toml` as solid cells. Everything but the head is
 flat-coloured: every face maps to the centre of one cell, so nothing is
 mirrored and mip-mapping cannot bleed. The body's skin cell is sampled from
-the face texture, so the two match. About two thirds of the atlas is free
+the face texture, so the two match. The body keeps its own UVs in a
+skin-coloured corner of the atlas, and about a third of the atlas is free
 for painted detail later.
+
+A second texture with the same layout, `Textures/cass-atlas-normal.png`,
+carries the face's and the body base's own normal maps and is flat
+elsewhere. Both sources are meant to be shaded through them: without the
+face's, toon shadow creases around the mouth.
+
+Detail that a texture would carry is geometry instead: stitching, seams,
+pockets, belt loops, lacing and trims are thin strips and patches laid a
+couple of millimetres above the surface (`kitbash/detail.py`), at the full
+level only.
 
 Materials are lilToon with no minimum brightness (in a dark world the
 avatar is dark), and lilToon's Clipping Canceller is switched on for the
 project so a face seen from very close is pushed back rather than cut open.
+The avatar's material adds, in `CassMaterials.Look`: an outline coloured
+from the texture under it (darker and a little more saturated, never plain
+black), a faint rim light with a matching rim shade, and a softer, shorter
+shadow than the props use.
 
 ## Gestures and face tracking
 
@@ -168,9 +183,9 @@ gesture per hand:
 | Peace | Hungry | Wink 1 |
 | Rock | Heart Eyes | Wink 2 |
 
-The right hand's layer sits above the left's, so where both touch the same
-blendshape the right hand wins. Expressions are recipes over the shapes
-above, not extra blendshapes.
+One expression shows at a time: while the right hand holds one, the left
+hand's layer rests, so two recipes are never laid over each other.
+Expressions are recipes over the shapes above, not extra blendshapes.
 
 **With a face tracker.** The tracking keys are split into three blendshape
 sets, eyes, brows and mouth, and each expression says which of those it
@@ -311,13 +326,15 @@ What that costs on Android and iOS:
 
 | Variant | Mobile rank | Triangles | Skinned + static meshes | Material slots |
 | --- | --- | --- | --- | --- |
-| `cass`, `cass-lite` | Medium | 13,656 | 2 + 0 | 2 |
-| `cass-adv` | Very Poor | 16,688 | 2 + 3 | 7 |
-| `cass-flashlight` | Very Poor | 16,100 | 2 + 4 | 8 |
-| `cass-lantern` | Very Poor | 16,246 | 2 + 5 | 9 |
+| `cass`, `cass-lite` | Medium | 14,852 | 2 + 0 | 2 |
+| `cass-adv` | Very Poor | 17,884 | 2 + 3 | 7 |
+| `cass-flashlight` | Very Poor | 17,296 | 2 + 4 | 8 |
+| `cass-lantern` | Very Poor | 17,442 | 2 + 5 | 9 |
 
-`cass` is 1,350 triangles under Medium's limit of 15,000. The face is 8,500
-of them, because it is the same mesh at both levels.
+`cass` is 148 triangles under Medium's limit of 15,000, so anything added to
+the lite level has to be paid for there. The face is 8,500 of them, because
+it is the same mesh at both levels; the stitched details are left out of
+the lite level altogether.
 
 The three adventure variants keep the carry seat and the catch-up portal
 on mobile, which is what they are worn for, and pay for it in rank: the
@@ -393,11 +410,11 @@ copy:
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 37,638 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-lite` | Good | 15,594 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-adv` | Good | 41,004 | 2 + 4 | 8 | 80 | 91 of 256 |
-| `cass-flashlight` | Poor (one light) | 40,416 | 2 + 5 | 9 | 75 | 157 of 256 |
-| `cass-lantern` | Poor (one light) | 40,562 | 2 + 6 | 10 | 75 | 157 of 256 |
+| `cass` | Good | 47,320 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
+| `cass-lite` | Good | 16,534 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
+| `cass-adv` | Good | 50,686 | 2 + 4 | 8 | 80 | 91 of 256 |
+| `cass-flashlight` | Poor (one light) | 50,098 | 2 + 5 | 9 | 75 | 157 of 256 |
+| `cass-lantern` | Poor (one light) | 50,244 | 2 + 6 | 10 | 75 | 157 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the head: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -413,8 +430,9 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Five variants are uploaded and public** with the model described here,
-for PC, Android and iOS. It has not been worn yet.
+**Five variants are uploaded and public**, for PC, Android and iOS, with
+the second pass of the model described here. The first pass was worn on
+PC; this one has not been worn yet.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -444,7 +462,8 @@ Checked:
   respected, no brightness floor.
 - The contact sheets for `cass` render and were looked at: all fourteen
   expressions (heart eyes and the scribbled Afraid eyes among them), each
-  garment taken off with whole skin underneath, the cameras and the poses.
+  garment taken off with whole skin underneath, the cameras and the poses,
+  and the face under harsh, dim and coloured light.
 - All five uploaded through `scripts/cass.sh upload` for all three
   platforms, with the editor switched to each, and VRChat's records read
   back matching the upload policy (source link, required tags, public).
@@ -477,24 +496,21 @@ Not checked, because only the client can:
 
 Known gaps:
 
-- The model is a first pass, modelled by script and judged from renders.
-  The face is a stand-in from another avatar. The hair is simple swept
-  strands with little wave in it; the boots are plain, without stitching,
-  and blunt at the toe; the sweater is flat-coloured apart from its
-  striped bands. There are no socks. Garment openings are hollow and rely
-  on the double-sided material.
+- The model is a second pass, modelled by script and judged from renders
+  and one round of notes from wearing the first. The face is a stand-in
+  from another avatar, and its expressions are mild. The outfit is
+  plainer than the design's skirt was. There are no socks. Garment
+  openings are hollow and rely on the double-sided material.
 - With the sweater and the shorts both switched off the body is bare: the
-  base is a smooth doll body with no underwear layer. The avatars are
-  public, so this wants a decision before the next upload.
+  base is a smooth doll body with no underwear layer. Parked, by choice.
 - The ears clip the hat's brim when a pose or physics bends them far;
   they have holes to stand in, not room to move.
 - Under the chin, the face texture's painted shadow is stretched where the
   head's neck was narrowed to meet the body's.
-- The lower edge of the sweater's collar is saw-toothed where it meets the
-  body of the sweater.
 - The human ears of the face mesh are still there, under the side hair.
-- The contact sheets' face cameras were placed for the placeholder's head
-  and sit a little high and close.
+- Nothing fades or dithers out as a viewer comes close; lilToon's Clipping
+  Canceller pushes near geometry back instead.
+- Held tools have no hand poses of their own.
 - The locomotion clips are baked on a generic rig and retargeted, not
   fitted to this avatar; `LocomotionBuild.BakeFor` exists for that.
 - Nothing is published: no releases, and the repositories are not on the

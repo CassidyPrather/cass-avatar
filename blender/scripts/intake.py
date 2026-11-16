@@ -7,8 +7,10 @@ This script unpacks them into a temporary folder and writes only what the
 avatar is built from into blender/sources/, which is committed:
 
     siroino-body.blend   both fidelity levels of the SiroinoSotai body on one armature
+    siroino-normal-full.png, siroino-normal-lite.png   the body's normal map for each level
     henge-face.blend     the face mesh of Mizunashi Hiyori with its armature
     henge-face.png       its colour texture
+    henge-face-normal.png  its normal map, which its author's material shades the face through
 
 Nothing is modelled here; the meshes, weights and shape keys are stored as
 they arrive. Re-run it only when a source archive changes. CREDITS.md lists
@@ -33,6 +35,10 @@ import cass_spec
 SIROINO_ZIP = cass_spec.REPO / "ref" / "SiroinoSotai_1.0.zip"
 HENGE_ZIP = cass_spec.REPO / "ref" / "Henge_MizunashiHiyori_20240922.zip"
 
+SIROINO_TEXTURES = {
+    "SiroinoSotai_1.0/TEX/PC/SiroinoSotaiNormal_PC_1k.png": "siroino-normal-full.png",
+    "SiroinoSotai_1.0/TEX/Mobail/SiroinoSotaiNormal_Mobile_1k.png": "siroino-normal-lite.png",
+}
 SIROINO_MEMBERS = {
     "full": "SiroinoSotai_1.0/SiroinoSotai_PC.fbx",
     "lite": "SiroinoSotai_1.0/SiroinoSotai_Mobile.fbx",
@@ -40,6 +46,7 @@ SIROINO_MEMBERS = {
 HENGE_FBX = "Henge_MizunashiHiyori_20240922/CC0_FBX/mizunashi2024.fbx"
 HENGE_TEXTURES = {
     "Henge_MizunashiHiyori_20240922/CC0_Textures/mizunashi_20240621_subs_Face_2048_AlbedoTransparency.png": "henge-face.png",
+    "Henge_MizunashiHiyori_20240922/CC0_Textures/mizunashi_20240621_subs_Face_2048_Normal.png": "henge-face-normal.png",
 }
 HENGE_FACE = "a_Face_Hiyori"
 
@@ -98,6 +105,9 @@ def intake_siroino(archive, folder):
             bpy.data.objects.remove(rig)
     drop_materials()
     save(cass_spec.SOURCES_DIR / "siroino-body.blend")
+    for member, name in SIROINO_TEXTURES.items():
+        shutil.copyfile(extract(archive, member, folder), cass_spec.SOURCES_DIR / name)
+        print(f"intake: wrote {cass_spec.SOURCES_DIR / name}")
 
 
 def intake_henge(archive, folder):

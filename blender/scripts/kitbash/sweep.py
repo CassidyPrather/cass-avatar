@@ -9,13 +9,13 @@ lie flat against what they grow from without any hand-set tilt.
 import numpy as np
 
 # Cross-sections as (across, outward) pairs on a unit half-width and unit thickness,
-# counter-clockwise seen from the root. The outer side is domed, the inner nearly flat.
+# counter-clockwise seen from the root. The outer side is a round dome, the inner a shallower one.
 PROFILES = {
-    "full": [(-1.0, 0.0), (-0.55, 0.85), (0.55, 0.85), (1.0, 0.0), (0.5, -0.30), (-0.5, -0.30)],
-    "lite": [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -0.30)],
+    "full": [(-1.0, 0.0), (-0.72, 0.68), (0.0, 1.0), (0.72, 0.68), (1.0, 0.0), (0.62, -0.34), (0.0, -0.46), (-0.62, -0.34)],
+    "lite": [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -0.36)],
 }
 # Which sides of each profile face outward (the rest are the underside).
-OUTER_SIDES = {"full": (0, 1, 2), "lite": (0, 1)}
+OUTER_SIDES = {"full": (0, 1, 2, 3), "lite": (0, 1)}
 
 
 def spline(points, count):

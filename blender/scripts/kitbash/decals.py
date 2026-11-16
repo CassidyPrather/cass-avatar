@@ -22,8 +22,9 @@ SCRIBBLE_LIFT = 0.0045   # the scribble has to clear the iris and its highlight
 # Per mark: (centre x, centre z) from the eye's own centre on the character's left; mirrored for the right.
 BLUSH_STROKES = [(-0.010 + 0.017 * i, -0.062, 0.0045, 0.011) for i in range(3)]        # x, z, half-width, half-height
 TEAR = (0.030, -0.040, 0.0085, 0.021)
-SCRIBBLE = [(-0.027, 0.014), (-0.014, -0.016), (-0.001, 0.016), (0.012, -0.016), (0.025, 0.013)]
-SCRIBBLE_WIDTH = 0.0028
+SCRIBBLE = [(-0.029, 0.002), (-0.022, 0.016), (-0.015, -0.014), (-0.008, 0.018), (-0.001, -0.017), (0.006, 0.015), (0.013, -0.015),
+            (0.020, 0.012), (0.028, -0.004)]
+SCRIBBLE_WIDTH = 0.0022
 
 
 def _eye_centres(mesh):
