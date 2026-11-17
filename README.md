@@ -39,7 +39,7 @@ Spec/*.json ──────────────────────�
 | --- | --- |
 | `blender/` | The source assets, the generator that builds `cass.blend` and `cass-lite.blend` from them, and the headless scripts that validate and export those. |
 | `Packages/net.wirenook.cass/` | The avatar, as a VPM package. `Spec/` holds the contracts, `BlenderExports/` the one place exports land, `Editor/` the generators, `Generated/`, `Materials/` and `Prefabs/` their output. |
-| `modules/` | Five standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
+| `modules/` | Six standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
 | `Assets/` | The validation scene and development tools. Not shipped. |
 | `tools/`, `art/` | The thumbnail composer, contact-sheet composer and banner. |
 
@@ -223,6 +223,7 @@ children.
 | `cass-lite` | The same, built from the low-polygon model on PC too. |
 | `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
 | `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, and a beacon shows where the wearer is through walls, with an arrow in everyone else's view when they are out of it. The ping's marker and the beacon are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
+| `cass-party` | The everyday build with the party tricks: a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, and a busy sign. |
 | `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:

@@ -4,6 +4,7 @@
     "net.wirenook.assets": "file:../modules/wirenook-assets/Packages/net.wirenook.assets",
     "net.wirenook.avatar-stations": "file:../modules/avatar-stations/Packages/net.wirenook.avatar-stations",
     "net.wirenook.locomotion": "file:../modules/locomotion/Packages/net.wirenook.locomotion",
+    "net.wirenook.party-tricks": "file:../modules/party-tricks/Packages/net.wirenook.party-tricks",
     "net.wirenook.world-sync": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.ide.rider": "3.0.40",

@@ -13,3 +13,6 @@
 [submodule "modules/adventure-tools"]
 	path = modules/adventure-tools
 	url = https://github.com/CassidyPrather/adventure-tools.git
+[submodule "modules/party-tricks"]
+	path = modules/party-tricks
+	url = https://github.com/CassidyPrather/party-tricks.git

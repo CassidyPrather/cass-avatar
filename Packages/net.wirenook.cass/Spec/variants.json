@@ -45,6 +45,16 @@
       "worstRankMobile": "VeryPoor"
     },
     {
+      "slug": "cass-party",
+      "extends": "cass",
+      "about": "The everyday build with the party tricks: a bonk hammer, the vanishing act, the mosaic censor and the busy sign.",
+      "worstRank": "Good",
+      "features": [
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "cass-flashlight",
       "extends": "cass",
       "about": "The adventure build with one real light source: the flashlight, a spotlight, which can be left standing in the world. It replaces both of cass-adv's glowing stand-ins. Any light on an avatar ranks it Poor and a second Very Poor, hence one light and a variant of its own.",

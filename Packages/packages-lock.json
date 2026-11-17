@@ -256,6 +256,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "net.wirenook.party-tricks": {
+      "version": "file:../modules/party-tricks/Packages/net.wirenook.party-tricks",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "net.wirenook.world-sync": {
       "version": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
       "depth": 0,
