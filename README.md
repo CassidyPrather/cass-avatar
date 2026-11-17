@@ -222,6 +222,7 @@ children.
 | `cass` | Default outfit with per-garment toggles, procedural locomotion, the Face Tracking switch. |
 | `cass-lite` | The same, built from the low-polygon model on PC too. |
 | `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
+| `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, and a beacon shows where the wearer is through walls, with an arrow in everyone else's view when they are out of it. The ping's marker and the beacon are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
 | `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:

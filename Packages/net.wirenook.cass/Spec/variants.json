@@ -33,6 +33,18 @@
       "worstRankMobile": "VeryPoor"
     },
     {
+      "slug": "cass-event",
+      "extends": "cass",
+      "about": "The adventure build for leading a group: its laser pointer can ping the spot it points at, and a beacon marks the wearer through walls and points other people's view towards them. The ping's marker and the beacon are meshes of their own, two material slots more than Good allows, hence a variant of its own.",
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
+        "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Event).prefab"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "cass-flashlight",
       "extends": "cass",
       "about": "The adventure build with one real light source: the flashlight, a spotlight, which can be left standing in the world. It replaces both of cass-adv's glowing stand-ins. Any light on an avatar ranks it Poor and a second Very Poor, hence one light and a variant of its own.",
