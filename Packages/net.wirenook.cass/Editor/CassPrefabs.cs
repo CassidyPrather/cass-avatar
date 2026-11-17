@@ -497,6 +497,21 @@ namespace Wirenook.Cass.Editor
             if (variant.Lite) Ensure<CassLiteModel>(root);
             else if (lite != null) UnityEngine.Object.DestroyImmediate(lite, true);
 
+            // A feature this variant used to list was placed here by an
+            // earlier rebuild, and is taken out again. Only what was added
+            // at this variant can be: what a parent variant placed is the
+            // parent's to remove.
+            foreach (var child in root.transform.Cast<Transform>().ToList())
+            {
+                if (!PrefabUtility.IsAddedGameObjectOverride(child.gameObject)) continue;
+                if (child.GetComponentInChildren<Wirenook.Assets.WirenookFeature>(true) == null) continue;
+                var source = PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject);
+                var placedFrom = source != null ? AssetDatabase.GetAssetPath(source) : null;
+                if (string.IsNullOrEmpty(placedFrom) || variant.Features.Contains(placedFrom)) continue;
+                Debug.Log("[cass] Variant " + variant.Slug + " no longer lists " + placedFrom + "; removed.");
+                UnityEngine.Object.DestroyImmediate(child.gameObject);
+            }
+
             foreach (var path in variant.Features)
             {
                 var feature = AssetDatabase.LoadAssetAtPath<GameObject>(path);

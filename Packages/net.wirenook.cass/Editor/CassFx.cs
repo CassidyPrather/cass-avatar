@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
@@ -29,6 +30,9 @@ namespace Wirenook.Cass.Editor
         private const string UserEyeTracking = "UserEyeTracking";
         private const string BlinkPick = "Face/BlinkPick";
 
+        /// <summary>VRChat's own flag for a wearer who has stepped away; it syncs it itself.</summary>
+        private const string Afk = "AFK";
+
         /// <summary>The blendshape set that only carries speech visemes; it is never switched off.</summary>
         public const string VisemeSet = "visemes";
 
@@ -54,6 +58,7 @@ namespace Wirenook.Cass.Editor
             fx.Int("GestureLeft").Int("GestureRight")
                 .Bool(UserFaceTracking).Bool(UserEyeTracking)
                 .Bool(TrackingEnabled, true)
+                .Bool(Afk)
                 .Int(BlinkPick);
 
             fx.Layer("Base").State("Idle");
@@ -262,6 +267,26 @@ namespace Wirenook.Cass.Editor
             resume.Or().IfFalse(UserFaceTracking).IfFalse(UserEyeTracking);
             foreach (var gesture in left) resume.NotEqual("GestureLeft", gesture);
             foreach (var gesture in right) resume.NotEqual("GestureRight", gesture);
+
+            // Away, the eyes stay shut. Like the blink, this is the tracking
+            // eyelid shapes and not the MMD ones.
+            var asleep = layer.State("Asleep", fx.Clip("asleep", clip =>
+                clip.Blendshape(mesh, "EyeClosedLeft", 100f).Blendshape(mesh, "EyeClosedRight", 100f)));
+            WhileAway(layer, asleep, pick, 0.4f);
+        }
+
+        /// <summary>
+        /// Gives a layer a state it holds for as long as the wearer is away,
+        /// whatever else it would be doing. Call it last: the any-state
+        /// transitions the layer already has are told to stand down while
+        /// away, or they would pull it straight back out.
+        /// </summary>
+        private static void WhileAway(LayerBuilder layer, StateBuilder away, StateBuilder back, float fade)
+        {
+            foreach (var transition in layer.Machine.anyStateTransitions)
+                transition.AddCondition(AnimatorConditionMode.IfNot, 0f, Afk);
+            layer.Any(away).Fade(fade).IfTrue(Afk);
+            away.To(back).Fade(fade).IfFalse(Afk);
         }
 
         /// <summary>
@@ -331,7 +356,17 @@ namespace Wirenook.Cass.Editor
                         .Equal("GestureRight", right).Equal("GestureLeft", left);
                 }
             }
+
+            // Away, the ears hang.
+            if (gestures.Poses.ContainsKey(AwayPose))
+            {
+                var hanging = states.TryGetValue(AwayPose, out var known) ? known : layer.State(AwayPose, Clip(AwayPose));
+                WhileAway(layer, hanging, rest, 0.5f);
+            }
         }
+
+        /// <summary>The pose from gestures.json the ears and tail take while the wearer is away.</summary>
+        private const string AwayPose = "droop";
 
         /// <summary>
         /// The local rotation that turns a bone, from where it rests, about

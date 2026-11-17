@@ -162,6 +162,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5521572696901702431}
+    - targetCorrespondingSourceObject: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6888122779643918282}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2249dc0c412158a419be7e38dbde81a0, type: 3}
 --- !u!4 &7332899149621980386 stripped
@@ -169,6 +173,80 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
     type: 3}
   m_PrefabInstance: {fileID: 2153898776928682797}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2849089073822817847
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7332899149621980386}
+    m_Modifications:
+    - target: {fileID: 1359036911730773058, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Stepladder
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8ede7755a56103a4481372b0e744b390, type: 3}
+--- !u!4 &6888122779643918282 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8655487779038587389, guid: 8ede7755a56103a4481372b0e744b390,
+    type: 3}
+  m_PrefabInstance: {fileID: 2849089073822817847}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3946118167101940565
 PrefabInstance:

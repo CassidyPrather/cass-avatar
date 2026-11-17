@@ -41,6 +41,7 @@ namespace Wirenook.Cass.Editor
             AssetDatabase.ImportAsset(CassSpec.ModelPath, ImportAssetOptions.ForceUpdate);
             CassFx.Rebuild();
             CassMenus.Rebuild();
+            CassShuffle.Rebuild();
             CassPrefabs.Rebuild();
             AssetDatabase.SaveAssets();
             Debug.Log("[cass] Rebuilt generated assets.");
