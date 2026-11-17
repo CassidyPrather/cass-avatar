@@ -6,7 +6,7 @@ description: Cassidy's VRChat avatar as a generated, non-destructive pipeline �
 # cass-avatar
 
 Unity 2022.3 project at the repository root. The avatar is the VPM package
-`Packages/net.wirenook.cass`; five standalone packages it builds on are git
+`Packages/net.wirenook.cass`; seven standalone packages it builds on are git
 submodules under `modules/` and are referenced in place from
 `Packages/manifest.json`. Code is AGPL-3.0-or-later with the VRChat/Unity
 linking exception in `LICENSE_ADDENDUM`.
@@ -22,8 +22,8 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 - `Packages/net.wirenook.cass/Runtime/Core/` — engine-free logic (upload policy, tile rules, gesture rules), unit-tested headless.
 - `Packages/net.wirenook.cass/{Generated,Materials,Prefabs}/` — generator output, committed. `Prefabs/cass-root.prefab` is the single root avatar prefab (a variant of the model); `Prefabs/Variants/*.prefab` are the upload variants.
 - `blender/` — `sources/` (the trimmed CC0 body base and face), `scripts/build_cass.py` and `scripts/kitbash/` (the generator that assembles them with the modelled hair, ears, tail and outfit), the two outputs `cass.blend` and `cass-lite.blend`, and the headless scripts that validate and export. See `blender/README.md`.
-- `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`. Each is its own repository with its own README, SKILL.md, CI and version.
-- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer. Harness only; not shipped.
+- `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`, `party-tricks`, `shape-collector`. Each is its own repository with its own README, SKILL.md, CI and version. The last two have a local history only: their GitHub repositories do not exist yet.
+- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer, plus tools for looking at one feature: `FxProbe` (what a build left in a variant's animators, and `Try` to build a variant with one more feature prefab on it), `ShownPreview` (a feature prefab with its hidden props brought out), and `BeaconPreview`, `CensorPreview`, `NapPreview`. Harness only; not shipped.
 - `Assets/DevTools/UnityBridge/` — the file bridge that lets scripts drive the open editor.
 - `tools/thumbnail/`, `tools/contact_sheet.py`, `art/banner/` — Python and SVG tooling outside Unity.
 - `ref/` — private reference art. Never publish, embed or trace it.
@@ -46,6 +46,7 @@ python tools/thumbnail/test_thumbnail.py
 - Recompile with `scripts/unity-refresh.sh`, which waits for `scripts/compile-check.py` to pass first. A compile error in the live editor blocks every other tool.
 - `Wirenook.DevTools.Reflect.Describe <Type>` and `Reflect.Serialized <Type>` (via `invoke`) list a type's members and serialized property names. The VRChat SDK is compiled and thinly documented; ask the editor instead of guessing.
 - Rendering several pictures in one editor frame needs `CassPreview.SkinEveryRender`, and a pose plus toggle states has to go through one sampled clip (`CassPreview.Sample`); Unity skins once per frame and resets whatever a sampled clip does not mention.
+- Shell here-documents fail on this machine whenever their text contains an apostrophe. Write the script to a file and run that.
 - Entry points take strings and return a short text result. Keep invocations short, never enter play mode, never leave objects in the open scene.
 - Unity writes `.meta` files on refresh. Commit them; never hand-write them.
 
@@ -58,6 +59,10 @@ python tools/thumbnail/test_thumbnail.py
 - **Props are toggled by scaling a bone, not by switching a renderer**, for the same reason.
 - **Write Defaults is ON everywhere** (`ControllerBuilder.WriteDefaults`).
 - **`Runtime/Core/` and `Tests/` compile with plain dotnet in CI**: no `UnityEngine` there, classic NUnit asserts only.
+- **A tile's switch is a rule** (`uv-tiles.json`): the value of its parameter that shows it, what it `needs` and what it gives way to (`unless`). Alternatives share one parameter with opposite `when`. The 4x4 grid is full; a new garment has to share a tile or replace one.
+- **A bone that a second layer scales must also be scaled by the layer that toggles its prop.** Avatar Optimizer dropped the curves of a bone that only a later layer scaled (the hammer's hit burst). Check with `FxProbe.Clips`.
+- **Nothing with a constraint goes under a bone that is scaled to zero.** A world position has no answer under a parent of no size. Scale the constrained parts themselves (the stepladder's steps).
+- **A feature that must stay off Android and iOS for rank is marked `WirenookPcOnly` on the object, not the prefab**, so the rest of the feature is kept (the nap's Zs, the seats' screen).
 - Blendshape, bone and tile names live in `Spec/`. Add a name there first; Blender's validation and Unity's generators both read it.
 - **Both fidelity levels must export the same mesh names, bones, blendshapes and UV tiles.** The lite meshes are swapped in by name.
 - **`blender/cass.blend` and `cass-lite.blend` are generator output.** Change the generator and run `scripts/cass.sh build`; a hand-edited file is detected by its stamp and not overwritten without `--force`.

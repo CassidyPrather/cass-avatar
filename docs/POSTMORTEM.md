@@ -248,3 +248,111 @@ Things that are true of the tools and will be true again.
 - Editor-written settings (`ProjectSettings.asset`, `GraphicsSettings.asset`)
   flip between two values depending on what ran last and are reverted
   rather than committed.
+
+## Second session: the wish list
+
+Written on 2026-11-17, after one unattended session that took a list of
+some twenty wishes and worked through them: a fourth pass on the model,
+three things from the original design, two new packages, eleven new
+features and three new variants. Nothing from this session has been worn.
+The README's Status section says what was uploaded.
+
+### What was added
+
+- **Model.** The sweater's fit, the boots, the hat and the hair, then a
+  skirt, long hair and a vest, each on a UV tile of its own. Tile switches
+  became rules, so that alternatives give way to each other.
+- **adventure-tools:** a laser pointer that pings, and a beacon with a
+  compass arrow.
+- **party-tricks** (new): a bonk hammer, a vanishing act, a mosaic censor
+  and a busy sign.
+- **locomotion:** a stepladder for a lifted play space, and a nap while
+  away.
+- **avatar-stations:** seats in a ring or facing a screen.
+- **world-sync:** the anchor bus, which places many things for the synced
+  cost of one, and a check that runs it in the editor.
+- **shape-collector** (new): the bus's first user.
+- **cass:** the outfit shuffle, a face for being away, and the variants
+  `cass-event`, `cass-party` and `cass-shuffle`.
+- **Harness:** `FxProbe`, `ShownPreview` and a preview each for the beacon,
+  the censor and the nap.
+
+### What went wrong
+
+| What happened | Cause | What changed |
+| --- | --- | --- |
+| The hammer's hit burst never played in a built avatar | Avatar Optimizer dropped every curve of a bone that only the hit layer scaled. The bone and its triangles were still there. The cause inside the optimiser was not tracked down | The layer that toggles the mallet scales the burst's bone too, as the megaphone's does for its waves. `FxProbe.Clips` is how it was found, and how to look for the next one |
+| `cass` went from Medium to Poor on Android and iOS | The nap's Zs are a second material on the avatar's mesh, and a third material slot is past Medium there | The Zs are marked PC-only on their own object; the nap is kept |
+| `cass-event` had eight stations | A variant kept a feature prefab it no longer listed, beside the one that replaced it | A rebuild takes out features a variant used to list |
+| The beacon's arrow pointed up for someone behind the viewer | It pointed along the screen direction to the target, which for a target behind is mostly up or down | The further behind, the more it points sideways |
+| A long edit failed with "unexpected EOF" and left a file half-changed once | Shell here-documents on this machine fail whenever their text has an apostrophe in it | Scripts with prose in them are written to a file and run |
+| Twenty-five renders landed in `C:\dist` | A relative output path, resolved by Blender against the drive root | `preview.py` takes an absolute `--out`. The folder is still there: the session was not allowed to delete outside the project |
+| The editor stopped answering for five minutes | The validation scene file was restored with git while the scene was open, and Unity put up "The open scene(s) have been modified externally", a native dialog that blocks everything | The dialog was answered (Reload). Do not change an open scene's file underneath the editor |
+| A new package was in the manifest and Unity did not have it | Unity re-reads the manifest when it regains focus, and it never had focus | `unity-bridge.py invoke UnityEditor.PackageManager.Client.Resolve`, then refresh |
+
+### Gotchas, added
+
+- **Avatar Optimizer can drop a bone's animation and keep the bone.** A
+  feature can verify, rank and render at rest, and not work. Read the
+  curves of a built variant, not just its layers.
+- **A mesh's bounds scale with the object, so a mesh at zero scale has
+  none.** That is how the beacon and the shape collector carry bounds tens
+  or hundreds of metres across without costing rank at rest. Whether the
+  client caps a mesh's bounds on avatars is not known.
+- **A constraint under a parent of no size has no answer.** Scale the
+  constrained things, not what they hang from.
+- **Modular Avatar merges into VRChat's default controller for a playable
+  layer the avatar leaves at default**, and renumbers layer-weight
+  controls to match. The nap relies on both; `FxProbe.TryPlayable` shows
+  the result.
+- **Later layers win, and with Write Defaults on a layer writes every
+  property any of its states animates, in every state.** An "off" state
+  that animates nothing is not a pass-through. The shuffle has no off
+  state for that reason, and the away face lives in layers that already
+  owned its shapes.
+- **Android and iOS allow two material slots at Medium.** Any prop that
+  joins the avatar's mesh with a material of its own is a third.
+- **VRChat asks for the rights confirmation once per avatar id per editor
+  session,** and a first upload has no id to agree for until the SDK
+  reserves one halfway through. For this session's unattended uploads the
+  owner gave the certification in writing beforehand; it was recorded
+  through the SDK's own call, with ids reserved first for the new
+  variants, by a helper that was not kept.
+- **An FBX export is not byte-for-byte repeatable.** Rebuilding every prop
+  of a package to add one touches all of them; build with `--only`.
+
+### Open, from this session
+
+Everything below builds, verifies and was looked at in the editor where
+there was something to look at. None of it has run in the client.
+
+- **Contact readings.** The stepladder and the anchor bus both rest on a
+  contact receiver reporting a sender's position in metres along its own
+  axes, as the synced anchor already did. If that is wrong they are all
+  wrong together, and by the same factor.
+- **Drivers on other people's clients.** The bus has every viewer's client
+  copy synced parameters into unsynced ones with a parameter driver. The
+  editor check stands in for that; nobody has watched VRChat do it.
+- **Being seen.** The outfit shuffle needs an inner animator to stop while
+  its renderer is out of view and a contact sender to follow it. That is
+  how VRLabs' prefab is described as working; this build of it is untried.
+- **The click.** A fist as the laser's "click" will suit some controllers
+  and not others.
+- **Hiding by the hips.** The vanishing act scales the hips to exactly
+  zero.
+- **Video.** The seats' screen draws `_Udon_VideoTex` and has only ever
+  shown its test card.
+- **Heights and thresholds** everywhere are first guesses: the ladder's,
+  the hammer's speed, the nap's fades, the shuffle's dwell.
+- **The face.** A search for other licence-compatible faces found
+  candidates and tried none, because the best of them need a download
+  from BOOTH that the session could not make. In order: Akane (茜犬) by
+  山野重工赤山派閥独立支部, <https://booth.pm/en/items/8861598>, CC0 and
+  built on the same SiroinoSotai body, about 220 expression shapes, key
+  names unseen; the VRoid AvatarSample D to G models that
+  <https://opengameart.org/content/vroid-studio-cc0-models> hosts as CC0,
+  41 shapes and no ARKit set; and Sick (しっく) by MITUBA,
+  <https://booth.pm/en/items/8664885>, CC0 on the same body with a full
+  ARKit set, a poorer match in style and better as a source of shapes.
+  Licences are as the pages stated them on 2026-11-16 and want reading
+  again at intake.

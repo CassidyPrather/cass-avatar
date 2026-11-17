@@ -31,6 +31,7 @@ Spec/*.json ──────────────────────�
                     ▼
         Prefabs/Variants/cass-adv.prefab    adds flight, stations and hand tools
         Prefabs/Variants/cass-flashlight.prefab, cass-lantern.prefab   one real light each (extend cass)
+        Prefabs/Variants/cass-event, cass-party, cass-shuffle, cass-shapes.prefab   one more set of features each (extend cass)
                     ▼  at build time, on a copy
         lite model where asked ▶ Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
 ```
@@ -39,7 +40,7 @@ Spec/*.json ──────────────────────�
 | --- | --- |
 | `blender/` | The source assets, the generator that builds `cass.blend` and `cass-lite.blend` from them, and the headless scripts that validate and export those. |
 | `Packages/net.wirenook.cass/` | The avatar, as a VPM package. `Spec/` holds the contracts, `BlenderExports/` the one place exports land, `Editor/` the generators, `Generated/`, `Materials/` and `Prefabs/` their output. |
-| `modules/` | Six standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
+| `modules/` | Seven standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
 | `Assets/` | The validation scene and development tools. Not shipped. |
 | `tools/`, `art/` | The thumbnail composer, contact-sheet composer and banner. |
 
@@ -48,10 +49,15 @@ Spec/*.json ──────────────────────�
 | Submodule | Package | What it provides |
 | --- | --- | --- |
 | [`wirenook-assets`](https://github.com/CassidyPrather/wirenook-assets) | `net.wirenook.assets` | The shared palette, materials, menu icons, sounds and the editor helpers the others build with. |
-| [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, and collider flight. |
-| [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners. |
-| [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat and a catch-up portal. |
-| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer, megaphone, flashlight, lantern, screen notices. |
+| [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, collider flight, a stepladder for a lifted play space, and a standing nap while away. |
+| [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners: one at a time, or many on a shared bus. |
+| [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
+| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
+| `party-tricks` | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
+| `shape-collector` | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
+
+The last two were made in the session described under [Status](#status) and
+have a local history only: their repositories do not exist on GitHub yet.
 
 They are mounted as submodules and referenced in place
 (`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
@@ -122,7 +128,12 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   second UV set that only says which toggle group it belongs to, and the
   shader drops whole groups. A garment lists the body zones it covers, and
   a zone is drawn only while nothing covers it, so skin cannot clip through
-  clothing and a hidden zone costs nothing to draw. It is one float per
+  clothing and a hidden zone costs nothing to draw. A tile's switch is a
+  rule: the value of its parameter that shows it, what else it needs and
+  what it gives way to. The shorts give way to the skirt, the vest is only
+  shown over the sweater it is fitted to, and the short and the long hair
+  are one switch. The grid is four by four, the most the shader has, and
+  every tile is now in use. It is one float per
   group on the material rather than a renderer per toggle, which is what
   lets the whole avatar be one mesh and one material slot.
 - **`proportions.json`**: the figure is scaled to its `height` and stands
@@ -130,9 +141,9 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   placeholder; the body base's own proportions now stand in for them.
 
 The model exists at two fidelity levels with the same objects, bones,
-blendshapes and UV tiles: `cass.fbx` (about 49,000 triangles) and
-`cass-lite.fbx` (about 16,600), which uses the body base's low-polygon mesh
-and coarser modelled parts. The prefabs hold the full one; a build takes the
+blendshapes and UV tiles: `cass.fbx` (about 58,700 triangles) and
+`cass-lite.fbx` (about 18,900, of which 16,300 are shown at rest), which
+uses the body base's low-polygon mesh and coarser modelled parts. The prefabs hold the full one; a build takes the
 lite meshes instead for Android and iOS, and for any variant that asks.
 
 How the model is built, what was changed about the source assets and the
@@ -144,12 +155,13 @@ contracts a hand-made replacement has to keep are in
 There is one texture, `Textures/cass-atlas.png`, baked by the model build.
 It holds the face's painted texture (recoloured: blue eyes, brown lashes
 and brows) and, beside it, the flat colours of
-`Textures/cass-palette.toml` as solid cells. Everything but the head is
-flat-coloured: every face maps to the centre of one cell, so nothing is
+`Textures/cass-palette.toml` as solid cells. Everything but the head and
+the skirt is flat-coloured: every face maps to the centre of one cell, so nothing is
 mirrored and mip-mapping cannot bleed. The body's skin cell is sampled from
 the face texture, so the two match. The body keeps its own UVs in a
-skin-coloured corner of the atlas, and about a third of the atlas is free
-for painted detail later.
+skin-coloured corner of the atlas. The skirt's gingham is a painted patch
+that repeats every two centimetres, and each of the skirt's faces is laid on
+it at one scale.
 
 A second texture with the same layout, `Textures/cass-atlas-normal.png`,
 carries the face's and the body base's own normal maps and is flat
@@ -211,6 +223,12 @@ so it keeps working in MMD worlds and with a face tracker. The ears pass
 through holes in the hat's brim just above their roots, so poses bend them
 higher up; their PhysBones swing around whatever pose is held.
 
+**Away.** While VRChat marks the wearer as away (AFK), the eyes close and
+the ears hang, whatever the hands are doing. Both are done in layers that
+already owned those shapes and bones (the blink and the poses), which are
+outside the two that MMD worlds silence. The body stands asleep; that part
+is the nap in `net.wirenook.locomotion`.
+
 ## Variants and uploads
 
 `Spec/variants.json` lists the upload variants. Each is a prefab variant of
@@ -219,12 +237,21 @@ children.
 
 | Variant | Adds |
 | --- | --- |
-| `cass` | Default outfit with per-garment toggles, procedural locomotion, the Face Tracking switch. |
+| `cass` | Default outfit with the Outfit menu, procedural locomotion, the Face Tracking switch, a standing nap while away. |
 | `cass-lite` | The same, built from the low-polygon model on PC too. |
-| `cass-adv` | Flight, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
-| `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, and a beacon shows where the wearer is through walls, with an arrow in everyone else's view when they are out of it. The ping's marker and the beacon are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
+| `cass-adv` | Flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
+| `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, a beacon shows where the wearer is through walls with an arrow in everyone else's view when they are out of it, and there are four seats to put down, in a ring or facing a screen. The ping's marker, the beacon and the seats are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
 | `cass-party` | The everyday build with the party tricks: a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, and a busy sign. |
+| `cass-shuffle` | The everyday build that changes its outfit whenever a viewer looks away from it and back. Each viewer's client rolls for itself; nothing is synced. PC only. |
+| `cass-shapes` | The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. Its course is a third skinned mesh, which is Medium. |
 | `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
+
+**The Outfit menu** has a switch for each garment (sweater, shorts, boots,
+hat) and three for what came from the original design: a tiered gingham
+skirt, which replaces the shorts while it is on; an open vest with a
+neckerchief, worn over the sweater; and long hair in place of the short.
+All three rest off. With all of them on the avatar is the design in the
+reference art.
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:
 
@@ -321,7 +348,10 @@ What that costs on Android and iOS:
 
 | Left out | Why |
 | --- | --- |
-| Garment toggles (the Outfit menu), expressions that swap UV tiles | They work by discarding UV tiles |
+| Garment toggles (the Outfit menu), and with them the skirt, the vest and the long hair; expressions that swap UV tiles | They work by discarding UV tiles |
+| The outfit shuffle (`cass-shuffle` is not built for mobile at all) | The same |
+| The beacon, the censor, the picture on the seats' screen | Drawn by custom shaders |
+| The nap's Zs | A third material slot is past Medium there; the nap itself is kept |
 | Flight | It is a collider to stand on, and avatar colliders are disabled |
 | Screen notices | Drawn by a custom shader |
 | The light in `cass-flashlight` and `cass-lantern` | Avatar lights are disabled; the tool is still there and can still be placed, unlit |
@@ -329,18 +359,23 @@ What that costs on Android and iOS:
 
 | Variant | Mobile rank | Triangles | Skinned + static meshes | Material slots |
 | --- | --- | --- | --- | --- |
-| `cass`, `cass-lite` | Medium | 14,936 | 2 + 0 | 2 |
-| `cass-adv` | Very Poor | 17,968 | 2 + 3 | 7 |
-| `cass-flashlight` | Very Poor | 17,380 | 2 + 4 | 8 |
-| `cass-lantern` | Very Poor | 17,526 | 2 + 5 | 9 |
+| `cass`, `cass-lite` | Medium | 14,648 | 2 + 0 | 2 |
+| `cass-adv` | Very Poor | 18,092 | 2 + 3 | 7 |
+| `cass-event` | Very Poor | 19,076 | 2 + 6 | 10 |
+| `cass-party` | Very Poor | 15,557 | 2 + 1 | 5 |
+| `cass-shapes` | Very Poor | 15,180 | 3 + 0 | 3 |
+| `cass-flashlight` | Very Poor | 17,504 | 2 + 4 | 8 |
+| `cass-lantern` | Very Poor | 17,650 | 2 + 5 | 9 |
 
-`cass` is 64 triangles under Medium's limit of 15,000, so anything added to
-the lite level has to be paid for there. The face is 8,500 of them, because
+`cass` is 352 triangles under Medium's limit of 15,000, so anything added to
+what the lite level shows at rest has to be paid for there. What rests
+hidden (the skirt, the vest, the long hair) is cut out of the mobile build
+and costs it nothing. The face is 8,500 of them, because
 it is the same mesh at both levels; the stitched details are left out of
 the lite level altogether, as are the folded edges of the waistband,
 hems and collar.
 
-The three adventure variants keep the carry seat and the catch-up portal
+The adventure variants keep the carry seat and the catch-up portal
 on mobile, which is what they are worn for, and pay for it in rank: the
 props that are left in the world are separate meshes with their own
 material slots, and mobile allows two of each before Very Poor. Mobile
@@ -414,11 +449,15 @@ copy:
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 48,812 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-lite` | Good | 16,618 | 2 + 0 (from 9) | 2 (from 9) | 69 | 5 of 256 |
-| `cass-adv` | Good | 52,178 | 2 + 4 | 8 | 80 | 91 of 256 |
-| `cass-flashlight` | Poor (one light) | 51,590 | 2 + 5 | 9 | 75 | 157 of 256 |
-| `cass-lantern` | Poor (one light) | 51,736 | 2 + 6 | 10 | 75 | 157 of 256 |
+| `cass` | Good | 58,852 | 2 + 0 | 3 | 82 | 8 of 256 |
+| `cass-lite` | Good | 18,955 | 2 + 0 | 3 | 82 | 8 of 256 |
+| `cass-adv` | Good | 62,630 | 2 + 4 | 8 | 102 | 96 of 256 |
+| `cass-event` | Medium | 63,620 | 2 + 9 | 13 | 102 | 165 of 256 |
+| `cass-party` | Good | 59,905 | 2 + 2 | 6 | 86 | 85 of 256 |
+| `cass-shuffle` | Good | 58,853 | 2 + 1 | 4 | 82 | 8 of 256 |
+| `cass-shapes` | Medium | 59,384 | 3 + 0 | 4 | 97 | 74 of 256 |
+| `cass-flashlight` | Poor (one light) | 62,042 | 2 + 5 | 9 | 97 | 162 of 256 |
+| `cass-lantern` | Poor (one light) | 62,188 | 2 + 6 | 10 | 97 | 162 of 256 |
 
 The second skinned mesh is what stands between this and Excellent. It is
 the head: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -434,47 +473,67 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Five variants are uploaded and public**, for PC, Android and iOS, with
-the second pass of the model described here. The first pass was worn on
-PC; this one has not been worn yet.
+**Nine variants are uploaded and public**, each for every platform it is
+built for, with the fourth pass of the model described here. **This pass
+has not been worn, and nothing added in the session that made it has run
+in the VRChat client.**
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
 | `cass` | `avtr_83eafc89-950e-4553-bb36-c37238333069` | PC, Android, iOS |
 | `cass-lite` | `avtr_df376716-743f-4bde-a5cc-98ddec85a313` | PC, Android, iOS |
 | `cass-adv` | `avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9` | PC, Android, iOS |
+| `cass-event` | `avtr_eb395cf9-c1b5-45f1-af1c-ea60c6710fba` | PC, Android, iOS |
+| `cass-party` | `avtr_703d3044-1d5c-419f-8136-72743d3290dc` | PC, Android, iOS |
+| `cass-shuffle` | `avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0` | PC |
+| `cass-shapes` | `avtr_01467232-af45-4db8-b1ef-288077548fbe` | PC, Android, iOS |
 | `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC, Android, iOS |
 | `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC, Android, iOS |
 
-**`cass` and `cass-adv` have been worn in the VRChat client on PC, which
-is where the portal's pop-out, the notices' early exit and the thumbnails
-were found wanting; the fixes for those have not been tried in the client
-yet. The Android and iOS builds and the two real-light variants have not
-been worn at all.** Everything below was checked in Blender, in the Unity
-editor, against VRChat's API, or headless. `docs/POSTMORTEM.md` has the
-history, the gotchas and the open issues.
+The first pass of the model, as `cass` and `cass-adv`, was worn in the
+client on PC. That is where the portal's pop-out, the notices' early exit
+and the thumbnails were found wanting, and the fixes for those have still
+not been tried there. Everything since was checked in Blender, in the
+Unity editor, against VRChat's API, or headless. `docs/POSTMORTEM.md` has
+the history, the gotchas and the open issues, in two parts: the pipeline,
+and the session of 2026-11-16 and 17 that added most of what is listed
+below as unchecked.
+
+That session ran unattended. The uploads were made with the owner's
+written certification that they hold the rights to the content, given
+beforehand for the purpose; it was recorded for each avatar id through the
+SDK's own agreement call, not by anyone answering the SDK's dialog.
 
 Checked:
 
 - Both Blender exports validate against the specs with no errors, and each
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- All five variants build through Modular Avatar and Avatar Optimizer for
-  PC, Android and iOS, and pass `scripts/cass.sh verify`: the rank each is
-  held to, the MMD mesh name and layer order intact after the build, every
-  viseme, required tracking key and MMD shape still present, budgets
-  respected, no brightness floor.
-- The contact sheets for `cass` render and were looked at: all fourteen
-  expressions (heart eyes and the scribbled Afraid eyes among them), each
-  garment taken off with whole skin underneath, the cameras and the poses,
-  and the face under harsh, dim and coloured light.
-- All five uploaded through `scripts/cass.sh upload` for all three
-  platforms, with the editor switched to each, and VRChat's records read
-  back matching the upload policy (source link, required tags, public).
-  The uploaded bundles of this model have not been re-opened with
-  `scripts/cass.sh bundle`; the placeholder's were.
-- Headless tests: 22 for the avatar's core logic, 11 for the thumbnail
-  composer, and each submodule's own suite.
+- All nine variants build through Modular Avatar and Avatar Optimizer for
+  the platforms they are built for, and pass `scripts/cass.sh verify`: the
+  rank each is held to, the MMD mesh name and layer order intact after the
+  build, every viseme, required tracking key and MMD shape still present,
+  budgets respected, no brightness floor.
+- The contact sheets for `cass` were rendered with the new model, and the
+  cameras and the outfit sheet looked at: each switch flipped in turn,
+  everything on (the original design) and everything off, with whole skin
+  underneath. The model's own review renders, in more poses, are from
+  Blender.
+- Each new feature was built onto a variant and read back with `FxProbe`:
+  its layers are there and every curve of its clips arrives at an object
+  that exists. Where there was something to see it was rendered in the
+  editor: the beacon's pin and arrow from nine camera positions, the censor
+  over the avatar under each of its modes, the nap's pose at four moments,
+  the seats in both arrangements, the party tricks in the feature sheet.
+- world-sync's anchor bus was run in the editor by a check that stands in
+  for VRChat's parameter drivers, contacts and network; a viewer who
+  arrives after six things are placed has all six, to within 2.9 cm, after
+  one turn of the broadcast.
+- All uploads went through `scripts/cass.sh upload`, and VRChat's records
+  read back matching the upload policy (source link, required tags,
+  public).
+- Headless tests: 28 for the avatar's core logic, 11 for the thumbnail
+  composer, and each submodule's own suite (38 in locomotion).
 
 Not checked, because only the client can:
 
@@ -483,45 +542,64 @@ Not checked, because only the client can:
   animation and a tracker drive the same blendshape, which is why gestures
   only animate shapes the tracker is not mapped to while one is live.
 - **MMD worlds**, beyond the mesh name and layer order.
-- **Every gadget in use**: collider flight, the carry seat, the portal's
-  station, the laser's raycast, the screen notice in a headset. Each
-  submodule's README says what its own unknowns are.
-- **Synced world positions.** The receiving half is checked in the editor
-  (a dropped prop reconstructs within 3 cm across a ±512 m world); the half
-  that measures the position on the wearer's client only runs in game.
+- **Every gadget in use.** The older ones: collider flight, the carry
+  seat, the portal's station, the laser's raycast, the screen notice in a
+  headset. And every new one: the ping, the beacon, the hammer, the
+  vanishing act, the censor, the stepladder, the nap, the seats and their
+  screen, the outfit shuffle, the shape collector. Each submodule's README
+  says what its own unknowns are.
+- **Synced world positions.** The receiving half, and now the bus's whole
+  protocol, are checked in the editor; the half that measures a position
+  on the wearer's client only runs in game, and the stepladder now rests on
+  the same kind of reading.
 - **How the locomotion feels**, and how it sits with real tracking.
 - **Hand poses**: props sit in the hand pointing where the fingers point,
   and the fingers do not close around them.
-- **The new model in motion.** The ear and tail poses, the arm twist
+- **The model in motion.** The ear and tail poses, the arm twist
   constraints, the hair, ear and tail physics and the eye-look limits are
-  generated and build cleanly, but nothing has seen them move. The ear
-  poses are not in the contact sheets, which sample the expression clips
-  and not the pose layer.
+  generated and build cleanly, but nothing has seen them move. The long
+  hair hangs on six more bones under the same PhysBone, with settings that
+  were chosen for the short hair.
 
 Known gaps:
 
-- The model is a second pass, modelled by script and judged from renders
+- The model is a fourth pass, modelled by script and judged from renders
   and one round of notes from wearing the first. The face is a stand-in
-  from another avatar, and its expressions are mild. The outfit is
-  plainer than the design's skirt was. There are no socks. Garment
-  openings are hollow and rely on the double-sided material.
-- With the sweater and the shorts both switched off the body is bare: the
-  base is a smooth doll body with no underwear layer. Parked, by choice.
+  from another avatar, and its expressions are mild; a search for
+  licence-compatible alternatives found candidates and tried none (see the
+  post-mortem). There are no socks. Garment openings are hollow and rely on
+  the double-sided material.
+- With the sweater off and neither the shorts nor the skirt on, the body
+  is bare: the base is a smooth doll body with no underwear layer. The
+  skirt needs none: it hides the hips and is closed off inside by a dark
+  lining, so from below there is only dark.
+- The skirt has no bones or physics. It follows the legs by its weights,
+  hangs straight through whatever is sat on, and a high kick comes through
+  its front. Its waistband goes round the untucked sweater, so the waist is
+  wide, and with the sweater off the lining shows in the gap.
+- The vest is fitted to the sweater and is only shown over it. With the
+  skirt on, its fringe is inside the skirt's waistband.
+- Long hair turns rigidly with the head until physics moves it, and has no
+  collider to keep it out of the shoulders.
+- The sweater's collar stands a little, and a twist wrinkles its front.
 - The ears clip the hat's brim when a pose or physics bends them far;
   they have holes to stand in, not room to move.
 - Under the chin, the face texture's painted shadow is stretched where the
   head's neck was narrowed to meet the body's.
-- The human ears of the face mesh are still there, under the side hair.
 - The hair is fitted under the hat, so with the hat switched off it is a
-  little flattened where the hat sits. Where the fringe's strands meet at
-  the parting they still run into each other.
+  little flattened where the hat sits, and the top edge of its lengths
+  shows as a faint line round the head.
 - Nothing fades or dithers out as a viewer comes close; lilToon's Clipping
   Canceller pushes near geometry back instead.
 - Held tools have no hand poses of their own.
-- The locomotion clips are baked on a generic rig and retargeted, not
-  fitted to this avatar; `LocomotionBuild.BakeFor` exists for that.
-- Nothing is published: no releases, and the repositories are not on the
-  VPM listing.
+- The locomotion clips and the nap are baked on a generic rig and
+  retargeted, not fitted to this avatar; `LocomotionBuild.BakeFor` exists
+  for the gaits.
+- VRChat's ten tags do not hold every feature of `cass-event`; the
+  least important two are left out.
+- Nothing is published: no releases, the repositories are not on the VPM
+  listing, and nothing from this session has been pushed. `party-tricks`
+  and `shape-collector` have no GitHub repository yet.
 
 ## Development
 
@@ -573,6 +651,11 @@ The body is [SiroinoSotai](https://siroinoworks.booth.pm/items/8268676) by
 [水無ひより / Mizunashi Hiyori](https://booth.pm/en/items/6120660) by
 ひみこ / HENGE. Both are CC0. Neither author was involved in or endorses
 this avatar.
+
+The outfit shuffle notices when it is not being drawn by the method of VRLabs'
+[IsRendering Detection](https://github.com/VRLabs/IsRendering-Detection) (MIT), and the world frame of
+`net.wirenook.world-sync` is the technique of VRLabs' World Constraint. Both are built here from their
+descriptions; no file of either is in this repository.
 
 Descended from https://github.com/vrchat-community/template-package
 ([VRCHAT DISTRO LICENSE FILE](https://github.com/vrchat-community/template-package/blob/d9cf13fe9f56867cbf7315a4dbbf1901bc1537ec/Packages/com.vrchat.core.bootstrap/License.md))

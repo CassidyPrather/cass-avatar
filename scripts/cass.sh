@@ -49,14 +49,22 @@ as_platform() {
 }
 
 # The variants whose whole slug matches a regular expression, in the order the spec lists them.
+# Given a platform as well, only those built for it.
 matching() {
-    python -c 'import json, re, sys; print(" ".join(v["slug"] for v in json.load(open("Packages/net.wirenook.cass/Spec/variants.json", encoding="utf-8"))["variants"] if re.fullmatch(sys.argv[1], v["slug"])))' "$1"
+    python -c 'import json, re, sys; print(" ".join(v["slug"] for v in json.load(open("Packages/net.wirenook.cass/Spec/variants.json", encoding="utf-8"))["variants"] if re.fullmatch(sys.argv[1], v["slug"]) and (len(sys.argv) < 3 or sys.argv[2] in v.get("platforms", [sys.argv[2]]))))' "$@"
 }
 
+# Uploads the variants matching a regular expression for the platform the
+# editor is on. Named a platform, it passes over variants not built for it;
+# without one, asking for such a variant is an error the editor reports.
 upload_matching() {
     local found
-    found=$(matching "$1")
+    found=$(matching "$@")
     if [ -z "$found" ]; then
+        if [ -n "$(matching "$1")" ]; then
+            echo "cass.sh: nothing matching \"$1\" is built for $2"
+            return 0
+        fi
         echo "cass.sh: no variant matches \"$1\"; there are: $(variants)" >&2
         return 2
     fi
@@ -123,7 +131,7 @@ case "$command" in
             for target in ${platform//,/ }; do
                 "$0" platform "$target" > /dev/null
                 echo "== $target =="
-                upload_matching "$slug" || status=$?
+                upload_matching "$slug" "$target" || status=$?
             done
             "$0" platform "$before" > /dev/null
             exit $status

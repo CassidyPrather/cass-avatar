@@ -16,3 +16,6 @@
 [submodule "modules/party-tricks"]
 	path = modules/party-tricks
 	url = https://github.com/CassidyPrather/party-tricks.git
+[submodule "modules/shape-collector"]
+	path = modules/shape-collector
+	url = https://github.com/CassidyPrather/shape-collector.git

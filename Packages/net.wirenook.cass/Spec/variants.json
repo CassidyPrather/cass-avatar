@@ -71,6 +71,16 @@
       "worstRankMobile": "Medium"
     },
     {
+      "slug": "cass-shapes",
+      "extends": "cass",
+      "about": "The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. The course is a skinned mesh of its own, a third, which is Medium on PC.",
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.shape-collector/Prefabs/Wirenook Shape Collector.prefab"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "cass-flashlight",
       "extends": "cass",
       "about": "The adventure build with one real light source: the flashlight, a spotlight, which can be left standing in the world. It replaces both of cass-adv's glowing stand-ins. Any light on an avatar ranks it Poor and a second Very Poor, hence one light and a variant of its own.",
