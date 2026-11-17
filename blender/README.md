@@ -11,14 +11,15 @@ It is built at two fidelity levels from the same generator, on one skeleton:
 
 | Level | File | Export | Body mesh | Triangles |
 | --- | --- | --- | --- | --- |
-| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 49,000 |
-| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 16,600 |
+| `full` | `cass.blend` | `cass.fbx` | SiroinoSotai PC (16.7k) | about 58,700, of which 13,300 are on tiles hidden at rest |
+| `lite` | `cass-lite.blend` | `cass-lite.fbx` | SiroinoSotai Mobile (3.5k) | about 16,300 shown at rest and 2,500 hidden |
 
 Both have the same objects, bones, shape keys and UV tiles, which is what
 lets Unity exchange one for the other at build time. The garments cut from
-the body follow its level; hair, ears, tail, boots and hat are divided more
-coarsely in `lite`, which also leaves out the stitched details and the
-short underlayer of the fringe. The face is the same mesh in both.
+the body follow its level; hair, ears, tail, boots, skirt and hat are divided
+more coarsely in `lite`, which also leaves out the stitched details, the
+knit lines of the sweater's ribbing and the folds of the skirt's gathers.
+The face is the same mesh in both.
 
 ## Files
 
@@ -39,11 +40,11 @@ short underlayer of the fringe. The face is the same mesh in both.
 | `kitbash/body.py` | The skin below the neck, with the size preset baked in and each face tagged with its body segment. |
 | `kitbash/face.py` | The head: fitted to the body's neck, re-keyed to the spec's shape key names. |
 | `kitbash/decals.py` | Blush strokes, tears and the scribbled eyes, as geometry on the face. |
-| `kitbash/atlas.py` | The texture, `Textures/cass-atlas.png` (the painted face beside the palette), and its normal map. |
+| `kitbash/atlas.py` | The texture, `Textures/cass-atlas.png` (the painted face, the palette and a patch of gingham), and its normal map. |
 | `kitbash/rig.py` | The armature: the body base's skeleton under the spec's names, plus added bones. |
-| `kitbash/shell.py`, `garments.py` | Sweater and shorts cut from the body's own mesh; boots lofted around the leg. |
-| `kitbash/detail.py` | Stitching, seams, pockets, lacing and trims laid onto finished parts as geometry. |
-| `kitbash/sweep.py`, `hair.py`, `extras.py`, `hat.py` | Swept strands; the hair; ears and tail; the hat. |
+| `kitbash/shell.py`, `garments.py` | Sweater, shorts and vest cut from the body's own mesh; boots lofted around the leg; the skirt lofted round the hips, with its dark lining; the neckerchief. |
+| `kitbash/detail.py` | Stitching, seams, pockets and trims laid onto finished parts as geometry. |
+| `kitbash/sweep.py`, `hair.py`, `extras.py`, `hat.py` | Swept strands; the hair in two lengths; ears and tail; the hat. |
 | `kitbash/stamp.py` | Marks a `.blend` as generator output and detects hand edits. |
 
 ## Commands
@@ -76,8 +77,12 @@ two ways:
 The first check exists because the second cannot see an orientation error in
 the bone nodes: Blender's importer rebuilds bones from the bind pose. Run
 `preview.py` with `-- --help` for its options (views, extra shots, shape key
-values, a test pose, tile overrides). Its cavity shading draws faint marks
-around the mouth after it has deleted hidden faces; they are not in the model.
+values, poses, tile overrides). `--pose down,walk,sit,kick` renders one set
+of pictures per pose, which is how the clothes are checked in motion, and
+`--tiles outfit.skirt.bottom=1,outfit.default.bottom=0,hair.long=1,hair.short=0,outfit.vest.layer=1`
+shows the alternatives, which are hidden at rest. Its cavity shading draws
+faint marks around the mouth after it has deleted hidden faces; they are not
+in the model.
 
 ## Source assets
 
@@ -135,12 +140,20 @@ The generator is deterministic: it uses no randomness, so the same sources
 and Spec files give the same model.
 
 To change how something looks, the numbers are at the top of its module:
-the hairstyle is the `FRINGE` guides and the azimuth lists in `hair.py`, the
-ears and tail are the guides and profiles in `extras.py`, the hat's
+the hairstyle is the `FRINGE` guides and the `LENGTHS` table in `hair.py`,
+the ears and tail are the guides and profiles in `extras.py`, the hat's
 dimensions are in `hat.py`, and each garment's cut and its stitched details
-are its function in `garments.py` (`NECKLINE` switches the sweater between
-a scoop and a crew neck). A new
-outfit is a new set of functions there, on its own discard tiles.
+are its function in `garments.py`, under the constants named for it
+(`NECKLINE` switches the sweater between a crew neck and a scoop). A new
+garment is a new function there, on a discard tile of its own; the 4 x 4
+grid of tiles is now full.
+
+What the garments owe each other: the sweater is a tube below the arms that
+is made wide enough at the hem for its ribbed band to pass round the shorts;
+the skirt's waistband is fitted round that tube, and the vest is the
+sweater's own shape stood off its surface, with a hem that hangs outside
+the skirt's waistband. So the shorts are built first, then the sweater, then
+the skirt and the vest (`PARTS` in `build_cass.py`).
 
 ## Modelling contracts
 
@@ -166,7 +179,7 @@ outfit is a new set of functions there, on its own discard tiles.
   bone name for each Unity `HumanBodyBones` entry, and `extra` lists every
   other bone with its parent. The armature must contain exactly those bones,
   with those parents, all with Deform enabled.
-- At most 90 bones (VRChat's Good on mobile). The model has 74. No leaf or
+- At most 90 bones (VRChat's Good on mobile). The model has 80. No leaf or
   helper bones.
 - To add or rename a bone, change `skeleton.json` first. Unity configures the
   humanoid rig from the same file.
@@ -176,8 +189,11 @@ outfit is a new set of functions there, on its own discard tiles.
     from the `twist` entry beside it in the spec.
   - `Ear1` to `Ear3` (both sides), `Tail1`, `Tail2`: physics chains that
     the gesture poses also turn.
-  - `HairRoot` and four two-bone chains under it (`HairSide`, `HairBack`,
-    both sides): one PhysBone on the root swings all four.
+  - `HairRoot` and four chains under it, `HairSide1` to `3` and `HairBack1`
+    to `4` on each side: one PhysBone on the root swings all four. The short
+    hair ends on the second bone of each chain; the long hair uses them
+    all, the side chains for what falls forward over the chest and the back
+    chains for what hangs down the back.
 - The `Eye.L` / `Eye.R` bones sit deep inside the head, not behind the eyes:
   the irises are shells that slide across the eye whites when the bone
   turns. They point up with Z forward, so in Unity a turn about X is the
@@ -190,15 +206,22 @@ outfit is a new set of functions there, on its own discard tiles.
 - The mesh carrying the face must be named `Body`. MMD worlds look it up by
   that name, and all shape keys live on it. Here it is the head only.
 - Other meshes are free to name. The model has `Skin` (the body), `Hair`,
-  `Ears`, `Tail`, `Outfit_Sweater`, `Outfit_Shorts`, `Outfit_Boots` and
-  `Outfit_Hat`; `preview.py --bare` treats the `Outfit_` prefix as "garment".
-  Both levels must have the same mesh names.
+  `Ears`, `Tail`, `Outfit_Sweater`, `Outfit_Shorts`, `Outfit_Skirt`,
+  `Outfit_Vest`, `Outfit_Boots` and `Outfit_Hat`; `preview.py --bare` treats
+  the `Outfit_` prefix as "garment". Both levels must have the same mesh
+  names.
 - One material slot per mesh, the same material everywhere, named `cass`. Its
   base colour is `Textures/cass-atlas.png`.
-- At most 70,000 triangles at the full level and 17,000 at lite, before the
-  build removes anything. What binds the lite level is VRChat's 15,000 for
-  Medium on mobile after the build, which `scripts/cass.sh verify cass android`
-  checks; it currently has 64 to spare.
+- At most 70,000 triangles at the full level, everything counted, before the
+  build removes anything. At lite the tiles that are shown at rest may have
+  17,000 between them and the tiles hidden at rest (the alternative skirt,
+  long hair and vest) 8,000: the mobile build cuts hidden tiles out of the
+  mesh, so an alternative costs it nothing, and the second limit is only
+  there to keep the alternatives coarse. What binds the lite level is
+  VRChat's 15,000 for Medium on mobile after the build, which
+  `scripts/cass.sh verify cass android` checks. Whatever is shown at rest
+  counts towards it, so that must not grow at lite; counted from the tiles,
+  the model is now about 14,650 after that build.
 - Each vertex has one to four bone weights that sum to 1.
 
 ### UV layers
@@ -208,7 +231,10 @@ Every mesh has exactly two UV layers, in this order.
 1. `UVMap` selects the colour from the atlas and must stay inside the unit
    square. A flat-coloured face has all its loops on the centre of one
    swatch (`common.set_swatches`); the head keeps the face texture's own
-   UVs, and the body its own, moved into its skin-coloured region. Swatch UVs are in `Textures/cass-atlas.json`. To add a colour,
+   UVs, and the body its own, moved into its skin-coloured region. The
+   skirt's cloth is the one painted pattern: each of its faces is laid on
+   the atlas's patch of gingham by `atlas.gingham_uv`, at one scale, moved a
+   whole number of checks so that it fits the patch. Swatch UVs are in `Textures/cass-atlas.json`. To add a colour,
    append a swatch to `cass-palette.toml`, re-bake with
    `python modules/wirenook-assets/tools/palette.py Packages/net.wirenook.cass/Textures/cass-palette.toml`
    and rebuild; the build bakes the palette into the atlas and reassigns
@@ -223,7 +249,7 @@ checked):
 
 | Faces | Tile |
 | --- | --- |
-| Head, neck, collarbones and shoulder tops (`Chest_01`, `Shoulder`), wrists, hands, hair, ears, tail, blush and tear marks | `always` |
+| Head, neck, collarbones and shoulder tops (`Chest_01`, `Shoulder`), wrists, hands, the hair's cap, fringe and the locks in front of the ears, ears, tail, blush and tear marks | `always` |
 | Skin of the chest and waist (segments `Chest_02`, `Spine`) | `body.torso` |
 | Skin from the upper arms to the forearms (`UpperArm` to `LowerArm`) | `body.arms` |
 | Skin of the pelvis (`Hips`) | `body.hips` |
@@ -232,6 +258,16 @@ checked):
 | Irises, highlights, heart and star pupils | `face.eyes` |
 | Scribbled eyes | `face.eyes_scribble` |
 | Sweater, shorts, boots, hat | `outfit.default.top`, `.bottom`, `.shoes`, `.hat` |
+| The hair's lengths to the shoulders | `hair.short` |
+| The hair's lengths to the middle of the back (hidden at rest; instead of `hair.short`) | `hair.long` |
+| Tiered gingham skirt and its dark lining (hidden at rest; instead of `outfit.default.bottom`) | `outfit.skirt.bottom` |
+| Suede vest and neckerchief (hidden at rest; over `outfit.default.top`) | `outfit.vest.layer` |
+
+Which tiles exclude each other is Unity's business; the model only puts
+each alternative on a tile of its own. The skirt hides `body.hips` like the
+shorts, and nothing is worn under it, so it carries its own darkness: a
+lining just inside the cloth, a loose dark shell over the hidden hips that
+moves with the legs, and a membrane joining the two.
 
 Unity discards the zones listed under a garment's `hides` while the garment
 is worn, so the garment has to reach past the border of those zones. The

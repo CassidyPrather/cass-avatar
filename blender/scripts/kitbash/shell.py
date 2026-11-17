@@ -59,6 +59,15 @@ class Shell:
             bmesh.ops.smooth_vert(self.bm, verts=interior, factor=factor, use_axis_x=True, use_axis_y=True, use_axis_z=True)
         self.bm.normal_update()
 
+    def relax_near(self, loop, reach, repeat, factor=0.5):
+        """Smooths the interior within `reach` of an open loop, to settle the cloth after its rim has been moved."""
+        rim = np.array([v.co[:] for v in loop], dtype=np.float64)
+        near = [v for v in self.bm.verts if not v.is_boundary
+                and np.linalg.norm(rim - np.array(v.co[:]), axis=1).min() < reach]
+        for _ in range(repeat):
+            bmesh.ops.smooth_vert(self.bm, verts=near, factor=factor, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+        self.bm.normal_update()
+
     def clear_skin(self, clearance):
         """Lifts every vertex that has sunk to within `clearance` of the skin back out to that distance.
 
@@ -95,6 +104,102 @@ class Shell:
             moved = {v: (v.co + sum((n.co for n in near), v.co * 0.0) / len(near)) / 2.0 for v, near in neighbours.items() if len(near) == 2}
             for vertex, position in moved.items():
                 vertex.co = position
+        self.bm.normal_update()
+
+    def fair_loop(self, loop, clearance=None, order=3):
+        """Redraws a roughly level open loop as an even, symmetric oval about a vertical axis.
+
+        Radius and height are each fitted as a few cosine harmonics of the
+        bearing from the axis (cosines only, so left and right match). With
+        `clearance`, the oval is then grown until no vertex on it is nearer
+        the skin than that. Returns the axis as (x, y).
+        """
+        co = np.array([v.co[:] for v in loop], dtype=np.float64)
+        axis = np.array((0.0, (co[:, 1].min() + co[:, 1].max()) / 2.0))
+        bearing = np.arctan2(co[:, 0], -(co[:, 1] - axis[1]))
+        basis = np.stack([np.cos(k * bearing) for k in range(order + 1)], axis=1)
+        radius = basis @ np.linalg.lstsq(basis, np.linalg.norm(co[:, :2] - axis, axis=1), rcond=None)[0]
+        height = basis @ np.linalg.lstsq(basis, co[:, 2], rcond=None)[0]
+        grow = 0.0
+        if clearance is not None:
+            if not hasattr(self, "_skin_tree"):
+                self._skin_tree = common.bvh_of(self.skin)
+            for _ in range(4):
+                short = 0.0
+                for r, z, b in zip(radius + grow, height, bearing):
+                    point = (r * np.sin(b), axis[1] - r * np.cos(b), z)
+                    location, normal, _index, _distance = self._skin_tree.find_nearest(point)
+                    short = max(short, clearance - (np.array(point) - np.array(location)) @ np.array(normal))
+                if short <= 1e-5:
+                    break
+                grow += short
+        for vertex, r, z, b in zip(loop, radius + grow, height, bearing):
+            vertex.co = (r * np.sin(b), axis[1] - r * np.cos(b), z)
+        self.bm.normal_update()
+        radius_fit = np.linalg.lstsq(basis, radius + grow, rcond=None)[0]
+        height_fit = np.linalg.lstsq(basis, height, rcond=None)[0]
+        # The oval, for whatever is to be laid round it: (axis, radius by bearing, height by bearing), bearings in radians.
+        self.faired = (axis, lambda b: float(sum(c * np.cos(k * b) for k, c in enumerate(radius_fit))),
+                       lambda b: float(sum(c * np.cos(k * b) for k, c in enumerate(height_fit))))
+        return axis
+
+    def cut_out(self, planes, where, inside):
+        """Cuts an opening with straight edges: the shell is split along each plane, then the faces `inside` go.
+
+        `planes` are (point, normal) pairs; `where` and `inside` are tests of
+        a face's centre. Only faces passing `where` are split or removed, so
+        an opening in the front leaves the back alone.
+        """
+        for point, normal in planes:
+            faces = [f for f in self.bm.faces if where(np.array(f.calc_center_median()[:]))]
+            geometry = list({v for f in faces for v in f.verts}) + list({e for f in faces for e in f.edges}) + faces
+            bmesh.ops.bisect_plane(self.bm, geom=geometry, dist=1e-6, plane_co=point, plane_no=normal,
+                                   clear_outer=False, clear_inner=False)
+        doomed = []
+        for face in self.bm.faces:
+            centre = np.array(face.calc_center_median()[:])
+            if where(centre) and inside(centre):
+                doomed.append(face)
+        bmesh.ops.delete(self.bm, geom=doomed, context="FACES")
+        self.bm.normal_update()
+
+    def fringe(self, ring, swatch, length, spacing, width, lift=0.0015):
+        """Hangs a row of pointed strips from a band's last ring, `spacing` apart: a fringed hem."""
+        self.bm.normal_update()
+        identifier = self.swatch_id(swatch)
+        order = _chain(ring)
+        lengths = [(b.co - a.co).length for a, b in zip(order, order[1:])]
+        total = sum(lengths)
+        number = max(1, int(round(total / spacing)))
+        segment, start = 0, 0.0
+        for k in range(number):
+            target = total * (k + 0.5) / number
+            while start + lengths[segment] < target and segment < len(lengths) - 1:
+                start += lengths[segment]
+                segment += 1
+            a, b = order[segment], order[segment + 1]
+            t = (target - start) / max(lengths[segment], 1e-9)
+            point = a.co.lerp(b.co, t)
+            normal = a.normal.lerp(b.normal, t)
+            normal.z = 0.0
+            if normal.length < 1e-9:
+                continue
+            normal.normalize()
+            along = (b.co - a.co).normalized() * (width / 2.0)
+            source = a if t < 0.5 else b
+            corners = []
+            for position in (point - along + normal * lift, point + along + normal * lift,
+                             point + normal * (lift + 0.004) - type(point)((0.0, 0.0, length * (0.85 + 0.15 * ((k * 7) % 5) / 4.0)))):
+                new = self.bm.verts.new(position)
+                new[self.deform] = source[self.deform]
+                self.grown.append(new)
+                corners.append(new)
+            face = self.bm.faces.new(corners)
+            face.normal_update()
+            if face.normal.dot(normal) < 0.0:
+                face.normal_flip()
+            face[self.swatch_layer] = identifier
+            face.smooth = True
         self.bm.normal_update()
 
     # --- bands ---
@@ -180,6 +285,18 @@ class Shell:
         reach = np.linalg.norm(points - centre, axis=1).max() * 1.5
         return self.cut(centre + direction * depth, direction, centre, reach)
 
+    def cut_fitted(self, loop, towards, margin=0.004):
+        """Cuts off a saw-toothed open loop that lies square to no axis (an armhole): with the plane that fits it best.
+
+        `towards` says which side of that plane is discarded, roughly.
+        """
+        points = np.array([v.co[:] for v in loop], dtype=np.float64)
+        centre = points.mean(axis=0)
+        normal = np.linalg.svd(points - centre)[2][-1]
+        if normal @ np.asarray(towards, dtype=np.float64) < 0.0:
+            normal = -normal
+        return self.cut_within(loop, centre, normal, margin)
+
     def cut_within(self, loop, point, normal, margin=0.004):
         """Cuts with a given plane, moved in as far as it must be to clear every tooth of an open loop."""
         normal = np.asarray(normal, dtype=np.float64)
@@ -190,7 +307,7 @@ class Shell:
         reach = np.linalg.norm(points - centre, axis=1).max() * 2.2
         return self.cut(np.asarray(point) + normal * min(0.0, needed), normal, centre, reach)
 
-    def band(self, loop, steps):
+    def band(self, loop, steps, rings=None):
         """Extrudes an open loop through `steps`, a list of (function(co) -> co, swatch).
 
         Each step makes one ring of quads; its function maps the previous
@@ -198,7 +315,7 @@ class Shell:
         the skin nearest to where they end up (see `to_object`), not like the
         seam they grew from: a seam between two body segments is weighted to
         both, and a hem that kept those weights would tear as the joint bends.
-        Returns the last ring.
+        Returns the last ring; `rings`, if given, is a list that receives every ring made.
         """
         ring = list(loop)
         members = set(ring)
@@ -221,8 +338,55 @@ class Shell:
                 face.smooth = True
             ring = [grown[v] for v in ring]
             members = set(ring)
+            if rings is not None:
+                rings.append(ring)
         self.bm.normal_update()
         return ring
+
+    def ribs(self, ring_a, ring_b, swatch, spacing=0.010, width=0.0024, lift=0.0012, inset=0.12):
+        """Lays thin strips from one band ring towards the next, evenly `spacing` apart: the lines of a ribbed knit.
+
+        The rings are two results of `band` grown from the same loop, so vertex i of one is
+        above vertex i of the other. Each strip stops `inset` of the way short of both rings.
+        """
+        self.bm.normal_update()
+        identifier = self.swatch_id(swatch)
+        order = _walk(ring_a, set(ring_a))
+        partner = dict(zip(ring_a, ring_b))
+        count = len(order)
+        lengths = [(order[(i + 1) % count].co - order[i].co).length for i in range(count)]
+        total = sum(lengths)
+        number = max(3, int(round(total / spacing)))
+        segment, start = 0, 0.0
+        for k in range(number):
+            target = total * (k + 0.5) / number
+            while start + lengths[segment] < target and segment < count - 1:
+                start += lengths[segment]
+                segment += 1
+            t = (target - start) / max(lengths[segment], 1e-9)
+            a, b = order[segment], order[(segment + 1) % count]
+            low = a.co.lerp(b.co, t)
+            high = partner[a].co.lerp(partner[b].co, t)
+            normal = (a.normal.lerp(b.normal, t) + partner[a].normal.lerp(partner[b].normal, t)).normalized()
+            along = high - low
+            across = normal.cross(along)
+            if across.length < 1e-9:
+                continue
+            across = across.normalized() * (width / 2.0)
+            source = a if t < 0.5 else b
+            corners = []
+            for fraction, side in ((inset, -1.0), (inset, 1.0), (1.0 - inset, 1.0), (1.0 - inset, -1.0)):
+                new = self.bm.verts.new(low + along * fraction + normal * lift + across * side)
+                new[self.deform] = source[self.deform]
+                self.grown.append(new)
+                corners.append(new)
+            face = self.bm.faces.new(corners)
+            face.normal_update()
+            if face.normal.dot(normal) < 0.0:
+                face.normal_flip()
+            face[self.swatch_layer] = identifier
+            face.smooth = True
+        self.bm.normal_update()
 
     def paint(self, test, swatch):
         """Recolours the faces whose centre passes `test(centre)`."""
@@ -257,6 +421,33 @@ class Shell:
                 column[bands] = sampled.get(name, np.zeros(len(bands)))
         common.set_weights(obj, table)
         return obj
+
+
+def _chain(ring):
+    """The vertices of a ring or an open run of vertices, in order along it."""
+    members = set(ring)
+    near = {v: [e.other_vert(v) for e in v.link_edges if e.other_vert(v) in members] for v in ring}
+    ends = [v for v in ring if len(near[v]) == 1]
+    order, previous, current = [], None, ends[0] if ends else ring[0]
+    while current is not None and len(order) < len(ring):
+        order.append(current)
+        following = [v for v in near[current] if v is not previous and v not in order[:1]]
+        previous, current = current, (following[0] if following else None)
+    return order
+
+
+def _walk(ring, members):
+    """The vertices of a closed ring in order round it."""
+    def neighbours(vertex):
+        return [e.other_vert(vertex) for e in vertex.link_edges if e.other_vert(vertex) in members]
+
+    order, previous, current = [ring[0]], None, ring[0]
+    while True:
+        following = [v for v in neighbours(current) if v is not previous and v is not order[0]]
+        if not following or len(order) >= len(ring):
+            return order
+        previous, current = current, following[0]
+        order.append(current)
 
 
 def around_axis(co, start, end):

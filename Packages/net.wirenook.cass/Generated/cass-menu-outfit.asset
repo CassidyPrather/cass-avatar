@@ -54,3 +54,33 @@ MonoBehaviour:
     subMenu: {fileID: 0}
     subParameters: []
     labels: []
+  - name: Skirt
+    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    type: 102
+    parameter:
+      name: Outfit/Skirt
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Vest
+    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    type: 102
+    parameter:
+      name: Outfit/Vest
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Long Hair
+    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    type: 102
+    parameter:
+      name: Hair/Long
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []

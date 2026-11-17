@@ -1,17 +1,32 @@
-"""Shoulder-length wavy hair: a scalp cap with swept strands over it.
+"""Wavy hair in two lengths: a scalp cap, a swept fringe, and curtains of hair hanging round the head.
 
-The guides below are the hairstyle. Each is a handful of control points in
-metres from the centre of the skull (x to the character's left, y to the
-back, z up), with a half-width at each point. Points that would sink into
-the head are lifted onto its surface, so a guide only has to say roughly
-where a strand goes. Back and side strands are generated around the head
-from a few numbers instead of being listed one by one.
+The cap is a dome over the scalp. The fringe is a few broad locks swept
+along guides: each guide is a handful of control points in metres from the
+centre of the skull (x to the character's left, y to the back, z up), with
+a half-width at each point. Points that would sink into the head are lifted
+onto its surface, so a guide only has to say roughly where a lock goes.
 
-The same guides are stored in the .blend as curves in the `Guides`
+The lengths are not separate locks, which cut through one another wherever
+they overlap, but curtains: one sheet each, running round the head from in
+front of one ear to in front of the other, corrugated into locks and cut
+into points along its hem, with the blue inner layer as its inside face.
+There are two sets, one to the shoulders and one to the middle of the back.
+The long set is three curtains, because long hair has to pass the
+shoulders: one falls down the back and one forward over each side of the
+chest.
+
+The cap, the fringe and the locks in front of the ears are on the `always`
+tile. The short lengths are on `hair.short` and the long ones on
+`hair.long`, so the two can be exchanged; only one is meant to be shown at
+a time.
+
+The fringe's guides are stored in the .blend as curves in the `Guides`
 collection (not exported), to look at or to model over.
 
-Physics: the hanging parts of the back and side strands are weighted to four
-two-bone chains under `HairRoot`; the fringe and the cap follow the head.
+Physics: the hanging parts of the curtains are weighted to four chains
+under `HairRoot` (`HairSide`, three bones, and `HairBack`, four, on each
+side); the fringe and the cap follow the head. The short lengths end on the
+second bone of each chain.
 """
 
 import math
@@ -29,45 +44,61 @@ STRAND_OFFSET = 0.016
 # Hairline height (z from the skull centre) by how far back a point is (y from the skull centre).
 HAIRLINE = ((-0.20, 0.074), (-0.08, 0.068), (-0.04, 0.036), (0.0, 0.024), (0.060, 0.024), (0.090, -0.060), (0.16, -0.100))
 
-# Fringe, from a parting just right of centre: (control points, half-widths, height). The first
-# point of each is its root, which is set down on the scalp. The height is how far above the
-# head the rest of the strand rides; pieces that cross are a strand's thickness apart in
-# height, so one lies over the other instead of cutting through it.
+# The parting runs back from the hairline to the whorl, a little to the character's right.
+PART_X = -0.030
+WHORL = (PART_X * 0.5, 0.034, 0.146)
+
+# Fringe: (control points, half-widths, height). The first point of each is its root, set down
+# on the scalp beside the parting, on the side the lock falls to, so that no two roots share a
+# place. The height is how far above the head the rest of the lock rides; locks that cross are
+# a lock's thickness apart in height, so one lies over the other instead of cutting through it.
+# The forehead shows between the two sides, as an upturned V under the parting.
 FRINGE = [
-    # Short pieces under everything else, so no forehead shows between the longer ones.
-    ([(-0.020, -0.090, 0.130), (0.020, -0.150, 0.090), (0.040, -0.156, 0.058), (0.050, -0.156, 0.036)],
-     [0.020, 0.030, 0.024, 0.003], 0.017),
-    ([(-0.045, -0.085, 0.128), (-0.082, -0.128, 0.088), (-0.100, -0.126, 0.056), (-0.106, -0.124, 0.030)],
-     [0.018, 0.028, 0.022, 0.003], 0.017),
-    ([(0.030, -0.080, 0.132), (0.090, -0.118, 0.092), (0.118, -0.108, 0.058), (0.130, -0.100, 0.030)],
-     [0.018, 0.028, 0.022, 0.003], 0.017),
-    # The long sweep across the forehead to the character's left, flicking out at the temple.
-    ([(-0.020, -0.075, 0.138), (0.030, -0.140, 0.100), (0.085, -0.135, 0.050), (0.128, -0.100, 0.008), (0.168, -0.070, -0.012)],
-     [0.020, 0.036, 0.034, 0.026, 0.004], 0.040),
-    ([(-0.025, -0.080, 0.136), (0.005, -0.150, 0.090), (0.045, -0.150, 0.045), (0.082, -0.135, 0.012), (0.105, -0.128, -0.014)],
-     [0.018, 0.030, 0.028, 0.020, 0.003], 0.028),
-    # To the right of the parting: shorter pieces that fall towards the right temple.
-    ([(-0.030, -0.078, 0.137), (-0.060, -0.135, 0.095), (-0.100, -0.115, 0.050), (-0.128, -0.085, 0.000), (-0.142, -0.080, -0.045)],
-     [0.018, 0.032, 0.030, 0.022, 0.003], 0.028),
-    ([(-0.028, -0.082, 0.135), (-0.040, -0.150, 0.088), (-0.062, -0.150, 0.048), (-0.070, -0.146, 0.018)],
-     [0.014, 0.024, 0.020, 0.003], 0.040),
-    # Locks in front of each ear, down to the jaw.
-    ([(0.060, -0.060, 0.128), (0.118, -0.075, 0.070), (0.140, -0.062, 0.000), (0.136, -0.066, -0.075), (0.150, -0.075, -0.125)],
-     [0.016, 0.026, 0.026, 0.020, 0.003], 0.018),
-    ([(-0.065, -0.060, 0.126), (-0.120, -0.070, 0.070), (-0.141, -0.058, 0.000), (-0.138, -0.064, -0.070), (-0.128, -0.078, -0.118)],
-     [0.016, 0.026, 0.026, 0.020, 0.003], 0.018),
+    # The long sweep across the forehead to the character's left, flicking out past the temple.
+    ([(-0.016, -0.074, 0.138), (0.034, -0.142, 0.100), (0.086, -0.136, 0.052), (0.132, -0.100, 0.006), (0.176, -0.066, -0.018)],
+     [0.018, 0.036, 0.037, 0.026, 0.004], 0.030),
+    # Under it, a shorter piece that stops over the left brow.
+    ([(-0.018, -0.086, 0.133), (0.022, -0.152, 0.088), (0.060, -0.150, 0.050), (0.088, -0.138, 0.022)],
+     [0.016, 0.028, 0.025, 0.003], 0.016),
+    # To the right of the parting: a sweep down to the right temple, turning out at its end.
+    ([(-0.044, -0.074, 0.136), (-0.078, -0.134, 0.094), (-0.112, -0.114, 0.048), (-0.138, -0.084, 0.000), (-0.166, -0.062, -0.034)],
+     [0.018, 0.032, 0.032, 0.023, 0.004], 0.028),
+    # Under that, a short piece over the right brow.
+    ([(-0.042, -0.086, 0.132), (-0.052, -0.150, 0.088), (-0.076, -0.148, 0.054), (-0.090, -0.138, 0.028)],
+     [0.014, 0.024, 0.021, 0.003], 0.016),
+    # Locks in front of each ear, down to the jaw, waved.
+    ([(0.050, -0.052, 0.130), (0.116, -0.076, 0.072), (0.142, -0.060, 0.000), (0.132, -0.070, -0.070), (0.150, -0.076, -0.128)],
+     [0.016, 0.027, 0.027, 0.021, 0.003], 0.018),
+    ([(-0.072, -0.052, 0.126), (-0.122, -0.070, 0.070), (-0.143, -0.056, 0.000), (-0.134, -0.068, -0.066), (-0.148, -0.078, -0.120)],
+     [0.016, 0.027, 0.027, 0.021, 0.003], 0.018),
 ]
 
-FRINGE_UNDERLAYER = 3     # how many of the first FRINGE entries are the short pieces underneath
+# The curtains start this far round from straight ahead, just in front of the ears, on each side.
+CURTAIN_FRONT = 62.0
+# Each length: how far below the skull centre the tips hang, how many waves the hair makes on
+# the way down and how far they swing it (degrees round the head), how far the tips flick out,
+# how deeply the hem is cut into points, and its curtains: (from, to) in degrees round the
+# head, clockwise seen from above from straight ahead, the number of points along the hem,
+# and where the curtain goes.
+LENGTHS = {
+    "short": {"tile": "hair.short", "length": 0.235, "waves": 0.8, "swing": 5.0, "flick": 0.028, "notch": 0.24,
+              "rows": {"full": 7, "lite": 3},
+              "curtains": ((CURTAIN_FRONT, 360.0 - CURTAIN_FRONT, 9, "round"),)},
+    "long": {"tile": "hair.long", "length": 0.495, "waves": 1.9, "swing": 7.0, "flick": 0.030, "notch": 0.16,
+             "rows": {"full": 13, "lite": 5},
+             "curtains": ((CURTAIN_FRONT, 114.0, 3, "chest"), (114.0, 246.0, 6, "back"),
+                          (246.0, 360.0 - CURTAIN_FRONT, 3, "chest"))},
+}
+CURTAIN_THICKNESS = 0.013
+CORRUGATION = 0.007       # how far the middle of each lock stands out from the grooves between them
+BODY_CLEARANCE = 0.016
 
-# Back and side strands: azimuths in degrees from straight ahead, per level (mirrored, plus one at 180).
-AZIMUTHS = {"full": (64, 82, 100, 118, 136, 153, 168), "lite": (70, 105, 142)}
-INNER_AZIMUTHS = {"full": (118, 150), "lite": (125,)}
-WHORL = (0.0, 0.030, 0.146)
-LENGTH = 0.235            # how far below the skull centre the tips hang
-
-BONES = {"Side": 82.0, "Back": 150.0}
-BONE_HEIGHTS = (-0.060, -0.150, -0.235)
+# The chains: the bearing of each joint and its height from the skull centre.
+BONES = {
+    "Side": ((82.0, -0.060), (82.0, -0.150), (72.0, -0.235), (60.0, -0.345)),
+    "Back": ((150.0, -0.060), (150.0, -0.150), (150.0, -0.235), (152.0, -0.350), (155.0, -0.480)),
+}
+BONE_REACH = 0.135
 
 
 def _direction(azimuth):
@@ -143,63 +174,178 @@ def _cap(part, skull, detail):
     part.loft(grid, "hair")
 
 
-def _hanging_guide(skull, azimuth, index, inner=False):
-    """A strand from the whorl over the head and down to the shoulders."""
-    flat = _direction(azimuth)
-    vary = math.sin(index * 2.399)          # deterministic variation between strands
-    clearance = (0.006 if inner else STRAND_OFFSET) + 0.004 * (index % 2)
-    points, widths = [], []
-    if not inner:
-        points.append(np.array(WHORL) + flat * 0.012)
-        widths.append(0.012)
-        for polar, width in ((32.0, 0.034), (62.0, 0.044)):
-            p = math.radians(polar)
-            points.append(skull.on_surface(flat * math.sin(p) + np.array((0.0, 0.0, math.cos(p))), clearance))
-            widths.append(width)
-    equator = skull.on_surface(flat + np.array((0.0, 0.0, 0.05)), clearance)
-    reach = np.linalg.norm(equator[:2])
-    points.append(equator)
-    widths.append(0.050 if inner else 0.042)
-    length = LENGTH * (0.94 if inner else 1.0 + 0.10 * vary)
-    turn = 1.0 if index % 2 else -1.0
-    # Hang with a soft wave, then curl outwards and up at the tip, each strand turning its own way.
-    for fraction, bulge, width, curl in ((0.36, 0.985, 0.042, 0.0), (0.66, 1.02 + 0.03 * vary, 0.038, 0.0), (0.86, 1.08, 0.030, 0.1),
-                                         (0.96, 1.17, 0.019, 0.5), (1.0, 1.22 + 0.04 * vary, 0.003, 1.0)):
-        if inner:
-            bulge, curl = 0.90 + 0.06 * fraction, 0.0
-            width *= 1.3
-        swirl = _direction(azimuth + turn * (4.0 * fraction + 9.0 * curl))
-        points.append(np.array((swirl[0] * reach * bulge, swirl[1] * reach * bulge, -length * fraction + 0.016 * curl)))
-        widths.append(width)
-    return points, widths
+def _clear_body(point, centre, body, clearance):
+    """Moves a point (relative to `centre`) out of the body and its clothes, to `clearance` off them."""
+    world = np.array(point, dtype=np.float64) + centre
+    for tree in body:
+        location, normal, _index, _distance = tree.find_nearest(Vector(world), 0.25)
+        if location is None:
+            continue
+        height = (Vector(world) - location).dot(normal)
+        if height < clearance:
+            # Sideways only, so the hair keeps its length.
+            push = np.array(normal) * (clearance - height)
+            push[2] = 0.0
+            world = world + push * 1.2
+    return world - centre
+
+
+def _curtain(part, skull, level, spec, start, end, teeth, course, body):
+    """One sheet of hanging hair between two bearings. Returns the bearing of each vertex it adds."""
+    full = level == "full"
+    per_tooth = 6 if full else 2
+    columns = teeth * per_tooth + 1
+    polars = (46.0, 60.0, 74.0) if full else (56.0,)
+    rows = spec["rows"][level]
+    long = course != "round"
+    bearings = np.linspace(start, end, columns)
+
+    # The head's outline at ear height, evened out round the head: the face mesh has ears.
+    # It has to pass outside them, so the widest point between the temple and the jaw counts,
+    # and what its neighbours measure counts for each bearing too.
+    measured = np.array([max(np.linalg.norm(skull.on_surface(_direction(b) + np.array((0.0, 0.0, tilt)), STRAND_OFFSET)[:2])
+                             for tilt in (0.05, -0.12, -0.28, -0.45)) for b in bearings])
+    spread = 2 if full else 1
+    reach = np.array([measured[max(0, i - spread):i + spread + 1].max() for i in range(columns)])
+    for _ in range(2 if full else 1):
+        reach[1:-1] = (reach[:-2] + 2.0 * reach[1:-1] + reach[2:]) / 4.0
+    # A coarse curtain is flat between its few columns, and passes inside what a round one clears.
+    reach = np.maximum(reach, measured) + (0.0 if full else 0.007)
+
+    outer = []          # rows of points, top to hem
+    for index, polar in enumerate(polars):
+        p = math.radians(polar)
+        # It starts flush with the cap and stands off it more and more on its way down the head.
+        clearance = CAP_OFFSET + 0.0015 + (STRAND_OFFSET - CAP_OFFSET) * (index + 1) / (len(polars) + 1)
+        outer.append([skull.on_surface(_direction(b) * math.sin(p) + np.array((0.0, 0.0, math.cos(p))), clearance) for b in bearings])
+    outer.append([np.array((*(_direction(b)[:2] * r), 0.008)) for b, r in zip(bearings, reach)])
+    hanging = len(outer) - 1
+
+    for row in range(1, rows + 1):
+        f = row / rows
+        ring = []
+        for column, (bearing, radius) in enumerate(zip(bearings, reach)):
+            tooth = column // per_tooth
+            # 0 in the middle of a lock, 1 in the groove between two.
+            groove = abs(2.0 * ((column % per_tooth) / per_tooth) - 1.0)
+            length = spec["length"] * (1.0 + 0.05 * math.sin(tooth * 2.4 + start)) * (1.0 - spec["notch"] * groove ** 0.7)
+            if course == "chest":
+                length *= 0.86
+            z = -length * f
+            # Waves: the whole curtain swings a little one way and then the other on its way down.
+            swing = spec["swing"] * math.sin(2.0 * math.pi * spec["waves"] * f + math.radians(bearing) * 1.3) * min(1.0, f * 2.5)
+            turned = bearing
+            if course == "chest":
+                # Round to the front of the shoulder, to fall on the chest.
+                side = 1.0 if bearing < 180.0 else -1.0
+                home = bearing if side > 0 else 360.0 - bearing
+                goal = home * 0.45 + 26.0
+                # The curtains part below the ear and are apart by the shoulder.
+                turned = home + (goal - home) * float(smoothstep(0.17, 0.46, f))
+                turned = turned if side > 0 else 360.0 - turned
+                radius = radius * (1.0 - 0.06 * float(smoothstep(0.1, 0.5, f)))
+            elif course == "back":
+                # Behind the shoulders, spreading as it falls.
+                goal = 180.0 + (bearing - 180.0) * 0.80
+                goal = min(max(goal, 126.0), 234.0)
+                turned = bearing + (goal - bearing) * float(smoothstep(0.17, 0.46, f))
+                radius = radius * (1.0 + 0.30 * f)
+            tip = float(smoothstep(0.72, 1.0, f))
+            radius += CORRUGATION * (1.0 - 2.0 * groove) * min(1.0, f * 2.0 + 0.25)
+            radius += spec["flick"] * tip ** 1.6 * (1.0 - 0.6 * groove)
+            direction = _direction(turned + swing)
+            point = np.array((direction[0] * radius, direction[1] * radius, z + 0.012 * tip ** 2))
+            if body is not None:
+                point = _clear_body(point, skull.centre, body, BODY_CLEARANCE)
+            ring.append(point)
+        outer.append(ring)
+
+    # The inside face, in the inner colour: the same sheet a thickness nearer the head, thinning to nothing at the hem.
+    inner = []
+    for row in range(hanging, len(outer) - 1):
+        f = (row - hanging) / rows
+        thickness = CURTAIN_THICKNESS * (1.0 - 0.75 * f)
+        ring = []
+        for point in outer[row]:
+            flat = np.array((point[0], point[1], 0.0))
+            inward = point - flat / max(np.linalg.norm(flat), 1e-9) * thickness
+            if body is not None and row > hanging:
+                inward = _clear_body(inward, skull.centre, body, 0.004)
+            ring.append(inward)
+        inner.append(ring)
+
+    first = len(part.co)
+    centre = skull.centre
+    outer_ids = [part.verts([centre + q for q in ring]) for ring in outer]
+    inner_ids = [part.verts([centre + q for q in ring]) for ring in inner] + [outer_ids[-1]]
+    tile = spec["tile"]
+    part.loft(outer_ids, "hair", closed=False, tile=tile)
+    part.loft(inner_ids, "hair-inner", closed=False, flip=True, tile=tile)
+    # Its two edges, where it has a thickness.
+    for column, flip in ((0, True), (columns - 1, False)):
+        for row in range(len(inner_ids) - 1):
+            quad = (outer_ids[hanging + row][column], outer_ids[hanging + row + 1][column],
+                    inner_ids[row + 1][column], inner_ids[row][column])
+            if len(set(quad)) == 4:
+                part.face(quad[::-1] if flip else quad, "hair-shade", tile)
+            else:
+                part.face(tuple(dict.fromkeys(quad[::-1] if flip else quad)), "hair-shade", tile)
+    per_vertex = [float(b) for _ring in outer for b in bearings] + [float(b) for _ring in inner for b in bearings]
+    if len(per_vertex) != len(part.co) - first:
+        raise RuntimeError("hair: a curtain's vertices and bearings are out of step")
+    return per_vertex
 
 
 def bone_table(armature):
-    """The hair bones as rig.add_bones rows: HairRoot under Head, then four two-bone chains."""
+    """The hair bones as rig.add_bones rows: HairRoot under Head, then the chains."""
     centre = skull_centre(armature)
     rows = [("HairRoot", centre, centre + (0.0, 0.0, 0.05), "Head", (0.0, -1.0, 0.0))]
-    for stem, azimuth in BONES.items():
+    for stem, joints in BONES.items():
         for side, sign in (("L", 1.0), ("R", -1.0)):
-            flat = _direction(azimuth) * (sign, 1.0, 1.0)
-            joints = [centre + flat * 0.135 + (0.0, 0.0, z) for z in BONE_HEIGHTS]
-            rows.append((f"Hair{stem}1.{side}", joints[0], joints[1], "HairRoot", tuple(-flat)))
-            rows.append((f"Hair{stem}2.{side}", joints[1], joints[2], f"Hair{stem}1.{side}", tuple(-flat)))
+            places = [centre + _direction(azimuth) * (sign, 1.0, 1.0) * BONE_REACH + (0.0, 0.0, z) for azimuth, z in joints]
+            roll = tuple(-_direction(joints[0][0]) * (sign, 1.0, 1.0))
+            for number in range(1, len(joints)):
+                parent = "HairRoot" if number == 1 else f"Hair{stem}{number - 1}.{side}"
+                rows.append((f"Hair{stem}{number}.{side}", places[number - 1], places[number], parent, roll))
     return rows
 
 
-def _weights(co, centre):
-    """Hair weights by position: the head above the ears, the nearest chain below."""
+def _weights(co, centre, owners):
+    """Hair weights: the head above the ears, and below them the chains nearest the vertex's place round the head.
+
+    `owners` holds, per vertex, its bearing round the head as the hair grows
+    (not where a long curtain has since swung it to), or None for the cap
+    and the fringe.
+    """
     relative = co - centre
-    azimuth = np.degrees(np.arctan2(np.abs(relative[:, 0]), -relative[:, 1]))
-    left = relative[:, 0] >= 0.0
-    hanging = 1.0 - smoothstep(BONE_HEIGHTS[0] - 0.035, BONE_HEIGHTS[0] + 0.025, relative[:, 2])
-    lower = 1.0 - smoothstep(BONE_HEIGHTS[1] - 0.03, BONE_HEIGHTS[1] + 0.03, relative[:, 2])
-    back = smoothstep(108.0, 124.0, azimuth)
-    table = {"Head": 1.0 - hanging}
-    for stem, share in (("Side", 1.0 - back), ("Back", back)):
-        for side, mask in (("L", left), ("R", ~left)):
-            table[f"Hair{stem}1.{side}"] = hanging * (1.0 - lower) * share * mask
-            table[f"Hair{stem}2.{side}"] = hanging * lower * share * mask
+    table = {"Head": np.ones(len(co))}
+    for stem, joints in BONES.items():
+        for side in "LR":
+            for number in range(1, len(joints)):
+                table[f"Hair{stem}{number}.{side}"] = np.zeros(len(co))
+    for index, bearing in enumerate(owners):
+        if bearing is None:
+            continue
+        z = relative[index, 2]
+        # Left and right meet down the middle of the back across a blend, so the curtain does not tear there.
+        left = float(smoothstep(200.0, 160.0, bearing))
+        from_front = bearing if bearing <= 180.0 else 360.0 - bearing
+        back = float(smoothstep(108.0, 124.0, from_front))
+        hanging = 1.0 - float(smoothstep(BONES["Side"][0][1] - 0.035, BONES["Side"][0][1] + 0.025, z))
+        table["Head"][index] = 1.0 - hanging
+        for stem, share in (("Side", 1.0 - back), ("Back", back)):
+            if share <= 0.0:
+                continue
+            joints = BONES[stem]
+            count = len(joints) - 1
+            # Each bone takes over from the one above it across a short blend round its joint.
+            take = [1.0 - float(smoothstep(joints[k][1] - 0.03, joints[k][1] + 0.03, z)) for k in range(1, count)]
+            carried = hanging * share
+            for number in range(1, count + 1):
+                passed = take[number - 1] if number <= len(take) else 0.0
+                for side, part in (("L", left), ("R", 1.0 - left)):
+                    table[f"Hair{stem}{number}.{side}"][index] += carried * (1.0 - passed) * part
+                carried *= passed
     return table
 
 
@@ -244,33 +390,25 @@ def build_hair(ctx):
     centre = skull_centre(armature)
     skull = Skull(ctx["head"], centre)
     rig.add_bones(armature, bone_table(armature))
+    # What long hair has to hang clear of: the body, and the sweater over it.
+    body = [common.bvh_of(ctx["skin"])] + ([common.bvh_of(ctx["sweater"])] if ctx.get("sweater") is not None else [])
 
     part = common.Part("Hair", "always")
     _cap(part, skull, detail)
     segments = max(6, int(round(16 * detail * detail + 2)))
-
+    owners = [None] * len(part.co)
     guides = []
-    # The lite level leaves out the short underlayer of the fringe.
-    fringe = FRINGE if level == "full" else FRINGE[FRINGE_UNDERLAYER:]
-    for points, widths, clearance in fringe:
-        lifted = [skull.settle(points[0], 0.002)] + [skull.lift(p, clearance) for p in points[1:]]
-        guides.append((lifted, widths))
-    fringe_count = len(guides)
-    azimuths = [180.0] + [sign * a for a in AZIMUTHS[level] for sign in (1.0, -1.0)]
-    for index, azimuth in enumerate(azimuths):
-        guides.append(_hanging_guide(skull, azimuth, index))
-    outer_count = len(guides)
-    inner = [180.0] + [sign * a for a in INNER_AZIMUTHS[level] for sign in (1.0, -1.0)]
-    for index, azimuth in enumerate(inner):
-        guides.append(_hanging_guide(skull, azimuth, index + 3, inner=True))
 
-    for index, (points, widths) in enumerate(guides):
-        world = [centre + p for p in points]
-        is_inner = index >= outer_count
-        sweep.strand(part, world, widths, 0.26 if index < fringe_count else 0.36,
-                     segments if index >= fringe_count else max(5, segments - 4), level,
-                     "hair-inner" if is_inner else "hair", "hair-inner" if is_inner else "hair-shade",
-                     away_from=centre, root_cap=is_inner)
+    for points, widths, clearance in FRINGE:
+        lifted = [skull.settle(points[0], 0.003)] + [skull.lift(p, clearance) for p in points[1:]]
+        sweep.strand(part, [centre + p for p in lifted], widths, 0.20, max(5, segments - 4), level, "hair", "hair-shade",
+                     away_from=centre)
+        guides.append((lifted, widths))
+    owners.extend([None] * (len(part.co) - len(owners)))
+
+    for name, spec in LENGTHS.items():
+        for start, end, teeth, course in spec["curtains"]:
+            owners.extend(_curtain(part, skull, level, spec, start, end, teeth, course, body if name == "long" else None))
     _store_guides(guides, centre)
 
     # Fit the hair to the hat: nothing may stand through the crown or the brim.
@@ -278,7 +416,9 @@ def build_hair(ctx):
     part.co = [tuple(position) for position in hat.tuck(part.co, centre)]
 
     removed = trim_scalp(ctx["head"], centre)
-    print(f"hair: {len(guides)} strands; removed {removed} hidden scalp faces from the head")
+    print(f"hair: {len(guides)} fringe locks and {sum(len(spec['curtains']) for spec in LENGTHS.values())} curtains; removed {removed} hidden scalp faces from the head")
     obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=40.0)
-    common.set_weights(obj, _weights(common.coords(obj.data), centre))
+    if len(owners) != len(obj.data.vertices):
+        raise RuntimeError(f"hair: {len(obj.data.vertices)} vertices but {len(owners)} weights")
+    common.set_weights(obj, _weights(common.coords(obj.data), centre, owners))
     return obj

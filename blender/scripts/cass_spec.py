@@ -25,12 +25,18 @@ FBX_PATH = PACKAGE / "BlenderExports" / "cass.fbx"
 # Fidelity levels. Both are built by the same generator from the same sources
 # and share one skeleton; `lite` uses the body base's low-polygon mesh and
 # coarser modelled parts, for mobile builds and the optimised PC variant.
+# `max_triangles` counts the tiles that are shown at rest. `max_hidden_triangles` counts the
+# rest (the alternative garments and hairstyles), where they are budgeted apart; without it
+# they count towards `max_triangles` with everything else.
 LEVELS = {
-    "full": {"blend": BLEND_PATH, "fbx": FBX_PATH, "max_triangles": 70000},
+    # A PC build keeps every tile, so the whole mesh is held to VRChat's 70,000.
+    "full": {"blend": BLEND_PATH, "fbx": FBX_PATH, "max_triangles": 70000, "max_hidden_triangles": None},
     "lite": {"blend": REPO / "blender" / "cass-lite.blend", "fbx": PACKAGE / "BlenderExports" / "cass-lite.fbx",
              # Before the build removes the skin under the outfit; VRChat's mobile Medium is 15,000 after it,
-             # and `scripts/cass.sh verify <slug> android` is what holds the build to that.
-             "max_triangles": 17000},
+             # and `scripts/cass.sh verify <slug> android` is what holds the build to that. The mobile
+             # build cuts the tiles hidden at rest out of the mesh, so they are free there; the cap on
+             # them only keeps the alternatives coarse.
+             "max_triangles": 17000, "max_hidden_triangles": 8000},
 }
 LEVEL_PROP = "wirenook_level"
 

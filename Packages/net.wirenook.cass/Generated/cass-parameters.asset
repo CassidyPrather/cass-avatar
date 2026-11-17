@@ -59,3 +59,30 @@ MonoBehaviour:
     useCustomLerpDuration: 0
     customLerpDuration: 0
     flippedRepresentation: 0
+  - name: Outfit/Skirt
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+    networkSynced: 1
+    bitWidth: 8
+    useCustomLerpDuration: 0
+    customLerpDuration: 0
+    flippedRepresentation: 0
+  - name: Outfit/Vest
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+    networkSynced: 1
+    bitWidth: 8
+    useCustomLerpDuration: 0
+    customLerpDuration: 0
+    flippedRepresentation: 0
+  - name: Hair/Long
+    valueType: 2
+    saved: 1
+    defaultValue: 0
+    networkSynced: 1
+    bitWidth: 8
+    useCustomLerpDuration: 0
+    customLerpDuration: 0
+    flippedRepresentation: 0

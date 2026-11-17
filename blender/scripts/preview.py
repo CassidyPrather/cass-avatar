@@ -5,7 +5,9 @@
     --views front,side,back,quarter,face   which cameras to render (default: all five)
     --keys NAME=1,NAME=0.5                 shape key values on Body (bare NAME means 1)
     --each-key NAME,NAME | all             also render the face once per listed key, alone at 1 (key_NNN.png)
-    --pose test                            rotate arm, leg, finger and ear bones to exercise the skinning
+    --pose NAME[,NAME]                     render in a pose instead of the rest pose; several give one set of
+                                           pictures each (rest, test, down, forward, raised, twist, sit, walk, kick)
+    --shaded                               studio light instead of flat, to see how the surface shades
     --bare                                 leave the garments out and show the skin zones they hide
     --tiles ID=0,ID=1                      override the default shown state of discard tiles
     --shot NAME:CX,CY,CZ:DX,DY,DZ:H        an extra view: centre, direction the camera looks from, frame height (repeatable)
@@ -38,6 +40,7 @@ BODY_VIEWS = {
     "side": Vector((1.0, 0.0, 0.0)),
     "back": Vector((0.0, 1.0, 0.0)),
     "quarter": Vector((0.7, -1.0, 0.25)),
+    "quarterback": Vector((-0.7, 1.0, 0.25)),
 }
 
 # Armature-space rotations (degrees about X, Y, Z) for the skinning test pose.
@@ -54,6 +57,33 @@ TEST_POSE = {
 }
 
 
+def _arms(down=0.0, forward=0.0, elbow=0.0):
+    """Both arms turned the same way: degrees down from the T-pose, forward, and bent at the elbow."""
+    pose = {}
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        pose[f"UpperArm.{side}"] = (0, sign * down, -sign * forward)
+        if elbow:
+            pose[f"LowerArm.{side}"] = (0, 0, -sign * elbow)
+    return pose
+
+
+# Poses for looking at how the clothes and hair move: the same kind of table as TEST_POSE.
+POSES = {
+    "rest": {},
+    "test": TEST_POSE,
+    # How the avatar actually stands in VRChat: arms at the sides.
+    "down": {**_arms(down=72.0), "Shoulder.L": (0, 6, 0), "Shoulder.R": (0, -6, 0)},
+    "forward": _arms(down=10.0, forward=80.0),
+    "raised": {**_arms(down=-65.0), "Shoulder.L": (0, -12, 0), "Shoulder.R": (0, 12, 0)},
+    "twist": {**_arms(down=65.0, elbow=25.0), "Spine": (18, 0, 22), "Chest": (10, 8, 18), "Head": (0, 0, -20)},
+    "sit": {**_arms(down=60.0, forward=20.0, elbow=40.0), "UpperLeg.L": (-88, 0, 0), "UpperLeg.R": (-88, 0, 0),
+            "LowerLeg.L": (88, 0, 0), "LowerLeg.R": (88, 0, 0)},
+    "walk": {**_arms(down=72.0), "UpperLeg.L": (-32, 0, 0), "LowerLeg.L": (18, 0, 0), "UpperLeg.R": (24, 0, 0),
+             "LowerLeg.R": (30, 0, 0), "UpperArm.L": (0, 72, 25), "UpperArm.R": (0, -72, 25)},
+    "kick": {**_arms(down=40.0), "UpperLeg.L": (-105, 0, 0), "LowerLeg.L": (12, 0, 0), "UpperLeg.R": (8, 0, 0)},
+}
+
+
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     parser = argparse.ArgumentParser(prog="preview.py", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -61,7 +91,8 @@ def parse_args():
     parser.add_argument("--views", default="front,side,back,quarter,face")
     parser.add_argument("--keys", default="")
     parser.add_argument("--each-key", default="")
-    parser.add_argument("--pose", choices=["test"])
+    parser.add_argument("--pose", default="")
+    parser.add_argument("--shaded", action="store_true")
     parser.add_argument("--bare", action="store_true")
     parser.add_argument("--tiles", default="")
     parser.add_argument("--shot", action="append", default=[])
@@ -119,9 +150,11 @@ def set_keys(spec):
         key_blocks()[name].value = float(value) if value else 1.0
 
 
-def apply_test_pose():
+def apply_pose(pose):
     armature = next(o for o in export_objects() if o.type == "ARMATURE")
-    for name, degrees in TEST_POSE.items():
+    for pose_bone in armature.pose.bones:
+        pose_bone.matrix_basis = Matrix.Identity(4)
+    for name, degrees in POSES[pose].items():
         pose_bone = armature.pose.bones[name]
         rest = pose_bone.bone.matrix_local
         pivot = Matrix.Translation(rest.translation)
@@ -147,12 +180,12 @@ def bounds():
     return lo, hi
 
 
-def setup_render(size):
+def setup_render(size, shaded=False):
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_WORKBENCH"
     shading = scene.display.shading
     # Flat light keeps the palette colours true; cavity shading and outlines carry the form.
-    shading.light = "FLAT"
+    shading.light = "STUDIO" if shaded else "FLAT"
     shading.color_type = "TEXTURE"
     shading.show_shadows = False
     shading.show_cavity = True
@@ -201,31 +234,36 @@ def render(path):
 
 def main():
     args = parse_args()
-    out = pathlib.Path(args.out)
+    out = pathlib.Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     apply_discards(args.bare, args.tiles)
     set_keys(args.keys)
-    if args.pose:
-        apply_test_pose()
-    camera = setup_render(args.size)
-    lo, hi = bounds()
-    tag = f"_{args.tag}" if args.tag else ""
-    for view in filter(None, args.views.split(",")):
-        if view == "face":
-            aim_at_face(camera, args.size)
-        else:
-            centre = Vector((0.0, 0.0, 0.5 * (lo.z + hi.z)))
-            height = (hi.z - lo.z) * 1.06
-            # The T-pose is about as wide as it is tall; only the profile is narrow.
-            aspect = (0.8 if args.pose else 0.5) if view == "side" else 1.0
-            aim(camera, BODY_VIEWS[view], centre, height, aspect, args.size)
-        render(out / f"{view}{tag}.png")
+    camera = setup_render(args.size, args.shaded)
+    poses = list(filter(None, args.pose.split(","))) or [None]
+    for pose in poses:
+        if pose:
+            apply_pose(pose)
+        posed = pose not in (None, "rest")
+        lo, hi = bounds()
+        tag = (f"_{pose}" if pose and len(poses) > 1 else "") + (f"_{args.tag}" if args.tag else "")
+        for view in filter(None, args.views.split(",")):
+            if view == "face":
+                aim_at_face(camera, args.size)
+            else:
+                centre = Vector((0.0, 0.5 * (lo.y + hi.y) if posed else 0.0, 0.5 * (lo.z + hi.z)))
+                height = (hi.z - lo.z) * 1.06
+                # The T-pose is about as wide as it is tall; only the profile is narrow.
+                aspect = (0.8 if posed else 0.5) if view == "side" else (0.7 if pose in ("down", "twist", "walk") else 1.0)
+                aim(camera, BODY_VIEWS[view], centre, height, aspect, args.size)
+            render(out / f"{view}{tag}.png")
 
-    for shot in args.shot:
-        name, centre, direction, height = shot.split(":")
-        aim(camera, Vector([float(c) for c in direction.split(",")]), Vector([float(c) for c in centre.split(",")]),
-            float(height), 1.0, args.size)
-        render(out / f"{name}{tag}.png")
+        for shot in args.shot:
+            name, centre, direction, height = shot.split(":")
+            aim(camera, Vector([float(c) for c in direction.split(",")]), Vector([float(c) for c in centre.split(",")]),
+                float(height), 1.0, args.size)
+            render(out / f"{name}{tag}.png")
+    if poses != [None]:
+        apply_pose("rest")
 
     names = [b.name for b in key_blocks()[1:]] if args.each_key == "all" else list(filter(None, args.each_key.split(",")))
     if names:

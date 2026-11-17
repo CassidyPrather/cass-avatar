@@ -350,39 +350,60 @@ namespace Wirenook.Cass.Editor
         }
 
         /// <summary>
-        /// One layer per garment switch, and one per body zone a garment can
-        /// cover. A zone is drawn only while every garment over it is off, so
-        /// two outfits that both cover the torso cannot disagree about it.
+        /// One layer per switched tile, and one per body zone a garment can
+        /// cover. A tile is shown while everything its rule asks for holds
+        /// (see <see cref="TileToggle"/>). A zone is drawn only while no
+        /// garment over it is shown, so two outfits that both cover the torso
+        /// cannot disagree about it.
         /// </summary>
         private static void OutfitLayers(ControllerBuilder fx, TileLayout tiles, List<string> renderers)
         {
+            foreach (var parameter in tiles.Defaults()) fx.Bool(parameter.Parameter, parameter.Value);
+
             foreach (var tile in tiles.Tiles.Where(candidate => candidate.Toggle != null))
             {
-                fx.Bool(tile.Toggle.Parameter, tile.Shown);
-                var layer = fx.Layer("Outfit: " + tile.Toggle.Label);
+                var shown = TileLayout.ShownWhen(tile);
+                // Unity rejects dots in state machine names.
+                var layer = fx.Layer("Outfit: " + tile.Id.Replace('.', ' '));
                 TileSwitch(fx, layer, tile, renderers, tile.Shown,
-                    show => show.IfTrue(tile.Toggle.Parameter),
-                    hide => hide.IfFalse(tile.Toggle.Parameter));
+                    show => AnyOf(show, new List<List<Condition>> { shown }),
+                    hide => AnyOf(hide, shown.Select(condition => new List<Condition> { condition.Opposite }).ToList()));
             }
 
             var resting = tiles.Resolve();
             foreach (var zone in tiles.Zones())
             {
-                var covers = tiles.Covering(zone.Id).Where(tile => tile.Toggle != null).Select(tile => tile.Toggle.Parameter).ToList();
+                var covers = tiles.Covering(zone.Id).Where(tile => tile.Toggle != null).Select(TileLayout.ShownWhen).ToList();
                 if (covers.Count == 0) continue;
 
-                // Unity rejects dots in state machine names.
                 var layer = fx.Layer("Zone: " + zone.Id.Replace('.', ' '));
                 TileSwitch(fx, layer, zone, renderers, resting[zone.Id],
-                    show =>
-                    {
-                        foreach (var parameter in covers) show.IfFalse(parameter);
-                    },
-                    hide =>
-                    {
-                        hide.IfTrue(covers[0]);
-                        foreach (var parameter in covers.Skip(1)) hide.Or().IfTrue(parameter);
-                    });
+                    show => AnyOf(show, TileLayout.NoneOf(covers)),
+                    hide => AnyOf(hide, covers));
+            }
+        }
+
+        /// <summary>
+        /// Makes a transition fire when every condition of any one set holds.
+        /// With no sets it must never fire, and a transition with no
+        /// conditions fires at once, so it is given two that contradict.
+        /// </summary>
+        private static void AnyOf(TransitionBuilder transition, List<List<Condition>> sets)
+        {
+            if (sets.Count == 0)
+            {
+                transition.IfTrue(TrackingEnabled).IfFalse(TrackingEnabled);
+                return;
+            }
+
+            for (var i = 0; i < sets.Count; i++)
+            {
+                if (i > 0) transition.Or();
+                foreach (var condition in sets[i])
+                {
+                    if (condition.Value) transition.IfTrue(condition.Parameter);
+                    else transition.IfFalse(condition.Parameter);
+                }
             }
         }
 

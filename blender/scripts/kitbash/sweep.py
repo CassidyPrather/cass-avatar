@@ -60,12 +60,13 @@ def frames(path, away_from=None, facing=None):
 
 
 def strand(part, guide, widths, thickness, segments, level, outer, under, away_from=None, facing=None, tip=True,
-           root_cap=False):
+           root_cap=False, tile=None):
     """Adds one swept strand to `part`. Returns the vertex index rings, root first.
 
     `widths` are half-widths at the guide's control points; a strand with
     `tip` ends in a point. `thickness` is the dome height as a fraction of
-    the half-width, or an absolute list per control point.
+    the half-width, or an absolute list per control point. `tile` puts the
+    strand on a discard tile other than the part's own.
     """
     path = spline(guide, segments)
     half = resample(widths, segments)
@@ -77,12 +78,12 @@ def strand(part, guide, widths, thickness, segments, level, outer, under, away_f
     for i in range(last + 1):
         rings.append(part.verts([path[i] + across[i] * (a * half[i]) + outward[i] * (o * thick[i]) for a, o in profile]))
     outer_sides = OUTER_SIDES[level]
-    part.loft(rings, lambda r, side: outer if side in outer_sides else under)
+    part.loft(rings, lambda r, side: outer if side in outer_sides else under, tile=tile)
     if tip:
         n = len(profile)
         apex = part.vert(path[-1])
         for side in range(n):
-            part.face((rings[-1][side], rings[-1][(side + 1) % n], apex), outer if side in outer_sides else under)
+            part.face((rings[-1][side], rings[-1][(side + 1) % n], apex), outer if side in outer_sides else under, tile)
     if root_cap:
-        part.face(rings[0][::-1], under)
+        part.face(rings[0][::-1], under, tile)
     return rings, path

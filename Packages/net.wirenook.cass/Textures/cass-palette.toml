@@ -41,8 +41,10 @@ swatches = [
   ["tear", "#8fd0ff"], ["star", "#ffd84a"],
 ]
 
-# Outfit trim.
+# Outfit trim, and the alternative pieces: the dark inside of the skirt, the suede vest and
+# the neckerchief. (The skirt's gingham is painted into the atlas by the model build.)
 [[row]]
 swatches = [
-  ["sweater-stripe", "#5f8fd0"],
+  ["sweater-stripe", "#5f8fd0"], ["void", "#0c0a10"], ["vest", "#7d5233"], ["vest-shade", "#5e3b24"],
+  ["bandana", "#c9483f"], ["bandana-shade", "#9a2f2f"],
 ]

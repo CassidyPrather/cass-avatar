@@ -9,6 +9,11 @@ Layout of Textures/cass-atlas.png (UV space, origin bottom-left):
     u, v < 0.25      the palette (Textures/cass-palette.png) at four times its size;
                      a swatch's UV here is its palette UV divided by PALETTE_SHRINK.
 
+    u < 0.50, v 0.256 .. 0.397     a patch of blue gingham for the skirt (GINGHAM_RECT). Faces are
+                                  laid on it one at a time by `gingham_uv`: the pattern repeats,
+                                  so a face may be moved a whole number of checks to fit, and the
+                                  patch only has to be as big as the biggest face.
+
 The rest is filled with the skin colour and is free for painted detail later.
 
     u 0.50 .. 1.00, v 0 .. 0.50   skin colour; the full-level body keeps its own UVs here,
@@ -40,6 +45,17 @@ BODY_REGIONS = {"full": (0.5, 0.0, 0.5), "lite": (0.25, 0.0, 0.25)}
 # The face's author uses its normal map at half strength and the body's at full; the
 # material has one strength, so the face's map is flattened by this much as it is baked.
 FACE_NORMAL_STRENGTH = 0.5
+
+# The skirt's gingham. The patch, in pixels (x0, y0, x1, y1; rows count up from the bottom);
+# the size of one repeat (a blue stripe and a white one); how many pixels a metre of cloth
+# covers; the room left round the part of the patch that faces use, so that filtering and
+# mip-mapping find more of the same pattern beyond a face's edge; and the colours of a check
+# that no stripe, one stripe and two stripes cross.
+GINGHAM_RECT = (8, 524, 1016, 812)
+GINGHAM_PERIOD = 32
+GINGHAM_SCALE = 1600.0
+GINGHAM_MARGIN = 16
+GINGHAM_COLOURS = ((0.955, 0.968, 1.0), (0.640, 0.765, 0.940), (0.365, 0.553, 0.812))
 
 # What the source's pink eyes and red-brown lashes become.
 EYE_HUE_SHIFT = -135.0 / 360.0
@@ -175,6 +191,32 @@ def _resample(image, rect, height, width):
     return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
 
 
+def _gingham(atlas):
+    """Paints the gingham patch: woven stripes both ways, darker where they cross."""
+    x0, y0, x1, y1 = GINGHAM_RECT
+    across = (np.arange(x0, x1) - x0 - GINGHAM_MARGIN) % GINGHAM_PERIOD < GINGHAM_PERIOD // 2
+    up = (np.arange(y0, y1) - y0 - GINGHAM_MARGIN) % GINGHAM_PERIOD < GINGHAM_PERIOD // 2
+    atlas[y0:y1, x0:x1] = np.array(GINGHAM_COLOURS)[up[:, None].astype(int) + across[None, :].astype(int)]
+
+
+def gingham_uv(cloth):
+    """UVs for one face on the gingham patch. `cloth` is (n, 2): where each corner is on the cloth, in metres.
+
+    The face is moved a whole number of repeats so that it starts in the
+    patch's first one; neighbouring faces land on different parts of the
+    patch and still meet on the same line of the pattern.
+    """
+    cloth = np.asarray(cloth, dtype=np.float64)
+    period = GINGHAM_PERIOD / GINGHAM_SCALE
+    pixels = (cloth - np.floor(cloth.min(axis=0) / period + 1e-9) * period) * GINGHAM_SCALE
+    x0, y0, x1, y1 = GINGHAM_RECT
+    room = np.array((x1 - x0, y1 - y0)) - 2 * GINGHAM_MARGIN
+    if (pixels.max(axis=0) > room).any():
+        raise RuntimeError(f"a face of {np.round(np.ptp(cloth, axis=0), 3)} m is too big for the gingham patch "
+                           f"({np.round(room / GINGHAM_SCALE - period, 3)} m); divide the cloth more finely")
+    return (np.array((x0, y0)) + GINGHAM_MARGIN + pixels) / SIZE
+
+
 def body_uv(uv, level):
     """A body level's own UVs moved into its region of the atlas."""
     u, v, size = BODY_REGIONS[level]
@@ -258,6 +300,8 @@ def build(face_png, palette_png, palette_json, out_png, out_json, overlays, skin
         rows, columns = _window(overlay)
         size = (rows.stop - rows.start, columns.stop - columns.start)
         atlas[rows.start - shift:rows.stop - shift, columns] = _paint(_resample(blue_face, iris, *size), shape)
+
+    _gingham(atlas)
 
     scale = int(PALETTE_SHRINK)
     big = np.repeat(np.repeat(palette, scale, axis=0), scale, axis=1)

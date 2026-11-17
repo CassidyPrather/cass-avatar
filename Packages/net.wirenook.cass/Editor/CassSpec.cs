@@ -73,6 +73,9 @@ namespace Wirenook.Cass.Editor
                             Parameter = (string)toggle["parameter"],
                             Label = (string)toggle["label"],
                             Icon = (string)toggle["icon"],
+                            When = (bool?)toggle["when"] ?? true,
+                            Needs = toggle["needs"]?.Select(parameter => (string)parameter).ToList() ?? new List<string>(),
+                            Unless = toggle["unless"]?.Select(parameter => (string)parameter).ToList() ?? new List<string>(),
                         },
                 });
             }

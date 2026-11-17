@@ -1,4 +1,4 @@
-"""The cowboy hat: a creased crown over the top of the head and a wide brim rolled up at the sides.
+"""The cowboy hat: a crown pinched at the front and creased along the top, and a wide brim rolled up at the sides.
 
 It is drawn a size too big, as head-wear on this kind of character is. The
 ears root outside the crown and pass up through the brim, which has a hole
@@ -17,11 +17,12 @@ from . import common, extras, hair
 SEAT = np.array((0.0, 0.020, 0.112))
 TILT = math.radians(11.0)
 CROWN = (0.104, 0.124)          # half-width, half-depth at the band
-CROWN_HEIGHT = 0.150
-CROWN_PINCH = 0.34              # how much narrower the top of the crown is at the front
+CROWN_HEIGHT = 0.156
+CROWN_PINCH = 0.44              # how much narrower the top of the crown is at the front
+CROWN_DIP = 0.026               # how far the ends of the crease sit below the ridges beside it
 BAND_HEIGHT = 0.026
 BRIM = (0.285, 0.262)           # half-width, half-depth at the edge
-BRIM_CURL = 0.085               # how high the sides of the brim roll up
+BRIM_CURL = 0.096               # how high the sides of the brim roll up
 BRIM_DROOP = 0.020              # how far the front and back dip
 BRIM_THICKNESS = 0.006
 EAR_HOLE = 0.036
@@ -87,30 +88,33 @@ def build_hat(ctx):
     around = max(12, int(round(28 * detail * detail / 4)) * 4) if detail < 1.0 else 40
     part = common.Part("Outfit_Hat", "outfit.default.hat")
 
-    def ring(half_width, half_depth, height, pinch=0.0):
+    def ring(half_width, half_depth, height, pinch=0.0, dip=0.0):
         points = []
         for k in range(around):
             angle = 2.0 * math.pi * k / around
             narrow = 1.0 - pinch * max(0.0, math.cos(angle)) ** 0.5
+            z = height(angle) if callable(height) else height
             points.append(_place((half_width * narrow * math.sin(angle), -half_depth * math.cos(angle),
-                                  height(angle) if callable(height) else height), centre))
+                                  z - CROWN_DIP * dip * math.cos(angle) ** 2), centre))
         return part.verts(points)
 
-    # Crown: band, sides drawing in, a rounded shoulder, and a top creased front to back.
+    # Crown: band, sides drawing in to a pinched front, a ridge down each side of the top and a
+    # crease between them that runs front to back and dips at both ends, so that from the front
+    # the top of the crown is an M and not a flat lid.
     w, d = CROWN
     crown = [
         (ring(w, d, 0.0), None),
         (ring(w * 1.01, d * 1.01, BAND_HEIGHT), "hat-band"),
         (ring(w * 0.97, d * 0.98, BAND_HEIGHT + 0.004), "hat"),
-        (ring(w * 0.95, d * 0.97, CROWN_HEIGHT * 0.60, CROWN_PINCH * 0.5), "hat"),
-        (ring(w * 0.89, d * 0.94, CROWN_HEIGHT * 0.90, CROWN_PINCH), "hat"),
-        (ring(w * 0.78, d * 0.88, CROWN_HEIGHT, CROWN_PINCH), "hat"),
-        (ring(w * 0.52, d * 0.76, CROWN_HEIGHT * 0.93, CROWN_PINCH), "hat"),
-        (ring(w * 0.20, d * 0.66, CROWN_HEIGHT * 0.80, CROWN_PINCH), "hat-shade"),
+        (ring(w * 0.94, d * 0.97, CROWN_HEIGHT * 0.56, CROWN_PINCH * 0.45), "hat"),
+        (ring(w * 0.87, d * 0.94, CROWN_HEIGHT * 0.87, CROWN_PINCH, 0.35), "hat"),
+        (ring(w * 0.74, d * 0.88, CROWN_HEIGHT, CROWN_PINCH, 1.0), "hat"),
+        (ring(w * 0.50, d * 0.78, CROWN_HEIGHT * 0.95, CROWN_PINCH, 1.0), "hat"),
+        (ring(w * 0.20, d * 0.68, CROWN_HEIGHT * 0.82, CROWN_PINCH, 1.0), "hat-shade"),
     ]
     for (lower, _), (upper, swatch) in zip(crown, crown[1:]):
         part.loft([lower, upper], swatch)
-    part.fan(crown[-1][0], _place((0.0, 0.0, CROWN_HEIGHT * 0.77), centre), "hat-shade")
+    part.fan(crown[-1][0], _place((0.0, 0.0, CROWN_HEIGHT * 0.78), centre), "hat-shade")
 
     # Brim: out from the band, rolled up at the sides and dipped front and back. It has a top
     # and an underside, joined round the edge by a binding, so it is solid from every angle.

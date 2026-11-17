@@ -54,7 +54,7 @@ DECAL_KEYS = ("照れ", "涙")
 
 # How finely the modelled parts are divided at each level.
 DETAIL = {"full": 1.0, "lite": 0.5}
-PARTS = (garments.build_shorts, garments.build_sweater, garments.build_boots,
+PARTS = (garments.build_shorts, garments.build_sweater, garments.build_skirt, garments.build_vest, garments.build_boots,
          hair.build_hair, extras.build_ears, extras.build_tail, hat.build_hat)
 
 

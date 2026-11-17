@@ -309,16 +309,37 @@ def check_materials(report, meshes):
         report.error(f"the shared material must be named '{cass_spec.MATERIAL_NAME}', is '{next(iter(materials)).name}'")
 
 
-def check_budget(report, meshes):
+def check_budget(report, meshes, tiles, tile_ids):
     level = bpy.context.scene.get(cass_spec.LEVEL_PROP, "full")
     limit = cass_spec.LEVELS[level]["max_triangles"]
+    hidden_limit = cass_spec.LEVELS[level].get("max_hidden_triangles")
     counts = {obj.name: triangle_count(obj.data) for obj in meshes}
     total = sum(counts.values())
-    report.note(f"Triangles: {total} (limit {limit} for the {level} level)")
+    # Triangles on tiles that are hidden at rest: the alternatives to what is worn by default.
+    hidden_tiles = {tile["id"] for tile in tiles["tiles"] if not tile["shown"]}
+    hidden = {}
+    for obj in meshes:
+        ids = tile_ids.get(obj.name)
+        if ids is None:
+            continue
+        hidden[obj.name] = sum(polygon.loop_total - 2 for polygon, tile in zip(obj.data.polygons, ids) if tile in hidden_tiles)
+    resting = sum(hidden.values())
+    shown = total - resting
+    if hidden_limit is None:
+        report.note(f"Triangles: {total} (limit {limit} for the {level} level), {resting} of them on tiles hidden at rest")
+    else:
+        report.note(f"Triangles: {shown} shown at rest (limit {limit} for the {level} level), "
+                    f"{resting} on tiles hidden at rest (limit {hidden_limit}), {total} in all")
     for name, count in counts.items():
-        report.note(f"  {name}: {count}")
-    if total > limit:
-        report.error(f"{total} triangles exceed the limit of {limit}")
+        report.note(f"  {name}: {count}" + (f" ({hidden[name]} hidden at rest)" if hidden.get(name) else ""))
+    if hidden_limit is None:
+        if total > limit:
+            report.error(f"{total} triangles exceed the limit of {limit}")
+    else:
+        if shown > limit:
+            report.error(f"{shown} triangles shown at rest exceed the limit of {limit}")
+        if resting > hidden_limit:
+            report.error(f"{resting} triangles on tiles hidden at rest exceed the limit of {hidden_limit}")
     lowest = min((v.co.z for obj in meshes for v in obj.data.vertices), default=0.0)
     if abs(lowest) > 0.01:
         report.warn(f"the lowest vertex is at Z={lowest:.3f}; the character should stand on Z=0")
@@ -345,7 +366,7 @@ def validate():
         check_shape_keys(report, blendshapes, body, tile_ids[body.name])
     check_materials(report, meshes)
     if meshes:
-        check_budget(report, meshes)
+        check_budget(report, meshes, tiles, tile_ids)
     return report
 
 

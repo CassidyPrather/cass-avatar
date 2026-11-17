@@ -209,17 +209,22 @@ namespace Wirenook.Validation.Editor
             Shoot("6 visemes", tileIndex, "(rest)", rest);
         }
 
-        /// <summary>Each garment taken off in turn, then all of them: checks the skin underneath comes back whole.</summary>
+        /// <summary>
+        /// Each outfit switch flipped in turn, then all on and all off: checks
+        /// the skin underneath comes back whole and the alternatives give way
+        /// to each other.
+        /// </summary>
         private static void Outfits(GameObject avatar, Camera camera, string folder)
         {
             var tiles = CassSpec.Tiles();
-            var toggles = tiles.Tiles.Where(tile => tile.Toggle != null).ToList();
+            var switches = tiles.Tiles.Where(tile => tile.Toggle != null && !string.IsNullOrEmpty(tile.Toggle.Label)).ToList();
+            var defaults = tiles.Defaults();
             var renderers = avatar.GetComponentsInChildren<Renderer>(true);
             var block = new MaterialPropertyBlock();
 
-            void Shoot(string label, Dictionary<string, bool> switched, int index)
+            void Shoot(string label, Dictionary<string, bool> parameters, int index)
             {
-                var shown = tiles.Resolve(switched);
+                var shown = tiles.ResolveFor(parameters);
                 block.Clear();
                 foreach (var tile in tiles.Tiles)
                     block.SetFloat(ToonMaterial.TileProperty(tile.Column, tile.Row), shown[tile.Id] ? 0f : 1f);
@@ -229,9 +234,14 @@ namespace Wirenook.Validation.Editor
 
             var index = 0;
             Shoot("Dressed", null, index++);
-            foreach (var toggle in toggles)
-                Shoot("No " + toggle.Toggle.Label, new Dictionary<string, bool> { { toggle.Id, false } }, index++);
-            Shoot("Nothing", toggles.ToDictionary(toggle => toggle.Id, toggle => false), index);
+            foreach (var tile in switches)
+            {
+                var rests = defaults.First(known => known.Parameter == tile.Toggle.Parameter).Value;
+                Shoot((rests ? "No " : "") + tile.Toggle.Label, new Dictionary<string, bool> { { tile.Toggle.Parameter, !rests } }, index++);
+            }
+
+            Shoot("Everything On", defaults.ToDictionary(known => known.Parameter, known => true), index++);
+            Shoot("Everything Off", defaults.ToDictionary(known => known.Parameter, known => false), index);
             foreach (var renderer in renderers) renderer.SetPropertyBlock(null);
         }
 

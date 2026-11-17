@@ -102,6 +102,136 @@ namespace Wirenook.Cass.Tests
             Assert.IsTrue(shown["body.arms"]);
         }
 
+        /// <summary>Shorts that give way to a skirt, a vest that needs its sweater, and hair that is short or long.</summary>
+        private static TileLayout Wardrobe()
+        {
+            return new TileLayout
+            {
+                Tiles = new List<Tile>
+                {
+                    new Tile { Id = "always", Column = 0, Row = 0 },
+                    new Tile { Id = "body.torso", Column = 1, Row = 0 },
+                    new Tile { Id = "body.hips", Column = 2, Row = 0 },
+                    new Tile
+                    {
+                        Id = "sweater", Column = 0, Row = 1, Hides = new List<string> { "body.torso" },
+                        Toggle = new TileToggle { Parameter = "Top", Label = "Sweater" },
+                    },
+                    new Tile
+                    {
+                        Id = "shorts", Column = 1, Row = 1, Hides = new List<string> { "body.hips" },
+                        Toggle = new TileToggle { Parameter = "Bottom", Label = "Shorts", Unless = new List<string> { "Skirt" } },
+                    },
+                    new Tile
+                    {
+                        Id = "skirt", Column = 2, Row = 1, Shown = false, Hides = new List<string> { "body.hips" },
+                        Toggle = new TileToggle { Parameter = "Skirt", Label = "Skirt" },
+                    },
+                    new Tile
+                    {
+                        Id = "vest", Column = 3, Row = 1, Shown = false,
+                        Toggle = new TileToggle { Parameter = "Vest", Label = "Vest", Needs = new List<string> { "Top" } },
+                    },
+                    new Tile { Id = "hair.short", Column = 0, Row = 2, Toggle = new TileToggle { Parameter = "Long", When = false } },
+                    new Tile { Id = "hair.long", Column = 1, Row = 2, Shown = false, Toggle = new TileToggle { Parameter = "Long", Label = "Long Hair" } },
+                },
+            };
+        }
+
+        private static Dictionary<string, bool> Wearing(params (string parameter, bool value)[] parameters)
+        {
+            return Wardrobe().ResolveFor(parameters.ToDictionary(entry => entry.parameter, entry => entry.value));
+        }
+
+        [Test]
+        public void SwitchParametersRestSoThatEveryTileRestsAsMarked()
+        {
+            var layout = Wardrobe();
+            CollectionAssert.IsEmpty(layout.Validate());
+            CollectionAssert.AreEqual(new[] { "Top", "Bottom", "Skirt", "Vest", "Long" }, layout.Defaults().Select(known => known.Parameter).ToList());
+            CollectionAssert.AreEqual(new[] { true, true, false, false, false }, layout.Defaults().Select(known => known.Value).ToList());
+
+            var resting = layout.ResolveFor();
+            foreach (var tile in layout.Tiles.Where(tile => tile.Toggle != null))
+                Assert.AreEqual(tile.Shown, resting[tile.Id], tile.Id);
+        }
+
+        [Test]
+        public void AlternativesShareOneSwitch()
+        {
+            var shown = Wearing(("Long", true));
+            Assert.IsTrue(shown["hair.long"]);
+            Assert.IsFalse(shown["hair.short"]);
+        }
+
+        [Test]
+        public void AGarmentGivesWayToTheOneNamedInUnless()
+        {
+            var shown = Wearing(("Skirt", true));
+            Assert.IsTrue(shown["skirt"]);
+            Assert.IsFalse(shown["shorts"], "the shorts are still switched on, and hidden");
+            Assert.IsFalse(shown["body.hips"]);
+
+            shown = Wearing(("Skirt", true), ("Bottom", false));
+            Assert.IsFalse(shown["body.hips"], "the skirt alone still covers the hips");
+
+            shown = Wearing(("Bottom", false));
+            Assert.IsTrue(shown["body.hips"], "with neither, the hips show");
+        }
+
+        [Test]
+        public void ALayerIsOnlyShownOverWhatItNeeds()
+        {
+            Assert.IsTrue(Wearing(("Vest", true))["vest"]);
+            Assert.IsFalse(Wearing(("Vest", true), ("Top", false))["vest"]);
+        }
+
+        [Test]
+        public void ATileWhoseParametersRestAgainstItsMarkIsAProblem()
+        {
+            // Short and long hair share a switch, so they cannot both rest shown.
+            var layout = Wardrobe();
+            layout.Get("hair.long").Shown = true;
+            Assert.IsTrue(layout.Validate().Any(problem => problem.Contains("hair.long")));
+
+            // The shorts rest shown, which a skirt that also rests shown would not allow.
+            layout = Wardrobe();
+            layout.Get("skirt").Shown = true;
+            Assert.IsTrue(layout.Validate().Any(problem => problem.Contains("shorts")));
+
+            layout = Wardrobe();
+            layout.Get("shorts").Toggle.Unless.Add("Cape");
+            Assert.IsTrue(layout.Validate().Any(problem => problem.Contains("Cape")));
+        }
+
+        [Test]
+        public void NoneOfIsTheExactOppositeOfAnyOf()
+        {
+            var layout = Wardrobe();
+            var covers = layout.Covering("body.hips").Select(TileLayout.ShownWhen).ToList();
+            var uncovered = TileLayout.NoneOf(covers);
+            Assert.IsNotEmpty(uncovered);
+
+            // Every combination of the two parameters involved, both ways round.
+            foreach (var bottom in new[] { false, true })
+            {
+                foreach (var skirt in new[] { false, true })
+                {
+                    var values = new Dictionary<string, bool> { { "Bottom", bottom }, { "Skirt", skirt } };
+                    bool Holds(List<Condition> all) => all.All(condition => values[condition.Parameter] == condition.Value);
+                    Assert.AreEqual(!covers.Any(Holds), uncovered.Any(Holds), "Bottom " + bottom + ", Skirt " + skirt);
+                    Assert.AreEqual(!covers.Any(Holds), layout.ResolveFor(values)["body.hips"], "resolved the same way");
+                }
+            }
+
+            // Something and its opposite can never both fail to hold.
+            var always = new List<List<Condition>>
+            {
+                new List<Condition> { new Condition("A", true) }, new List<Condition> { new Condition("A", false) },
+            };
+            CollectionAssert.IsEmpty(TileLayout.NoneOf(always));
+        }
+
         [Test]
         public void AZoneStaysHiddenWhileAnyGarmentCoversIt()
         {

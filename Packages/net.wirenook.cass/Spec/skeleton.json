@@ -76,11 +76,17 @@
     { "name": "HairRoot", "parent": "Head", "physics": "hair" },
     { "name": "HairSide1.L", "parent": "HairRoot" },
     { "name": "HairSide2.L", "parent": "HairSide1.L" },
+    { "name": "HairSide3.L", "parent": "HairSide2.L" },
     { "name": "HairSide1.R", "parent": "HairRoot" },
     { "name": "HairSide2.R", "parent": "HairSide1.R" },
+    { "name": "HairSide3.R", "parent": "HairSide2.R" },
     { "name": "HairBack1.L", "parent": "HairRoot" },
     { "name": "HairBack2.L", "parent": "HairBack1.L" },
+    { "name": "HairBack3.L", "parent": "HairBack2.L" },
+    { "name": "HairBack4.L", "parent": "HairBack3.L" },
     { "name": "HairBack1.R", "parent": "HairRoot" },
-    { "name": "HairBack2.R", "parent": "HairBack1.R" }
+    { "name": "HairBack2.R", "parent": "HairBack1.R" },
+    { "name": "HairBack3.R", "parent": "HairBack2.R" },
+    { "name": "HairBack4.R", "parent": "HairBack3.R" }
   ]
 }

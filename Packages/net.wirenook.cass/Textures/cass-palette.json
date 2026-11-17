@@ -284,6 +284,46 @@
         0.3125
       ],
       "emissive": false
+    },
+    "void": {
+      "color": "#0c0a10",
+      "uv": [
+        0.1875,
+        0.3125
+      ],
+      "emissive": false
+    },
+    "vest": {
+      "color": "#7d5233",
+      "uv": [
+        0.3125,
+        0.3125
+      ],
+      "emissive": false
+    },
+    "vest-shade": {
+      "color": "#5e3b24",
+      "uv": [
+        0.4375,
+        0.3125
+      ],
+      "emissive": false
+    },
+    "bandana": {
+      "color": "#c9483f",
+      "uv": [
+        0.5625,
+        0.3125
+      ],
+      "emissive": false
+    },
+    "bandana-shade": {
+      "color": "#9a2f2f",
+      "uv": [
+        0.6875,
+        0.3125
+      ],
+      "emissive": false
     }
   }
 }

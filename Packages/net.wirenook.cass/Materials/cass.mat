@@ -573,10 +573,10 @@ Material:
     - _UDIMDiscardRow2_1: 0
     - _UDIMDiscardRow2_2: 0
     - _UDIMDiscardRow2_3: 0
-    - _UDIMDiscardRow3_0: 0
-    - _UDIMDiscardRow3_1: 0
+    - _UDIMDiscardRow3_0: 1
+    - _UDIMDiscardRow3_1: 1
     - _UDIMDiscardRow3_2: 0
-    - _UDIMDiscardRow3_3: 0
+    - _UDIMDiscardRow3_3: 1
     - _UDIMDiscardUV: 1
     - _UseAnisotropy: 0
     - _UseAudioLink: 0

@@ -318,6 +318,16 @@ def attach(obj, armature):
     modifier.object = armature
 
 
+def join(target, source):
+    """Joins `source`'s mesh into `target`'s. Vertex groups and UV layers are matched by name."""
+    data = source.data
+    with bpy.context.temp_override(active_object=target, object=target, selected_objects=[target, source],
+                                   selected_editable_objects=[target, source]):
+        bpy.ops.object.join()
+    if data.users == 0:
+        bpy.data.meshes.remove(data)
+
+
 def bvh_of(obj):
     mesh = obj.data
     mesh.calc_loop_triangles()
