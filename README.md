@@ -53,11 +53,10 @@ Spec/*.json ──────────────────────�
 | [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners: one at a time, or many on a shared bus. |
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
-| `party-tricks` | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
-| `shape-collector` | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
+| [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
+| [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
 
-The last two were made in the session described under [Status](#status) and
-have a local history only: their repositories do not exist on GitHub yet.
+The last two were made in the session described under [Status](#status).
 
 They are mounted as submodules and referenced in place
 (`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
@@ -512,13 +511,13 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Nine variants are uploaded and public**, each for every platform it is
-built for, with the fourth pass of the model described here. **This pass
-has not been worn, and nothing added in the session that made it has run
-in the VRChat client.** The uploads are older than this page in four
-things: they do not have the skirt's physics, the stiffer ears, the
-locomotion baked for this skeleton or its own crouch, jump and landings.
-`cass-gaits` has not been uploaded at all.
+**Ten variants are uploaded and public**, each for every platform it is
+built for, as this page describes them; the uploads were last made on
+2026-11-18. **The fourth pass of the model has not been worn, and nothing
+added since the first pass has run in the VRChat client.** That includes
+the skirt's physics, the stiffer ears, the locomotion baked for this
+skeleton, its own crouch, jump and landings, and the walk styles of
+`cass-gaits`.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -531,6 +530,7 @@ locomotion baked for this skeleton or its own crouch, jump and landings.
 | `cass-shapes` | `avtr_01467232-af45-4db8-b1ef-288077548fbe` | PC, Android, iOS |
 | `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC, Android, iOS |
 | `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC, Android, iOS |
+| `cass-gaits` | `avtr_05927e20-4f35-4d3f-a94a-bacbef962f89` | PC |
 
 The first pass of the model, as `cass` and `cass-adv`, was worn in the
 client on PC. That is where the portal's pop-out, the notices' early exit
@@ -544,14 +544,16 @@ below as unchecked.
 That session ran unattended. The uploads were made with the owner's
 written certification that they hold the rights to the content, given
 beforehand for the purpose; it was recorded for each avatar id through the
-SDK's own agreement call, not by anyone answering the SDK's dialog.
+SDK's own agreement call, not by anyone answering the SDK's dialog. The
+uploads of 2026-11-18 ran overnight the same way, on a certification the
+owner gave that evening.
 
 Checked:
 
 - Both Blender exports validate against the specs with no errors, and each
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- All nine variants build through Modular Avatar and Avatar Optimizer for
+- All ten variants build through Modular Avatar and Avatar Optimizer for
   the platforms they are built for, and pass `scripts/cass.sh verify`: the
   rank each is held to, the MMD mesh name and layer order intact after the
   build, every viseme, required tracking key and MMD shape still present,
@@ -654,9 +656,8 @@ Known gaps:
   to say about it.
 - VRChat's ten tags do not hold every feature of `cass-event`; the
   least important two are left out.
-- Nothing is published: no releases, the repositories are not on the VPM
-  listing, and nothing from this session has been pushed. `party-tricks`
-  and `shape-collector` have no GitHub repository yet.
+- Every package is released as 0.1.0 on GitHub, with its `.zip` and
+  `.unitypackage`, but none is on the VPM listing yet.
 
 ## Development
 

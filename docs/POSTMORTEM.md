@@ -238,10 +238,12 @@ Things that are true of the tools and will be true again.
 
 ### Housekeeping
 
-- Nothing is released. No package has a version tag, and none is in the
-  VPM listing.
-- The root repository has never been pushed. Submodule branches
-  (`claude/setup`) are pushed only up to the first upload.
+- Every package was released as 0.1.0 on 2026-11-18, each from its own
+  repository's `main`. None is in the VPM listing.
+- `main` and `claude/setup` are the same commit in all eight
+  repositories. The root repository's `main` has a rule that asks for a
+  reviewed pull request; with one maintainer, pushes to it go through the
+  administrator's bypass.
 - `Generated/flashlight Flashlight.Beam.asset` and `lantern Lantern.Glow.asset`
   in adventure-tools are generated for the real-light builds and not used
   by them.
