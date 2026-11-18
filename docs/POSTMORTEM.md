@@ -238,8 +238,13 @@ Things that are true of the tools and will be true again.
 
 ### Housekeeping
 
-- Every package was released as 0.1.0 on 2026-11-18, each from its own
-  repository's `main`. None is in the VPM listing.
+- The seven submodule packages were released as 0.1.0 on 2026-11-18,
+  each from its own repository's `main`. The root repository's v0.1.0
+  has no files: its releases are immutable, the workflow attaches files
+  after publication, and GitHub refuses that. The tag cannot be reused,
+  so the avatar's first packaged version has to be a later one, from a
+  workflow that fills a draft before publishing or with the setting off.
+  None is in the VPM listing.
 - `main` and `claude/setup` are the same commit in all eight
   repositories. The root repository's `main` has a rule that asks for a
   reviewed pull request; with one maintainer, pushes to it go through the

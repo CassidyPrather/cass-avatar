@@ -656,8 +656,9 @@ Known gaps:
   to say about it.
 - VRChat's ten tags do not hold every feature of `cass-event`; the
   least important two are left out.
-- Every package is released as 0.1.0 on GitHub, with its `.zip` and
-  `.unitypackage`, but none is on the VPM listing yet.
+- The seven submodule packages are released as 0.1.0 on GitHub, each
+  with its `.zip` and `.unitypackage`. This repository's own v0.1.0 has
+  no files (see [Releasing](#releasing)). None is on the VPM listing yet.
 
 ## Development
 
@@ -686,6 +687,12 @@ The avatar is versioned in `Packages/net.wirenook.cass/package.json`.
 3. Each submodule releases the same way from its own repository.
 4. Add the repositories to the listing's `githubRepos`
    ([CassidyPrather/vpm](https://github.com/CassidyPrather/vpm)) once.
+
+Step 2 does not work in this repository as it stands. Its releases are
+immutable, which GitHub only lets take files while they are still drafts,
+and CI attaches them after publication. v0.1.0 was published that way on
+2026-11-18 and has no files, and its tag cannot be used again. The
+submodules do not have the setting and released normally.
 
 ## Legal
 
