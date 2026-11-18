@@ -115,6 +115,47 @@ namespace Wirenook.Validation.Editor
             }
         }
 
+        /// <returns>
+        /// The built variant's expression parameters and its menu, folder by
+        /// folder, each control with the parameter and value it sets; then
+        /// the parameters one of its playable layers ("Base", "FX", ...)
+        /// declares. For checking that a menu choice reaches the animator
+        /// under the same name.
+        /// </returns>
+        public static string Menu(string slug, string playable)
+        {
+            return Probe(slug, (built, fx, text) =>
+            {
+                var descriptor = built.GetComponent<VRCAvatarDescriptor>();
+                text.AppendLine("expression parameters:");
+                foreach (var parameter in descriptor.expressionParameters.parameters.Where(parameter => !string.IsNullOrEmpty(parameter.name)))
+                {
+                    text.AppendLine("  " + parameter.name + " (" + parameter.valueType + (parameter.networkSynced ? ", synced" : ", local") +
+                                    (parameter.saved ? ", saved" : "") + ") default " + parameter.defaultValue);
+                }
+
+                void List(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu, string indent)
+                {
+                    foreach (var control in menu.controls)
+                    {
+                        text.AppendLine(indent + control.name + " [" + control.type + "]" +
+                                        (string.IsNullOrEmpty(control.parameter?.name) ? "" : " " + control.parameter.name + " = " + control.value));
+                        if (control.subMenu != null) List(control.subMenu, indent + "  ");
+                    }
+                }
+
+                text.AppendLine("menu:");
+                List(descriptor.expressionsMenu, "  ");
+
+                var type = (VRCAvatarDescriptor.AnimLayerType)System.Enum.Parse(typeof(VRCAvatarDescriptor.AnimLayerType), playable);
+                var controller = descriptor.baseAnimationLayers.First(layer => layer.type == type).animatorController
+                    as UnityEditor.Animations.AnimatorController;
+                text.AppendLine(playable + " parameters: " + (controller == null
+                    ? "(no controller)"
+                    : string.Join(", ", controller.parameters.Select(parameter => parameter.name + " (" + parameter.type + ")"))));
+            });
+        }
+
         /// <summary>
         /// Builds a variant with one more feature prefab on it and lists one
         /// of its playable layers ("Action", "FX", ...): each animator layer

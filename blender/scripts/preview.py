@@ -6,7 +6,8 @@
     --keys NAME=1,NAME=0.5                 shape key values on Body (bare NAME means 1)
     --each-key NAME,NAME | all             also render the face once per listed key, alone at 1 (key_NNN.png)
     --pose NAME[,NAME]                     render in a pose instead of the rest pose; several give one set of
-                                           pictures each (rest, test, down, forward, raised, twist, sit, walk, kick)
+                                           pictures each (rest, test, down, forward, raised, twist, sit, walk, run, kick);
+                                           the skirt is then laid over the legs as its physics would lay it
     --shaded                               studio light instead of flat, to see how the surface shades
     --bare                                 leave the garments out and show the skin zones they hide
     --tiles ID=0,ID=1                      override the default shown state of discard tiles
@@ -80,8 +81,14 @@ POSES = {
             "LowerLeg.L": (88, 0, 0), "LowerLeg.R": (88, 0, 0)},
     "walk": {**_arms(down=72.0), "UpperLeg.L": (-32, 0, 0), "LowerLeg.L": (18, 0, 0), "UpperLeg.R": (24, 0, 0),
              "LowerLeg.R": (30, 0, 0), "UpperArm.L": (0, 72, 25), "UpperArm.R": (0, -72, 25)},
+    "run": {**_arms(down=60.0, elbow=80.0), "UpperLeg.L": (-58, 0, 0), "LowerLeg.L": (75, 0, 0), "UpperLeg.R": (22, 0, 0),
+            "LowerLeg.R": (95, 0, 0)},
     "kick": {**_arms(down=40.0), "UpperLeg.L": (-105, 0, 0), "LowerLeg.L": (12, 0, 0), "UpperLeg.R": (8, 0, 0)},
 }
+
+# The skirt's PhysBone, as Unity sets it up (CassPrefabs, "skirt"): how thick a chain is, and how far its hinge lets a bone turn.
+SKIRT_RADIUS = 0.03
+SKIRT_LIMIT = 80.0
 
 
 def parse_args():
@@ -164,6 +171,53 @@ def apply_pose(pose):
         target = pivot @ rotation @ pivot.inverted() @ rest
         pose_bone.matrix_basis = rest.inverted() @ target
     bpy.context.view_layer.update()
+    settle_skirt(armature)
+    bpy.context.view_layer.update()
+
+
+def _clear(point, capsules):
+    """Whether a point of a chain is outside every collider, by the chain's own thickness."""
+    for start, end, radius in capsules:
+        along = end - start
+        t = max(0.0, min(1.0, (point - start).dot(along) / along.length_squared))
+        if (point - (start + along * t)).length < radius + SKIRT_RADIUS:
+            return False
+    return True
+
+
+def settle_skirt(armature):
+    """Lays the skirt's chains over the posed legs, standing in for the physics Unity gives them.
+
+    It is not a simulation. Each bone of a chain, from the waist down, hangs
+    as it does at rest unless that puts it inside one of the skeleton spec's
+    colliders; then it is turned outward on its hinge, a degree at a time,
+    until it is clear or at its limit. That is where a hinged chain under
+    gravity comes to rest on a leg, which is enough to see whether the cloth
+    then covers the leg.
+    """
+    skeleton = cass_spec.load_skeleton()
+    root = armature.pose.bones.get("SkirtRoot")
+    if root is None:
+        return
+    capsules = [(armature.pose.bones[entry["bone"]].head.copy(), armature.pose.bones[entry["to"]].head.copy(), entry["radius"])
+                for entry in skeleton.get("colliders", []) if "skirt" in entry["physics"]]
+    for first in root.children:
+        parent, parent_matrix, turned = root, root.matrix.copy(), 0.0
+        bone = first
+        while bone is not None:
+            base = parent_matrix @ parent.bone.matrix_local.inverted() @ bone.bone.matrix_local
+            hanging = max(-SKIRT_LIMIT, min(SKIRT_LIMIT, -turned))
+            angle = hanging
+            while True:
+                matrix = base @ Matrix.Rotation(math.radians(angle), 4, "X")
+                if angle >= SKIRT_LIMIT or all(_clear(matrix @ Vector((0.0, bone.bone.length * t, 0.0)), capsules)
+                                               for t in (0.25, 0.5, 0.75, 1.0)):
+                    break
+                angle = min(SKIRT_LIMIT, angle + 1.0)
+            bone.matrix_basis = Matrix.Rotation(math.radians(angle), 4, "X")
+            turned += angle
+            parent, parent_matrix = bone, matrix
+            bone = bone.children[0] if bone.children else None
 
 
 def bounds():
@@ -253,7 +307,7 @@ def main():
                 centre = Vector((0.0, 0.5 * (lo.y + hi.y) if posed else 0.0, 0.5 * (lo.z + hi.z)))
                 height = (hi.z - lo.z) * 1.06
                 # The T-pose is about as wide as it is tall; only the profile is narrow.
-                aspect = (0.8 if posed else 0.5) if view == "side" else (0.7 if pose in ("down", "twist", "walk") else 1.0)
+                aspect = (0.8 if posed else 0.5) if view == "side" else (0.7 if pose in ("down", "twist", "walk", "run") else 1.0)
                 aim(camera, BODY_VIEWS[view], centre, height, aspect, args.size)
             render(out / f"{view}{tag}.png")
 

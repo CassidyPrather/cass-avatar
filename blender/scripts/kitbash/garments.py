@@ -355,27 +355,69 @@ SKIRT_TIERS = (0.31, 0.65, 1.0)   # where each tier ends, as a fraction of the w
 SKIRT_GATHER = 0.010              # how far each tier stands out from the seam it is gathered into
 SKIRT_FOLDS = (12, 18, 24)        # folds round each tier (full level)
 SKIRT_LINING = 0.014              # how far inside the cloth its dark lining hangs
+# The chains the cloth hangs on: a name and a bearing round the skirt, in degrees from straight
+# ahead, mirrored onto both sides. Two stand in front of each thigh, so that a raised leg takes
+# both up and with them the cloth that lies over it; round the sides and the back they are sparser.
+SKIRT_CHAINS = (("Front", 10.0), ("Thigh", 34.0), ("Side", 75.0), ("Rear", 118.0), ("Back", 158.0))
+# Where each chain's bones start, as fractions of the way from waistband to hem: at the seams.
+SKIRT_JOINTS = (0.0,) + SKIRT_TIERS[:-1]
+SKIRT_HANG = 0.07                 # the height below the waistband over which the cloth passes from the hips to its chains
+SKIRT_JOINT_BLEND = 0.04          # half the height over which one bone of a chain takes over from the one above
 
 
-def _skirt_weights(co, axis_y, hip, knee):
-    """Skirt weights by place: the hips at the waist, and below them each leg's share of what hangs beside it.
+def _skirt_bones(point_at, root):
+    """The skirt bones as rig.add_bones rows: SkirtRoot under Hips, then the chains down the cloth.
 
-    Cloth in front of a leg goes most of the way with it, so a knee carries
-    the skirt up; cloth behind goes with it less, so a stride does not fold
-    the back of the skirt into the body.
+    Each bone's Z axis points out from the body, so its X axis lies along the
+    cloth and a turn about X swings the chain straight out or in. That is the
+    axis a PhysBone's hinge limit turns about (CassPrefabs, "skirt").
     """
-    theta = np.arctan2(co[:, 0], -(co[:, 1] - axis_y))
-    # Cloth straight in front of a leg is that leg's; only a narrow strip down the middle is shared.
-    left = smoothstep(-0.3, 0.3, np.sin(theta))
-    front = 0.5 + 0.5 * np.cos(theta)
-    leg = smoothstep(hip + 0.03, hip - 0.22, co[:, 2]) * (0.50 + 0.45 * front)
-    shin = smoothstep(knee + 0.05, knee - 0.10, co[:, 2]) * 0.75
-    spine = smoothstep(hip + 0.14, hip + 0.21, co[:, 2]) * 0.5
-    return {
-        "Hips": (1.0 - leg) * (1.0 - spine), "Spine": (1.0 - leg) * spine,
-        "UpperLeg.L": leg * left * (1.0 - shin), "LowerLeg.L": leg * left * shin,
-        "UpperLeg.R": leg * (1.0 - left) * (1.0 - shin), "LowerLeg.R": leg * (1.0 - left) * shin,
-    }
+    rows = [("SkirtRoot", root, root + np.array((0.0, 0.0, 0.05)), "Hips", (0.0, -1.0, 0.0))]
+    for stem, bearing in SKIRT_CHAINS:
+        theta = math.radians(bearing)
+        for side, sign in (("L", 1.0), ("R", -1.0)):
+            joints = [point_at(f, theta) * (sign, 1.0, 1.0) for f in SKIRT_JOINTS + (1.0,)]
+            out = (sign * math.sin(theta), -math.cos(theta), 0.0)
+            for number in range(1, len(joints)):
+                parent = "SkirtRoot" if number == 1 else f"Skirt{stem}{number - 1}.{side}"
+                rows.append((f"Skirt{stem}{number}.{side}", joints[number - 1], joints[number], parent, out))
+    return rows
+
+
+def _skirt_weights(obj, oval, band_low, drop):
+    """Hangs the skirt on its chains: the waistband stays with the hips, and below it the cloth goes with the chains.
+
+    Every vertex is shared between the two chains it lies between round the
+    skirt, and down each chain between the bones on either side of a joint,
+    so at most four bones hold it. Only what lies near the cloth hangs: the
+    lining does, the shell over the hips and the middle of the floor keep
+    the weights they have.
+    """
+    co = common.coords(obj.data)
+    f = np.clip((band_low - co[:, 2]) / drop, 0.0, 1.0)
+    half_width, half_depth, centre_y, square = oval(f)[:4]
+    rho = _oval(co[:, 0], co[:, 1] - centre_y, half_width, half_depth, square)
+    hanging = smoothstep(band_low, band_low - SKIRT_HANG, co[:, 2]) * smoothstep(0.60, 0.85, rho)
+    bearing = np.degrees(np.arctan2(co[:, 0], -(co[:, 1] - centre_y)))
+
+    table = {name: values * (1.0 - hanging) for name, values in common.weights_of(obj).items()}
+    seams = [band_low - drop * joint for joint in SKIRT_JOINTS[1:]]
+    # How much of what a bone would hold is handed on to the bones below its lower joint.
+    passed = [smoothstep(seam + SKIRT_JOINT_BLEND, seam - SKIRT_JOINT_BLEND, co[:, 2]) for seam in seams]
+    chains = sorted([(sign * at, stem, side) for stem, at in SKIRT_CHAINS for side, sign in (("L", 1.0), ("R", -1.0))])
+    for index, (at, stem, side) in enumerate(chains):
+        before = (at - chains[index - 1][0]) % 360.0
+        after = (chains[(index + 1) % len(chains)][0] - at) % 360.0
+        away = (bearing - at + 180.0) % 360.0 - 180.0
+        share = hanging * np.clip(np.where(away >= 0.0, 1.0 - away / after, 1.0 + away / before), 0.0, 1.0)
+        for number in range(1, len(SKIRT_JOINTS) + 1):
+            held = share.copy()
+            for joint in range(number - 1):
+                held = held * passed[joint]
+            if number - 1 < len(passed):
+                held = held * (1.0 - passed[number - 1])
+            table[f"Skirt{stem}{number}.{side}"] = held
+    return table
 
 
 def build_skirt(ctx):
@@ -392,11 +434,15 @@ def build_skirt(ctx):
     joining the two and a floor under the sweater's hem, all in the `void`
     swatch. Looking up the skirt shows
     legs coming out of the dark, not a hollow body.
+
+    The cloth hangs on its own bones (`_skirt_bones`): ten chains of three
+    round the skirt, jointed at the seams between the tiers, which Unity
+    swings with one PhysBone and keeps off the legs with colliders. The
+    legs do not move it by weight.
     """
     armature, detail, level = ctx["armature"], ctx["detail"], ctx["level"]
     full = detail >= 1.0
     hip = np.array(rig.head_of(armature, "UpperLeg.L"))
-    knee = np.array(rig.head_of(armature, "LowerLeg.L"))
     tube = ctx.get("sweater_tube")
     if tube is not None:
         # Outside the sweater, which hangs to below the waistband.
@@ -415,7 +461,7 @@ def build_skirt(ctx):
         """Half-width, half-depth, centre and squareness of the skirt, `f` of the way from waistband to hem."""
         spread = f ** 0.85
         return (waist_size[0] + (SKIRT_SWEEP[0] - waist_size[0]) * spread, waist_size[1] + (SKIRT_SWEEP[1] - waist_size[1]) * spread,
-                waist_y + (hem_y - waist_y) * spread, SWEATER_SQUARE + (2.0 - SWEATER_SQUARE) * min(1.0, f * 2.5), scale, extra)
+                waist_y + (hem_y - waist_y) * spread, SWEATER_SQUARE + (2.0 - SWEATER_SQUARE) * np.minimum(1.0, f * 2.5), scale, extra)
 
     def ring(z, shape, wave=None):
         half_width, half_depth, centre_y, square, scale, extra = shape
@@ -514,7 +560,9 @@ def build_skirt(ctx):
         cloth = np.array([corners[mesh.loops[loop].vertex_index] for loop in loops])
         uv[loops] = atlas.gingham_uv(cloth)
     common.set_uv(mesh, cass_spec.UV_PALETTE, uv)
-    common.set_weights(obj, _skirt_weights(common.coords(mesh), hem_y, hip[2], knee[2]))
+    # The waistband goes with the hips and, towards its top, the spine; what hangs is settled below, once the shell is joined on.
+    spine = smoothstep(hip[2] + 0.14, hip[2] + 0.21, common.coords(mesh)[:, 2]) * 0.5
+    common.set_weights(obj, {"Hips": 1.0 - spine, "Spine": spine})
 
     # The dark shell over the hips, cut from the body like the shorts but loose and shapeless,
     # and a membrane from its waist out to the lining. It moves with the legs.
@@ -532,7 +580,18 @@ def build_skirt(ctx):
     void = shell.to_object("Outfit_SkirtVoid", "outfit.skirt.bottom", ctx["collection"], armature, ctx["material"],
                            ctx["palette"], ctx["tiles"])
     common.join(obj, void)
-    print(f"skirt: waistband {np.round(waist_size, 3)} at {top:.3f}, hem at {SKIRT_HEM:.3f}")
+
+    def point_at(f, theta):
+        """Where the cloth is at a bearing round the skirt, `f` of the way down it, before any gathering."""
+        half_width, half_depth, centre_y, square = oval(f)[:4]
+        x, y = math.sin(theta), -math.cos(theta)
+        radius = 1.0 / float(_oval(x, y, half_width, half_depth, square))
+        return np.array((x * radius, centre_y + y * radius, band_low - drop * f))
+
+    rig.add_bones(armature, _skirt_bones(point_at, np.array((0.0, waist_y, band_low))))
+    common.set_weights(obj, _skirt_weights(obj, oval, band_low, drop))
+    print(f"skirt: waistband {np.round(waist_size, 3)} at {top:.3f}, hem at {SKIRT_HEM:.3f}, "
+          f"{len(SKIRT_CHAINS) * 2} chains jointed at {[round(band_low - drop * joint, 3) for joint in SKIRT_JOINTS]}")
     return obj
 
 

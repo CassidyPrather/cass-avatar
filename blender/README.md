@@ -42,7 +42,7 @@ The face is the same mesh in both.
 | `kitbash/decals.py` | Blush strokes, tears and the scribbled eyes, as geometry on the face. |
 | `kitbash/atlas.py` | The texture, `Textures/cass-atlas.png` (the painted face, the palette and a patch of gingham), and its normal map. |
 | `kitbash/rig.py` | The armature: the body base's skeleton under the spec's names, plus added bones. |
-| `kitbash/shell.py`, `garments.py` | Sweater, shorts and vest cut from the body's own mesh; boots lofted around the leg; the skirt lofted round the hips, with its dark lining; the neckerchief. |
+| `kitbash/shell.py`, `garments.py` | Sweater, shorts and vest cut from the body's own mesh; boots lofted around the leg; the skirt lofted round the hips, with its dark lining and the bones it hangs on; the neckerchief. |
 | `kitbash/detail.py` | Stitching, seams, pockets and trims laid onto finished parts as geometry. |
 | `kitbash/sweep.py`, `hair.py`, `extras.py`, `hat.py` | Swept strands; the hair in two lengths; ears and tail; the hat. |
 | `kitbash/stamp.py` | Marks a `.blend` as generator output and detects hand edits. |
@@ -77,8 +77,12 @@ two ways:
 The first check exists because the second cannot see an orientation error in
 the bone nodes: Blender's importer rebuilds bones from the bind pose. Run
 `preview.py` with `-- --help` for its options (views, extra shots, shape key
-values, poses, tile overrides). `--pose down,walk,sit,kick` renders one set
-of pictures per pose, which is how the clothes are checked in motion, and
+values, poses, tile overrides). `--pose down,walk,run,sit,kick` renders one
+set of pictures per pose, which is how the clothes are checked in motion.
+In a pose the skirt's chains are laid over the legs as its physics would
+leave them: each bone hangs as at rest unless that puts it inside one of
+the spec's leg colliders, and is then turned out on its hinge until it is
+clear. It is a stand-in for the PhysBone, not a simulation of it. And
 `--tiles outfit.skirt.bottom=1,outfit.default.bottom=0,hair.long=1,hair.short=0,outfit.vest.layer=1`
 shows the alternatives, which are hidden at rest. Its cavity shading draws
 faint marks around the mouth after it has deleted hidden faces; they are not
@@ -179,8 +183,9 @@ the skirt and the vest (`PARTS` in `build_cass.py`).
   bone name for each Unity `HumanBodyBones` entry, and `extra` lists every
   other bone with its parent. The armature must contain exactly those bones,
   with those parents, all with Deform enabled.
-- At most 90 bones (VRChat's Good on mobile). The model has 80. No leaf or
-  helper bones.
+- At most 150 bones (VRChat's Good on PC and Medium on mobile). The model
+  has 111, of which 31 are the skirt's; a mobile build cuts the skirt out
+  and is left with 77. No leaf or helper bones.
 - To add or rename a bone, change `skeleton.json` first. Unity configures the
   humanoid rig from the same file.
 - The extra bones:
@@ -194,6 +199,18 @@ the skirt and the vest (`PARTS` in `build_cass.py`).
     hair ends on the second bone of each chain; the long hair uses them
     all, the side chains for what falls forward over the chest and the back
     chains for what hangs down the back.
+  - `SkirtRoot` under the hips, and five chains of three under it on each
+    side: `SkirtFront` and `SkirtThigh` in front of the leg, then
+    `SkirtSide`, `SkirtRear` and `SkirtBack` round to behind it
+    (`SKIRT_CHAINS` in `garments.py` has the bearings). The bones lie on
+    the cloth and are jointed at the seams between the tiers. Each has its
+    Y axis down the cloth and its Z axis pointing out from the body, so
+    that its X axis lies along the cloth: Unity's PhysBone hinges a bone
+    about X, and the skirt has to swing outward. Unity refuses a skirt
+    bone rolled any other way. The cloth is shared between the two chains
+    it lies between and the two bones either side of a joint; the legs
+    carry none of it. The spec's `colliders` are the capsules along the
+    legs that push the chains.
 - The `Eye.L` / `Eye.R` bones sit deep inside the head, not behind the eyes:
   the irises are shells that slide across the eye whites when the bone
   turns. They point up with Z forward, so in Unity a turn about X is the

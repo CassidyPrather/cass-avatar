@@ -20,6 +20,7 @@ namespace Wirenook.Validation.Editor
         public const string CamerasRoot = "Cameras";
         public const string LightingRoot = "Lighting";
         public const string AvatarSlot = "Avatar Slot";
+        public const string StageRoot = "Stage";
 
         /// <summary>The height cameras are framed for; avatars near it fit every shot.</summary>
         private const float Height = 1.8f;
@@ -152,7 +153,7 @@ namespace Wirenook.Validation.Editor
 
         private static void BuildStage(Scene scene)
         {
-            var stage = new GameObject("Stage");
+            var stage = new GameObject(StageRoot);
             Move(stage, scene);
 
             // A mid-grey floor and backdrop: neutral enough to judge colour
@@ -273,6 +274,29 @@ namespace Wirenook.Validation.Editor
             light.color = colour;
             light.intensity = intensity;
             light.range = 6f;
+        }
+
+        /// <summary>
+        /// Removes what a failed build or an interrupted preview left standing
+        /// in the validation scene: every root object that is not the scene's
+        /// own. A stray avatar is in every picture taken after it.
+        /// </summary>
+        /// <returns>What was removed, one name per line.</returns>
+        public static string RemoveStrays()
+        {
+            var scene = SceneManager.GetSceneByPath(ScenePath);
+            if (!scene.isLoaded) return "The validation scene is not open.";
+            var own = new[] { StageRoot, CamerasRoot, LightingRoot, AvatarSlot };
+            var removed = new List<string>();
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                // The build framework keeps an object of its own in every open scene.
+                if (own.Contains(root.name) || root.name.StartsWith("nadena.dev.ndmf", System.StringComparison.Ordinal)) continue;
+                removed.Add(root.name + " (" + root.GetComponentsInChildren<Transform>(true).Length + " objects)");
+                Object.DestroyImmediate(root);
+            }
+
+            return removed.Count == 0 ? "Nothing to remove." : string.Join("\n", removed);
         }
 
         public static IEnumerable<Camera> Cameras(Scene scene)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using nadena.dev.modular_avatar.core;
 using nadena.dev.ndmf;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -39,6 +40,7 @@ namespace Wirenook.Cass.Editor
             if (!variant.Platforms.Contains(platform))
                 return slug + " (" + WirenookPlatform.Name(platform) + "): not built for this platform" + System.Environment.NewLine + "ok";
 
+            WrittenControllers(slug, problems);
             var report = CassBuild.Measure(slug, out var built);
             try
             {
@@ -137,6 +139,23 @@ namespace Wirenook.Cass.Editor
             {
                 problems.Add("FX layers 1 and 2 must be the hand gesture layers for MMD worlds; the build produced: " +
                              string.Join(", ", names.Take(4)));
+            }
+        }
+
+        /// <summary>
+        /// A feature may merge a controller that is generated but not
+        /// committed: the walk-style sampler's are too large to keep. Until
+        /// they are written the feature merges nothing, the build succeeds
+        /// without it, and nothing in the result says so. This is checked on
+        /// the prefab, since the build removes the components that would tell.
+        /// </summary>
+        private static void WrittenControllers(string slug, List<string> problems)
+        {
+            foreach (var merge in CassBuild.LoadVariant(slug).GetComponentsInChildren<ModularAvatarMergeAnimator>(true))
+            {
+                if (merge.animator != null) continue;
+                problems.Add("\"" + merge.gameObject.name + "\" merges a " + merge.layerType + " controller that does not exist, so it would " +
+                             "install nothing. If it is the walk-style sampler, write its controllers with scripts/cass.sh gaits styles.");
             }
         }
 

@@ -75,8 +75,9 @@ HUMANOID_REQUIRED = (
     "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot",
 )
 
-# VRChat ranks an avatar Good on mobile up to 90 bones, and Excellent on PC up to 75.
-MAX_BONES = 90
+# VRChat ranks an avatar Good on PC, and Medium on mobile, up to 150 bones. The mobile build does
+# not carry them all: it cuts out what is hidden at rest, and the bones only that hangs on go with it.
+MAX_BONES = 150
 MAX_INFLUENCES = 4
 
 

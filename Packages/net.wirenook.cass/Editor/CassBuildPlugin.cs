@@ -4,6 +4,7 @@ using System.Linq;
 using nadena.dev.ndmf;
 using UnityEditor;
 using UnityEngine;
+using VRC.Dynamics;
 using Wirenook.Assets.Editor;
 using Wirenook.Cass.Editor;
 
@@ -24,6 +25,9 @@ namespace Wirenook.Cass.Editor
     /// Everything else (materials, animators, physics, toggles) is shared,
     /// because both levels have the same objects, bones, blendshapes and UV
     /// tiles.
+    ///
+    /// A mobile build also loses the physics of garments it cannot show
+    /// (see <see cref="RemoveCutChains"/>).
     /// </summary>
     public sealed class CassBuildPlugin : Plugin<CassBuildPlugin>
     {
@@ -39,7 +43,40 @@ namespace Wirenook.Cass.Editor
             {
                 var root = context.AvatarRootObject;
                 if (WirenookPlatform.IsMobile || root.GetComponent<CassLiteModel>() != null) UseLiteModel(root);
+                if (WirenookPlatform.IsMobile) RemoveCutChains(root);
             });
+        }
+
+        /// <summary>
+        /// Removes the PhysBones of chains whose garment a mobile build cuts
+        /// out of the mesh, and the colliders nothing else uses.
+        ///
+        /// No mobile shader can hide a UV tile, so a tile hidden at rest is
+        /// cut away for good (WirenookBuildPlugin). A chain that carries
+        /// only such a tile (skeleton.json, `tile`) is then moving nothing,
+        /// but VRChat would still count it, and past its limits strips every
+        /// dynamic from the avatar. Avatar Optimizer drops the bare bones
+        /// afterwards.
+        /// </summary>
+        public static void RemoveCutChains(GameObject avatar)
+        {
+            var tiles = CassSpec.Tiles();
+            var cut = new HashSet<string>(CassSpec.Skeleton().ChainRoots()
+                .Where(chain => chain.Tile != null && !tiles.Get(chain.Tile).Shown)
+                .Select(chain => chain.Name));
+            if (cut.Count == 0) return;
+
+            var kept = new HashSet<VRCPhysBoneColliderBase>();
+            var orphaned = new HashSet<VRCPhysBoneColliderBase>();
+            foreach (var bone in avatar.GetComponentsInChildren<VRCPhysBoneBase>(true))
+            {
+                var removed = cut.Contains(bone.GetRootTransform().name);
+                (removed ? orphaned : kept).UnionWith(bone.colliders.Where(collider => collider != null));
+                if (removed) UnityEngine.Object.DestroyImmediate(bone);
+            }
+
+            foreach (var collider in orphaned.Where(collider => !kept.Contains(collider)))
+                UnityEngine.Object.DestroyImmediate(collider);
         }
 
         /// <summary>Exchanges every mesh that comes from the full export for its namesake in the lite one.</summary>

@@ -23,7 +23,7 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 - `Packages/net.wirenook.cass/{Generated,Materials,Prefabs}/` — generator output, committed. `Prefabs/cass-root.prefab` is the single root avatar prefab (a variant of the model); `Prefabs/Variants/*.prefab` are the upload variants.
 - `blender/` — `sources/` (the trimmed CC0 body base and face), `scripts/build_cass.py` and `scripts/kitbash/` (the generator that assembles them with the modelled hair, ears, tail and outfit), the two outputs `cass.blend` and `cass-lite.blend`, and the headless scripts that validate and export. See `blender/README.md`.
 - `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`, `party-tricks`, `shape-collector`. Each is its own repository with its own README, SKILL.md, CI and version. The last two have a local history only: their GitHub repositories do not exist yet.
-- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer, plus tools for looking at one feature: `FxProbe` (what a build left in a variant's animators, and `Try` to build a variant with one more feature prefab on it), `ShownPreview` (a feature prefab with its hidden props brought out), and `BeaconPreview`, `CensorPreview`, `NapPreview`. Harness only; not shipped.
+- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer, plus tools for looking at one feature: `FxProbe` (what a build left in a variant's animators, `Menu` for its menu and parameters, and `Try` to build a variant with one more feature prefab on it), `ShownPreview` (a feature prefab with its hidden props brought out), `GaitPreview` (clips of a locomotion controller on the built avatar), and `BeaconPreview`, `CensorPreview`, `NapPreview`. Harness only; not shipped.
 - `Assets/DevTools/UnityBridge/` — the file bridge that lets scripts drive the open editor.
 - `tools/thumbnail/`, `tools/contact_sheet.py`, `art/banner/` — Python and SVG tooling outside Unity.
 - `ref/` — private reference art. Never publish, embed or trace it.
@@ -33,6 +33,7 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 
 ```bash
 scripts/cass.sh build|export|rebuild|verify|report|sheets|preview|upload [slug]   # see the script header
+scripts/cass.sh gaits [styles|<style>]      # bake the walk on the avatar's own skeleton; all styles for cass-gaits; or choose one
 scripts/compile-check.py <package dir>...   # type-check C# without touching the editor
 scripts/unity-refresh.sh                    # recompile the open editor, once everything type-checks
 scripts/unity-bridge.py invoke Namespace.Type.Method [string args...]
@@ -64,6 +65,12 @@ python tools/thumbnail/test_thumbnail.py
 - **Nothing with a constraint goes under a bone that is scaled to zero.** A world position has no answer under a parent of no size. Scale the constrained parts themselves (the stepladder's steps).
 - **A feature that must stay off Android and iOS for rank is marked `WirenookPcOnly` on the object, not the prefab**, so the rest of the feature is kept (the nap's Zs, the seats' screen).
 - Blendshape, bone and tile names live in `Spec/`. Add a name there first; Blender's validation and Unity's generators both read it.
+- **A physics chain that carries one garment names that garment's `tile` in `skeleton.json`** (the skirt). Its PhysBone is then switched with the tile and removed from mobile builds, which cut hidden tiles out; without it a hidden garment's physics still counts on mobile and takes the rank to Very Poor.
+- **Skirt bones have Y down the cloth and Z pointing out from the body.** A PhysBone hinge turns a bone about its X axis; `CassPrefabs` throws on a chain rolled otherwise.
+- **The walk is baked for this skeleton** into `Generated/Locomotion/` by `scripts/cass.sh gaits` (the locomotion submodule does the work); bake again when the legs or feet change. `Generated/Gaits/` is the style sampler of `cass-gaits`: its controllers are git-ignored (90 MB) and `verify` fails the variant until `scripts/cass.sh gaits styles` has written them.
+- **Two features must not both replace the Base playable layer.** `cass-gaits` builds on the root prefab, not on `cass`, for that reason.
+- **A build can fail inside NDMF with `AssetSaver.SaveAsset: sameAssetFile`.** Seen once, straight after a script reload, cause unknown; the same build passed when run again. A failed build removes its half-built copy (`CassBuild.Measure`); `ValidationScene.RemoveStrays` clears anything else left standing in the validation scene, where it would be in every later picture.
+- **PhysBones cannot be simulated here** (it needs play mode). `blender/scripts/preview.py --pose sit,run,kick` lays the skirt over the legs geometrically; feel is only seen in a client.
 - **Both fidelity levels must export the same mesh names, bones, blendshapes and UV tiles.** The lite meshes are swapped in by name.
 - **`blender/cass.blend` and `cass-lite.blend` are generator output.** Change the generator and run `scripts/cass.sh build`; a hand-edited file is detected by its stamp and not overwritten without `--force`.
 - **`Textures/cass-atlas.png` and `.json` are written by the model build**, not by hand. Colours are added in `cass-palette.toml`.

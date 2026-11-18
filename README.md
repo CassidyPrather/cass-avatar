@@ -117,7 +117,9 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   fidelity level, mapped to Unity's humanoid bones by name. Its extra
   bones say what they are for: the body base's arm twist helpers name the
   bone they follow, and the first bone of each physics chain (ears, tail,
-  hair) names its PhysBone settings.
+  hair, skirt) names its PhysBone settings. A chain that carries one
+  garment also names that garment's UV tile, and `colliders` lists the
+  capsules along the legs that keep the skirt's chains off them.
 - **`blendshapes.json`**: the shapes the `Body` mesh (the head) carries.
   - the 15 VRChat visemes (`vrc.v_*`);
   - VRChat's native face-tracking keys (Unified Expressions names, 102 in
@@ -237,7 +239,7 @@ children.
 
 | Variant | Adds |
 | --- | --- |
-| `cass` | Default outfit with the Outfit menu, procedural locomotion, the Face Tracking switch, a standing nap while away. |
+| `cass` | Default outfit with the Outfit menu, procedural locomotion baked for this avatar's own skeleton, the Face Tracking switch, a standing nap while away. |
 | `cass-lite` | The same, built from the low-polygon model on PC too. |
 | `cass-adv` | Flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
 | `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, a beacon shows where the wearer is through walls with an arrow in everyone else's view when they are out of it, and there are four seats to put down, in a ring or facing a screen. The ping's marker, the beacon and the seats are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
@@ -245,6 +247,7 @@ children.
 | `cass-shuffle` | The everyday build that changes its outfit whenever a viewer looks away from it and back. Each viewer's client rolls for itself; nothing is synced. PC only. |
 | `cass-shapes` | The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. Its course is a third skinned mesh, which is Medium. |
 | `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
+| `cass-gaits` | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
 
 **The Outfit menu** has a switch for each garment (sweater, shorts, boots,
 hat) and three for what came from the original design: a tiered gingham
@@ -252,6 +255,38 @@ skirt, which replaces the shorts while it is on; an open vest with a
 neckerchief, worn over the sweater; and long hair in place of the short.
 All three rest off. With all of them on the avatar is the design in the
 reference art.
+
+**The skirt** is cloth on physics. It hangs from the hips on ten chains of
+three bones, jointed at the seams between its tiers, with two chains in
+front of each thigh. One PhysBone swings them all, each on a hinge that
+lets it move straight out from the body or back in, and capsules along the
+upper and lower legs push them: a raised knee carries the front of the
+skirt up, sitting lays it over the thighs, and a heel kicked back lifts the
+hem behind. Walking does not reach it, since it stands well clear of the
+legs, so there it only sways. The PhysBone is switched with the skirt, and
+is not simulated while the shorts are worn.
+
+**The walk** comes from `net.wirenook.locomotion`, baked on this avatar's
+own skeleton: `scripts/cass.sh gaits` measures the legs, hips and feet of
+`cass.fbx` and writes the clips, the two controllers and the prefab that
+installs them to `Generated/Locomotion/`, which every variant of `cass`
+carries. Run it again when the model's legs or feet change. Standing,
+walking and running, crouching, jumping, falling and landing are all the
+package's own; only lying prone is still VRChat's.
+
+How it walks is a style, kept in `Generated/Locomotion/Gait Profile.asset`.
+The package names six (Weighty, Light, Sway, Bouncy, Swagger, Dainty), and
+`cass-gaits` is for telling them apart on the avatar itself:
+
+```bash
+scripts/cass.sh gaits styles          # bake all six for the sampler (minutes; about 90 MB, not committed)
+scripts/cass.sh upload cass-gaits     # then try them in game: Walk style in the menu
+scripts/cass.sh gaits Sway            # make the one you chose the avatar's own, and bake it
+scripts/cass.sh verify cass           # the variants pick the new bake up as they are
+```
+
+After that the profile can be tuned by hand and baked again with
+`scripts/cass.sh gaits`; the package's README says what each number does.
 
 `scripts/cass.sh upload <slug>` builds the variant and sends it with:
 
@@ -370,7 +405,8 @@ What that costs on Android and iOS:
 `cass` is 352 triangles under Medium's limit of 15,000, so anything added to
 what the lite level shows at rest has to be paid for there. What rests
 hidden (the skirt, the vest, the long hair) is cut out of the mobile build
-and costs it nothing. The face is 8,500 of them, because
+and costs it nothing; the skirt's PhysBone, its leg colliders and its 31
+bones go with it. The face is 8,500 of them, because
 it is the same mesh at both levels; the stitched details are left out of
 the lite level altogether, as are the folded edges of the waistband,
 hems and collar.
@@ -449,15 +485,18 @@ copy:
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 58,852 | 2 + 0 | 3 | 82 | 8 of 256 |
-| `cass-lite` | Good | 18,955 | 2 + 0 | 3 | 82 | 8 of 256 |
-| `cass-adv` | Good | 62,630 | 2 + 4 | 8 | 102 | 96 of 256 |
-| `cass-event` | Medium | 63,620 | 2 + 9 | 13 | 102 | 165 of 256 |
-| `cass-party` | Good | 59,905 | 2 + 2 | 6 | 86 | 85 of 256 |
-| `cass-shuffle` | Good | 58,853 | 2 + 1 | 4 | 82 | 8 of 256 |
-| `cass-shapes` | Medium | 59,384 | 3 + 0 | 4 | 97 | 74 of 256 |
-| `cass-flashlight` | Poor (one light) | 62,042 | 2 + 5 | 9 | 97 | 162 of 256 |
-| `cass-lantern` | Poor (one light) | 62,188 | 2 + 6 | 10 | 97 | 162 of 256 |
+| `cass` | Good | 58,852 | 2 + 0 | 3 | 112 | 8 of 256 |
+| `cass-lite` | Good | 18,955 | 2 + 0 | 3 | 112 | 8 of 256 |
+| `cass-adv` | Good | 62,630 | 2 + 4 | 8 | 132 | 96 of 256 |
+| `cass-event` | Medium | 63,620 | 2 + 9 | 13 | 132 | 165 of 256 |
+| `cass-party` | Good | 59,905 | 2 + 2 | 6 | 116 | 85 of 256 |
+| `cass-shuffle` | Good | 58,853 | 2 + 1 | 4 | 112 | 8 of 256 |
+| `cass-shapes` | Medium | 59,384 | 3 + 0 | 4 | 127 | 74 of 256 |
+| `cass-flashlight` | Poor (one light) | 62,042 | 2 + 5 | 9 | 127 | 162 of 256 |
+| `cass-lantern` | Poor (one light) | 62,188 | 2 + 6 | 10 | 127 | 162 of 256 |
+| `cass-gaits` | Good | 58,852 | 2 + 0 | 3 | 112 | 16 of 256 |
+
+Thirty of each variant's bones are the skirt's chains. Good allows 150.
 
 The second skinned mesh is what stands between this and Excellent. It is
 the head: Avatar Optimizer keeps meshes with blendshapes apart, because
@@ -476,7 +515,10 @@ No atlasing happens at build time: the model is built with its one atlas.
 **Nine variants are uploaded and public**, each for every platform it is
 built for, with the fourth pass of the model described here. **This pass
 has not been worn, and nothing added in the session that made it has run
-in the VRChat client.**
+in the VRChat client.** The uploads are older than this page in four
+things: they do not have the skirt's physics, the stiffer ears, the
+locomotion baked for this skeleton or its own crouch, jump and landings.
+`cass-gaits` has not been uploaded at all.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -533,7 +575,7 @@ Checked:
   read back matching the upload policy (source link, required tags,
   public).
 - Headless tests: 28 for the avatar's core logic, 11 for the thumbnail
-  composer, and each submodule's own suite (38 in locomotion).
+  composer, and each submodule's own suite (56 in locomotion).
 
 Not checked, because only the client can:
 
@@ -552,14 +594,27 @@ Not checked, because only the client can:
   protocol, are checked in the editor; the half that measures a position
   on the wearer's client only runs in game, and the stepladder now rests on
   the same kind of reading.
-- **How the locomotion feels**, and how it sits with real tracking.
+- **How the locomotion feels**, and how it sits with real tracking. That
+  goes for all six styles, for the crouch, and for the jump, fall and
+  landing poses, which were looked at on the avatar in the editor and
+  nowhere else. `cass-gaits` exists so that the styles can be judged in
+  the client.
 - **Hand poses**: props sit in the hand pointing where the fingers point,
   and the fingers do not close around them.
 - **The model in motion.** The ear and tail poses, the arm twist
   constraints, the hair, ear and tail physics and the eye-look limits are
   generated and build cleanly, but nothing has seen them move. The long
   hair hangs on six more bones under the same PhysBone, with settings that
-  were chosen for the short hair.
+  were chosen for the short hair. The ears were stiffened after a note
+  from wearing them (more pull, less spring, a 25° limit); how stiff that
+  feels is still to be seen.
+- **The skirt's physics.** The bones, weights and colliders are checked in
+  Blender, where `preview.py` lays the chains over posed legs and the cloth
+  covers them sitting, running and kicking. That is geometry, not a
+  simulation: how the PhysBone's pull, spring, gravity and hinge feel, and
+  whether a fast leg gets through between two chains, only a client shows.
+  The numbers are in `CassPrefabs` (`"skirt"`) and `skeleton.json`
+  (`colliders`).
 
 Known gaps:
 
@@ -573,10 +628,11 @@ Known gaps:
   is bare: the base is a smooth doll body with no underwear layer. The
   skirt needs none: it hides the hips and is closed off inside by a dark
   lining, so from below there is only dark.
-- The skirt has no bones or physics. It follows the legs by its weights,
-  hangs straight through whatever is sat on, and a high kick comes through
-  its front. Its waistband goes round the untucked sweater, so the waist is
-  wide, and with the sweater off the lining shows in the gap.
+- The skirt collides with the wearer's legs and nothing else: it hangs
+  straight through a chair, the floor and other people. A high kick opens
+  it onto its dark lining, since a chain cannot fold round a leg. Its
+  waistband goes round the untucked sweater, so the waist is wide, and with
+  the sweater off the lining shows in the gap.
 - The vest is fitted to the sweater and is only shown over it. With the
   skirt on, its fringe is inside the skirt's waistband.
 - Long hair turns rigidly with the head until physics moves it, and has no
@@ -592,9 +648,10 @@ Known gaps:
 - Nothing fades or dithers out as a viewer comes close; lilToon's Clipping
   Canceller pushes near geometry back instead.
 - Held tools have no hand poses of their own.
-- The locomotion clips and the nap are baked on a generic rig and
-  retargeted, not fitted to this avatar; `LocomotionBuild.BakeFor` exists
-  for the gaits.
+- The nap is baked on a generic rig and retargeted, not fitted to this
+  avatar as the gaits now are.
+- Lying prone still plays VRChat's own crawl; the gait model has nothing
+  to say about it.
 - VRChat's ten tags do not hold every feature of `cass-event`; the
   least important two are left out.
 - Nothing is published: no releases, the repositories are not on the VPM

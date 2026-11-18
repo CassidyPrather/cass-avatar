@@ -1,0 +1,7 @@
+# The two controllers of the walk-style sampler hold every style's clips:
+# about 90 MB of text that is only there to choose from. They are written by
+# `scripts/cass.sh gaits styles` and are not committed. The prefab beside
+# them is, so that the cass-gaits variant keeps its place for it; the bake
+# points the prefab at the controllers it has just written.
+*.controller
+*.controller.meta

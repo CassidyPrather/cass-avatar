@@ -33,6 +33,12 @@ namespace Wirenook.Cass.Editor
         /// <summary>How far the eye bones turn at the edges of the gaze, in degrees.</summary>
         private const float EyeUp = 8f, EyeDown = 10f, EyeSide = 10f;
 
+        /// <summary>
+        /// How thick the skirt's chains are, in metres, and how far a bone of one may turn on its
+        /// hinge, in degrees. blender/scripts/preview.py lays the skirt over posed legs with the same two.
+        /// </summary>
+        private const float SkirtRadius = 0.03f, SkirtLimit = 80f;
+
         /// <summary>A blendshape that moves the irises and nothing else, used to find where the eyes are.</summary>
         private const string IrisShape = "瞳小";
 
@@ -153,7 +159,20 @@ namespace Wirenook.Cass.Editor
             descriptor.autoLocomotion = true;
             descriptor.autoFootsteps = true;
 
-            foreach (var chain in skeleton.ChainRoots()) ConfigurePhysBone(Find(root, chain.Name), chain.Physics);
+            var tiles = CassSpec.Tiles();
+            foreach (var chain in skeleton.ChainRoots())
+            {
+                var colliders = skeleton.CollidersFor(chain.Physics)
+                    .Select(collider => ConfigureCollider(Find(root, collider.Bone), Find(root, collider.To), collider.Radius))
+                    .ToList();
+                var bone = ConfigurePhysBone(Find(root, chain.Name), chain.Physics, colliders);
+                // A chain that carries one garment rests as that garment does, and the
+                // FX layer that shows the garment switches it on (CassFx.OutfitLayers).
+                // Nobody pays for the physics of cloth they cannot see.
+                bone.enabled = chain.Tile == null || tiles.Get(chain.Tile).Shown;
+                bone.resetWhenDisabled = chain.Tile != null;
+            }
+
             foreach (var twist in skeleton.TwistBones())
                 ConfigureTwist(Find(root, twist.Name), Find(root, twist.TwistSource), twist.TwistWeight);
             UnifyRenderers(root, skeleton);
@@ -365,32 +384,42 @@ namespace Wirenook.Cass.Editor
         }
 
         /// <summary>
-        /// PhysBone settings by the name a chain root carries in skeleton.json.
-        /// Everything here stays inside what mobile allows in total (see
-        /// CassChecks): one component per ear, one for the tail and one for
-        /// all of the hair.
+        /// PhysBone settings by the name a chain root carries in skeleton.json:
+        /// one component per ear, one for the tail, one for all of the hair
+        /// and one for the skirt.
+        ///
+        /// Integration is Simplified throughout, which reads pull and spring.
+        /// Stiffness only acts under Advanced integration; it is set so that
+        /// a chain switched over starts from a sensible value.
         /// </summary>
-        private static void ConfigurePhysBone(Transform chainRoot, string physics)
+        private static VRCPhysBone ConfigurePhysBone(Transform chainRoot, string physics, List<VRCPhysBoneColliderBase> colliders)
         {
             var bone = Ensure<VRCPhysBone>(chainRoot.gameObject);
             bone.rootTransform = chainRoot;
             bone.integrationType = VRCPhysBoneBase.IntegrationType.Simplified;
             bone.limitType = VRCPhysBoneBase.LimitType.Angle;
+            bone.limitRotation = Vector3.zero;
             bone.allowCollision = VRCPhysBoneBase.AdvancedBool.True;
+            bone.colliders = colliders;
             bone.multiChildType = VRCPhysBoneBase.MultiChildType.Ignore;
+            bone.endpointPosition = Vector3.zero;
+            bone.gravityFalloff = 0f;
             bone.isAnimated = false;
 
             switch (physics)
             {
                 case "ears":
-                    // Soft, grabbable, posable and stretchy: these are for friends to play with.
-                    bone.pull = 0.25f;
-                    bone.spring = 0.55f;
-                    bone.stiffness = 0.25f;
-                    bone.gravity = 0.03f;
-                    bone.immobile = 0f;
+                    // Stiff: they stand up, give a little when the head moves and come
+                    // straight back, without the wobble a soft ear has. Still grabbable,
+                    // posable and stretchy; these are for friends to play with. The
+                    // narrow limit also keeps them off the brim of the hat.
+                    bone.pull = 0.7f;
+                    bone.spring = 0.2f;
+                    bone.stiffness = 0.75f;
+                    bone.gravity = 0f;
+                    bone.immobile = 0.4f;
                     bone.radius = 0.03f;
-                    bone.maxAngleX = 70f;
+                    bone.maxAngleX = 25f;
                     Touchable(bone, true);
                     bone.grabMovement = 0.6f;
                     bone.maxStretch = 0.5f;
@@ -431,9 +460,96 @@ namespace Wirenook.Cass.Editor
                     bone.maxSquish = 0f;
                     bone.stretchMotion = 0f;
                     break;
+                case "skirt":
+                    // Cloth on ten chains of three bones. The root does not move; each
+                    // chain swings on a hinge, straight out from the body or back in, so
+                    // a leg that lifts a chain cannot shed it to one side. Low pull and
+                    // some spring let the hem trail and settle; gravity is felt only away
+                    // from rest, so the skirt keeps its flare standing and drapes when
+                    // it is lifted or the hips tilt. Part of the wearer's own travel is
+                    // left out, or a run would press the whole front against the legs.
+                    bone.pull = 0.2f;
+                    bone.spring = 0.35f;
+                    bone.stiffness = 0.2f;
+                    bone.gravity = 0.25f;
+                    bone.gravityFalloff = 1f;
+                    bone.immobile = 0.35f;
+                    bone.radius = SkirtRadius;
+                    bone.limitType = VRCPhysBoneBase.LimitType.Hinge;
+                    bone.maxAngleX = SkirtLimit;
+                    // The chains have no leaf bones, so the last bone of each gets its length from here.
+                    bone.endpointPosition = SkirtEndpoint(chainRoot);
+                    Touchable(bone, false);
+                    bone.maxStretch = 0f;
+                    bone.maxSquish = 0f;
+                    bone.stretchMotion = 0f;
+                    break;
                 default:
                     throw new InvalidDataException("skeleton.json: \"" + physics + "\" (on " + chainRoot.name + ") is not a known set of physics settings.");
             }
+
+            return bone;
+        }
+
+        /// <summary>
+        /// Checks that the skirt's chains are built the way its hinge needs,
+        /// and returns the offset that stands in for the leaf bone the model
+        /// does not have.
+        ///
+        /// A hinge limit turns a bone about its own X axis. Blender rolls each
+        /// skirt bone so that its Y axis runs down the cloth and its Z axis
+        /// points out from the body, which puts X along the cloth and makes
+        /// the hinge swing outward. A chain rolled any other way would be
+        /// held flat against the leg that pushes it, so that is an error here
+        /// and not something to find out in game.
+        /// </summary>
+        private static Vector3 SkirtEndpoint(Transform skirtRoot)
+        {
+            var avatar = skirtRoot.root;
+            var lengths = new List<float>();
+            foreach (Transform first in skirtRoot)
+            {
+                var outward = avatar.InverseTransformDirection(first.position - skirtRoot.position);
+                outward.y = 0f;
+                var faces = avatar.InverseTransformDirection(first.forward);
+                if (Vector3.Dot(faces, outward.normalized) < 0.7f)
+                    throw new InvalidDataException("Skirt bone " + first.name + " does not have its Z axis pointing out from the body; its hinge would not swing outward.");
+
+                var last = first;
+                while (last.childCount > 0)
+                {
+                    last = last.GetChild(0);
+                    if (last.localPosition.normalized.y < 0.95f)
+                        throw new InvalidDataException("Skirt bone " + last.name + " is not along its parent's Y axis.");
+                }
+
+                lengths.Add(last.localPosition.magnitude);
+            }
+
+            if (lengths.Count == 0) throw new InvalidDataException(skirtRoot.name + " has no chains under it.");
+            return new Vector3(0f, lengths.Average(), 0f);
+        }
+
+        /// <summary>
+        /// A capsule along a bone, from its joint to the next one, that the
+        /// chains listing it are kept outside of. It pushes nothing else: not
+        /// the avatar's other chains, and not other people's.
+        /// </summary>
+        private static VRCPhysBoneColliderBase ConfigureCollider(Transform bone, Transform next, float radius)
+        {
+            var collider = Ensure<VRCPhysBoneCollider>(bone.gameObject);
+            var along = bone.InverseTransformPoint(next.position);
+            collider.rootTransform = bone;
+            collider.shapeType = VRCPhysBoneColliderBase.ShapeType.Capsule;
+            collider.insideBounds = false;
+            collider.bonesAsSpheres = false;
+            collider.globalCollision = VRCPhysBoneBase.AdvancedBool.False;
+            collider.radius = radius;
+            // The height counts the round ends, which are centred on the two joints.
+            collider.height = along.magnitude + 2f * radius;
+            collider.position = along * 0.5f;
+            collider.rotation = Quaternion.FromToRotation(Vector3.up, along);
+            return collider;
         }
 
         private static void Touchable(VRCPhysBone bone, bool touchable)

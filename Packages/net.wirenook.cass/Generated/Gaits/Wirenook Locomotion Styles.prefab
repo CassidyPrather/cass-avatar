@@ -1,0 +1,580 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &545647233930230023
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4929575647272795763}
+  - component: {fileID: 8549922487532154657}
+  m_Layer: 0
+  m_Name: Swagger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4929575647272795763
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 545647233930230023}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8549922487532154657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 545647233930230023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Swagger
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 4
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Swagger
+--- !u!1 &1199350832073399922
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5471487349843421244}
+  - component: {fileID: 5822498341303657361}
+  - component: {fileID: 186904508450055502}
+  - component: {fileID: 4377138764452543662}
+  - component: {fileID: 2429359064059559839}
+  - component: {fileID: 4942406028996156520}
+  - component: {fileID: 8771041585497763510}
+  m_Layer: 0
+  m_Name: Wirenook Locomotion Styles
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5471487349843421244
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8818510050095224207}
+  - {fileID: 8590759466441071764}
+  - {fileID: 7638729725223498929}
+  - {fileID: 2333795932159885680}
+  - {fileID: 4929575647272795763}
+  - {fileID: 3675205164826268038}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5822498341303657361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14676dfe8f7437b4ba6f13282bfb99f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: locomotion-styles
+  label: Walk styles to choose between
+  icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+  summaryIcon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+  tag: 
+  tagPriority: 0
+  joinAvatarMesh: 0
+--- !u!114 &186904508450055502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bb122659f724ebf85fe095ac02dc339, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  animator: {fileID: 9100000, guid: 7d7e8e2d8000e6e4b8ad655fb801db27, type: 2}
+  layerType: 0
+  deleteAttachedAnimator: 0
+  pathMode: 1
+  matchAvatarWriteDefaults: 0
+  relativePathRoot:
+    referencePath: 
+    targetObject: {fileID: 0}
+  layerPriority: 0
+  mergeAnimatorMode: 1
+--- !u!114 &4377138764452543662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bb122659f724ebf85fe095ac02dc339, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  animator: {fileID: 9100000, guid: 9050156d0bee394439b86c152bfec724, type: 2}
+  layerType: 2
+  deleteAttachedAnimator: 0
+  pathMode: 1
+  matchAvatarWriteDefaults: 0
+  relativePathRoot:
+    referencePath: 
+    targetObject: {fileID: 0}
+  layerPriority: 0
+  mergeAnimatorMode: 1
+--- !u!114 &2429359064059559839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71a96d4ea0c344f39e277d82035bf9bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  parameters:
+  - nameOrPrefix: Wirenook/Locomotion/Style
+    remapTo: 
+    internalParameter: 0
+    isPrefix: 0
+    syncType: 1
+    localOnly: 0
+    defaultValue: 0
+    saved: 0
+    hasExplicitDefaultValue: 1
+    m_overrideAnimatorDefaults: 0
+--- !u!114 &4942406028996156520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef83cb0c23d4d7c9d41021e544a1978, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  menuToAppend: {fileID: 0}
+  installTargetMenu: {fileID: 0}
+--- !u!114 &8771041585497763510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199350832073399922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Walk style
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 103
+    parameter:
+      name: 
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 1
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Walk style
+--- !u!1 &3314921052296568150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8818510050095224207}
+  - component: {fileID: 2428295957080313923}
+  m_Layer: 0
+  m_Name: Weighty
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8818510050095224207
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3314921052296568150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2428295957080313923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3314921052296568150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Weighty
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 0
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Weighty
+--- !u!1 &4628199336982061481
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7638729725223498929}
+  - component: {fileID: 743112664595916546}
+  m_Layer: 0
+  m_Name: Sway
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7638729725223498929
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4628199336982061481}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &743112664595916546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4628199336982061481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Sway
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 2
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Sway
+--- !u!1 &6700716318189949120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8590759466441071764}
+  - component: {fileID: 4433862801515143128}
+  m_Layer: 0
+  m_Name: Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8590759466441071764
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6700716318189949120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4433862801515143128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6700716318189949120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Light
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Light
+--- !u!1 &8712988836675966886
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3675205164826268038}
+  - component: {fileID: 4065556245043842961}
+  m_Layer: 0
+  m_Name: Dainty
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3675205164826268038
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8712988836675966886}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4065556245043842961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8712988836675966886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Dainty
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 5
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Dainty
+--- !u!1 &8857785067728130822
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2333795932159885680}
+  - component: {fileID: 1818984956587908332}
+  m_Layer: 0
+  m_Name: Bouncy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2333795932159885680
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8857785067728130822}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5471487349843421244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1818984956587908332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8857785067728130822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Bouncy
+    icon: {fileID: 2800000, guid: 1e164e79e79a80944b2a7cf469faaac7, type: 3}
+    type: 102
+    parameter:
+      name: Wirenook/Locomotion/Style
+    value: 3
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Bouncy

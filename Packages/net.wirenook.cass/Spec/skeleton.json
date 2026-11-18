@@ -1,5 +1,5 @@
 {
-  "$comment": "Bone contract for the shared armature: `humanoid` maps UnityEngine.HumanBodyBones names to the bone names in the exported FBX, `extra` lists the non-humanoid bones with their parents. Blender validates the armature against it on export; Unity configures the humanoid rig from it by name. The FBX rest pose is the T-pose. An extra bone with `twist` is a twist helper: Unity gives it a rotation constraint that follows `source` about the bone's own long axis at `weight` (the body base's own setup). An extra bone with `physics` is the root of a chain; the value names the PhysBone settings Unity gives it (see CassPrefabs).",
+  "$comment": "Bone contract for the shared armature: `humanoid` maps UnityEngine.HumanBodyBones names to the bone names in the exported FBX, `extra` lists the non-humanoid bones with their parents. Blender validates the armature against it on export; Unity configures the humanoid rig from it by name. The FBX rest pose is the T-pose. An extra bone with `twist` is a twist helper: Unity gives it a rotation constraint that follows `source` about the bone's own long axis at `weight` (the body base's own setup). An extra bone with `physics` is the root of a chain; the value names the PhysBone settings Unity gives it (see CassPrefabs). A chain root with `tile` carries only what is on that UV tile (uv-tiles.json): its physics runs while the tile is shown, and a build that cuts the tile out of the mesh leaves the physics out with it. `colliders` lists the capsules that keep chains off the body: each lies along `bone` from its joint to the joint of `to`, is `radius` metres thick, and pushes the chains whose `physics` it names.",
   "armature": "Armature",
   "humanoid": {
     "Hips": "Hips",
@@ -87,6 +87,43 @@
     { "name": "HairBack1.R", "parent": "HairRoot" },
     { "name": "HairBack2.R", "parent": "HairBack1.R" },
     { "name": "HairBack3.R", "parent": "HairBack2.R" },
-    { "name": "HairBack4.R", "parent": "HairBack3.R" }
+    { "name": "HairBack4.R", "parent": "HairBack3.R" },
+    { "name": "SkirtRoot", "parent": "Hips", "physics": "skirt", "tile": "outfit.skirt.bottom" },
+    { "name": "SkirtFront1.L", "parent": "SkirtRoot" },
+    { "name": "SkirtFront2.L", "parent": "SkirtFront1.L" },
+    { "name": "SkirtFront3.L", "parent": "SkirtFront2.L" },
+    { "name": "SkirtFront1.R", "parent": "SkirtRoot" },
+    { "name": "SkirtFront2.R", "parent": "SkirtFront1.R" },
+    { "name": "SkirtFront3.R", "parent": "SkirtFront2.R" },
+    { "name": "SkirtThigh1.L", "parent": "SkirtRoot" },
+    { "name": "SkirtThigh2.L", "parent": "SkirtThigh1.L" },
+    { "name": "SkirtThigh3.L", "parent": "SkirtThigh2.L" },
+    { "name": "SkirtThigh1.R", "parent": "SkirtRoot" },
+    { "name": "SkirtThigh2.R", "parent": "SkirtThigh1.R" },
+    { "name": "SkirtThigh3.R", "parent": "SkirtThigh2.R" },
+    { "name": "SkirtSide1.L", "parent": "SkirtRoot" },
+    { "name": "SkirtSide2.L", "parent": "SkirtSide1.L" },
+    { "name": "SkirtSide3.L", "parent": "SkirtSide2.L" },
+    { "name": "SkirtSide1.R", "parent": "SkirtRoot" },
+    { "name": "SkirtSide2.R", "parent": "SkirtSide1.R" },
+    { "name": "SkirtSide3.R", "parent": "SkirtSide2.R" },
+    { "name": "SkirtRear1.L", "parent": "SkirtRoot" },
+    { "name": "SkirtRear2.L", "parent": "SkirtRear1.L" },
+    { "name": "SkirtRear3.L", "parent": "SkirtRear2.L" },
+    { "name": "SkirtRear1.R", "parent": "SkirtRoot" },
+    { "name": "SkirtRear2.R", "parent": "SkirtRear1.R" },
+    { "name": "SkirtRear3.R", "parent": "SkirtRear2.R" },
+    { "name": "SkirtBack1.L", "parent": "SkirtRoot" },
+    { "name": "SkirtBack2.L", "parent": "SkirtBack1.L" },
+    { "name": "SkirtBack3.L", "parent": "SkirtBack2.L" },
+    { "name": "SkirtBack1.R", "parent": "SkirtRoot" },
+    { "name": "SkirtBack2.R", "parent": "SkirtBack1.R" },
+    { "name": "SkirtBack3.R", "parent": "SkirtBack2.R" }
+  ],
+  "colliders": [
+    { "bone": "UpperLeg.L", "to": "LowerLeg.L", "radius": 0.085, "physics": ["skirt"] },
+    { "bone": "UpperLeg.R", "to": "LowerLeg.R", "radius": 0.085, "physics": ["skirt"] },
+    { "bone": "LowerLeg.L", "to": "Foot.L", "radius": 0.065, "physics": ["skirt"] },
+    { "bone": "LowerLeg.R", "to": "Foot.R", "radius": 0.065, "physics": ["skirt"] }
   ]
 }

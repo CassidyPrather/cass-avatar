@@ -83,13 +83,33 @@ namespace Wirenook.Cass.Editor
             return WriteReport(report);
         }
 
-        /// <summary>Builds a variant and leaves the processed copy in the scene, for inspection.</summary>
+        /// <summary>
+        /// Builds a variant and leaves the processed copy in the scene, for
+        /// inspection. A build that fails leaves nothing: the half-built copy
+        /// would otherwise stand in the scene, and in every picture taken of
+        /// it afterwards.
+        /// </summary>
         public static BuildReport Measure(string slug, out GameObject built)
         {
             var prefab = LoadVariant(slug);
-            built = UnityEngine.Object.Instantiate(prefab);
-            built.name = slug;
+            var copy = UnityEngine.Object.Instantiate(prefab);
+            copy.name = slug;
+            try
+            {
+                var report = Measure(slug, copy);
+                built = copy;
+                return report;
+            }
+            catch
+            {
+                UnityEngine.Object.DestroyImmediate(copy);
+                AvatarProcessor.CleanTemporaryAssets();
+                throw;
+            }
+        }
 
+        private static BuildReport Measure(string slug, GameObject built)
+        {
             var features = built.GetComponentsInChildren<WirenookFeature>(true)
                 .Select(feature => new BuildReport.Feature
                 {

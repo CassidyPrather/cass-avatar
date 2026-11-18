@@ -4,6 +4,9 @@
 #   scripts/cass.sh build             sources and modelled parts -> blender/cass.blend and cass-lite.blend
 #   scripts/cass.sh export            Blender -> BlenderExports/cass.fbx and cass-lite.fbx (validated)
 #   scripts/cass.sh rebuild           regenerate materials, animators, menus and prefabs
+#   scripts/cass.sh gaits             bake the walk for the avatar's own skeleton (after its legs or feet change)
+#   scripts/cass.sh gaits styles      bake every walk style into cass-gaits, the variant that switches between them
+#   scripts/cass.sh gaits <style>     make one style the avatar's own and bake it (Weighty, Light, Sway, ...)
 #   scripts/cass.sh verify [slug] [platform]   build a variant as an upload would and check it
 #   scripts/cass.sh report [slug] [platform]   the same build, as JSON in dist/build-report/
 #   scripts/cass.sh sheets [slug] [platform]   contact sheets in dist/validation/<slug>/
@@ -98,6 +101,28 @@ case "$command" in
         scripts/unity-refresh.sh
         unity invoke Wirenook.Cass.Editor.CassBuild.Rebuild
         ;;
+    gaits)
+        # The gaits are baked on the model's own skeleton, so stride, hip
+        # width and foot length are the avatar's. One style is committed, in
+        # Generated/Locomotion; every style at once is the sampler's, in
+        # Generated/Gaits, which is too large to commit and is written here.
+        model=Packages/net.wirenook.cass/BlenderExports/cass.fbx
+        fitted=Packages/net.wirenook.cass/Generated/Locomotion
+        bake=Wirenook.Locomotion.Editor.LocomotionBuild
+        case "${2:-}" in
+            "")
+                unity --timeout 1800 invoke $bake.BakeFor "$model" "$fitted"
+                ;;
+            styles)
+                unity --timeout 3400 invoke $bake.BakeStyles "$model" Packages/net.wirenook.cass/Generated/Gaits
+                # The sampler's prefab may be new: the variant takes it up on a rebuild.
+                unity invoke Wirenook.Cass.Editor.CassBuild.Rebuild
+                ;;
+            *)
+                unity --timeout 1800 invoke $bake.BakeForInStyle "$model" "$fitted" "$2"
+                ;;
+        esac
+        ;;
     verify)
         as_platform "$platform" verify "$slug"
         ;;
@@ -156,7 +181,7 @@ case "$command" in
         done
         ;;
     *)
-        sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
         exit 2
         ;;
 esac

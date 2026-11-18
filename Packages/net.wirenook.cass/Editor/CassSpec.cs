@@ -164,8 +164,20 @@ namespace Wirenook.Cass.Editor
                     Name = (string)token["name"],
                     Parent = (string)token["parent"],
                     Physics = (string)token["physics"],
+                    Tile = (string)token["tile"],
                     TwistSource = twist == null ? null : (string)twist["source"],
                     TwistWeight = twist == null ? 0f : (float)twist["weight"],
+                });
+            }
+
+            foreach (var token in json["colliders"] ?? new JArray())
+            {
+                spec.Colliders.Add(new BoneCollider
+                {
+                    Bone = (string)token["bone"],
+                    To = (string)token["to"],
+                    Radius = (float)token["radius"],
+                    Physics = (token["physics"] ?? new JArray()).Select(name => (string)name).ToList(),
                 });
             }
 
@@ -248,6 +260,12 @@ namespace Wirenook.Cass.Editor
         /// <summary>The helpers that follow a neighbour's twist.</summary>
         public IEnumerable<ExtraBone> TwistBones() => Extra.Where(bone => bone.TwistSource != null);
 
+        /// <summary>The capsules that keep physics chains off the body.</summary>
+        public List<BoneCollider> Colliders = new List<BoneCollider>();
+
+        /// <summary>The capsules that push the chains with one set of physics settings.</summary>
+        public IEnumerable<BoneCollider> CollidersFor(string physics) => Colliders.Where(collider => collider.Physics.Contains(physics));
+
         public bool IsExtra(string name) => Extra.Any(bone => bone.Name == name);
     }
 
@@ -259,11 +277,34 @@ namespace Wirenook.Cass.Editor
         /// <summary>On the first bone of a chain: which PhysBone settings it gets. Null elsewhere.</summary>
         public string Physics;
 
+        /// <summary>
+        /// On the first bone of a chain that carries only one garment: the UV
+        /// tile the garment is on. The chain's physics runs while that tile
+        /// is shown and is left out of a build that cuts the tile away. Null
+        /// for chains that are always worn.
+        /// </summary>
+        public string Tile;
+
         /// <summary>On a twist helper: the bone whose turn about its length it follows. Null elsewhere.</summary>
         public string TwistSource;
 
         /// <summary>How much of the source's twist a twist helper takes, 0 to 1.</summary>
         public float TwistWeight;
+    }
+
+    /// <summary>A capsule along a bone, from its joint to the joint of the next.</summary>
+    public sealed class BoneCollider
+    {
+        public string Bone;
+
+        /// <summary>The bone whose joint the capsule ends at.</summary>
+        public string To;
+
+        /// <summary>The capsule's thickness, in metres.</summary>
+        public float Radius;
+
+        /// <summary>The physics settings (<see cref="ExtraBone.Physics"/>) whose chains it pushes.</summary>
+        public List<string> Physics = new List<string>();
     }
 
     public sealed class VariantSpec

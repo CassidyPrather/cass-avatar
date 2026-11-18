@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
+using VRC.SDK3.Dynamics.PhysBone.Components;
 using VRC.SDKBase;
 using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
@@ -390,17 +391,29 @@ namespace Wirenook.Cass.Editor
         /// (see <see cref="TileToggle"/>). A zone is drawn only while no
         /// garment over it is shown, so two outfits that both cover the torso
         /// cannot disagree about it.
+        ///
+        /// A garment that hangs on physics chains of its own (skeleton.json,
+        /// `tile`) has their PhysBone switched with it, so the chains are
+        /// only simulated while there is cloth on them to see.
         /// </summary>
         private static void OutfitLayers(ControllerBuilder fx, TileLayout tiles, List<string> renderers)
         {
             foreach (var parameter in tiles.Defaults()) fx.Bool(parameter.Parameter, parameter.Value);
+
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(CassSpec.ModelPath);
+            if (model == null) throw new System.IO.FileNotFoundException("Export the model from Blender first: " + CassSpec.ModelPath);
+            var bones = model.GetComponentsInChildren<Transform>(true);
+            var chains = CassSpec.Skeleton().ChainRoots().Where(chain => chain.Tile != null)
+                .ToLookup(chain => tiles.Get(chain.Tile).Id, chain => AnimationUtility.CalculateTransformPath(
+                    bones.FirstOrDefault(bone => bone.name == chain.Name) ??
+                    throw new InvalidOperationException("The model has no bone named \"" + chain.Name + "\"."), model.transform));
 
             foreach (var tile in tiles.Tiles.Where(candidate => candidate.Toggle != null))
             {
                 var shown = TileLayout.ShownWhen(tile);
                 // Unity rejects dots in state machine names.
                 var layer = fx.Layer("Outfit: " + tile.Id.Replace('.', ' '));
-                TileSwitch(fx, layer, tile, renderers, tile.Shown,
+                TileSwitch(fx, layer, tile, renderers, chains[tile.Id].ToList(), tile.Shown,
                     show => AnyOf(show, new List<List<Condition>> { shown }),
                     hide => AnyOf(hide, shown.Select(condition => new List<Condition> { condition.Opposite }).ToList()));
             }
@@ -412,7 +425,7 @@ namespace Wirenook.Cass.Editor
                 if (covers.Count == 0) continue;
 
                 var layer = fx.Layer("Zone: " + zone.Id.Replace('.', ' '));
-                TileSwitch(fx, layer, zone, renderers, resting[zone.Id],
+                TileSwitch(fx, layer, zone, renderers, new List<string>(), resting[zone.Id],
                     show => AnyOf(show, TileLayout.NoneOf(covers)),
                     hide => AnyOf(hide, covers));
             }
@@ -443,12 +456,14 @@ namespace Wirenook.Cass.Editor
         }
 
         private static void TileSwitch(ControllerBuilder fx, LayerBuilder layer, Tile tile, List<string> renderers,
-            bool startsShown, Action<TransitionBuilder> whenShown, Action<TransitionBuilder> whenHidden)
+            List<string> chains, bool startsShown, Action<TransitionBuilder> whenShown, Action<TransitionBuilder> whenHidden)
         {
             AnimationClip Clip(bool shown) => fx.Clip(tile.Id + (shown ? " shown" : " hidden"), clip =>
             {
                 foreach (var renderer in renderers)
                     clip.Material<SkinnedMeshRenderer>(renderer, ToonMaterial.TileProperty(tile.Column, tile.Row), shown ? 0f : 1f);
+                foreach (var chain in chains)
+                    clip.Constant(chain, typeof(VRCPhysBone), "m_Enabled", shown ? 1f : 0f);
             });
 
             // The first state added is the layer default: it has to match what
