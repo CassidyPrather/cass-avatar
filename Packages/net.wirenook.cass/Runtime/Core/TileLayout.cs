@@ -13,6 +13,15 @@ namespace Wirenook.Cass.Core
         /// <summary>Whether the tile is visible when nothing animates it.</summary>
         public bool Shown = true;
 
+        /// <summary>
+        /// Whether Android and iOS builds carry the tile when it rests shown.
+        /// They cannot switch tiles, so what they carry is all they ever
+        /// show, and it has to fit their triangle limit: a garment that
+        /// does not fit is marked false and is cut from those builds like a
+        /// tile hidden at rest.
+        /// </summary>
+        public bool Mobile = true;
+
         /// <summary>Body zones this tile fully covers while it is shown.</summary>
         public List<string> Hides = new List<string>();
 
@@ -37,6 +46,15 @@ namespace Wirenook.Cass.Core
         public string Label;
         public string Icon;
         public bool When = true;
+
+        /// <summary>
+        /// The value the parameter rests at, where that cannot be told from
+        /// how the tile rests: shorts that are hidden at rest only because
+        /// the skirt is worn over them keep their switch on, so that taking
+        /// the skirt off shows them. Left out, the parameter rests at the
+        /// value that leaves the tile as <see cref="Tile.Shown"/> says.
+        /// </summary>
+        public bool? Rests;
         public List<string> Needs = new List<string>();
         public List<string> Unless = new List<string>();
     }
@@ -122,8 +140,8 @@ namespace Wirenook.Cass.Core
 
         /// <summary>
         /// The switch parameters, in the order the tiles introduce them, each
-        /// with the value it rests at: the one that leaves its tile as
-        /// <see cref="Tile.Shown"/> says.
+        /// with the value it rests at: the one its toggle names, or else the
+        /// one that leaves its tile as <see cref="Tile.Shown"/> says.
         /// </summary>
         public List<Condition> Defaults()
         {
@@ -131,7 +149,7 @@ namespace Wirenook.Cass.Core
             foreach (var tile in Tiles.Where(candidate => candidate.Toggle != null))
             {
                 if (defaults.Any(known => known.Parameter == tile.Toggle.Parameter)) continue;
-                defaults.Add(new Condition(tile.Toggle.Parameter, tile.Shown ? tile.Toggle.When : !tile.Toggle.When));
+                defaults.Add(new Condition(tile.Toggle.Parameter, tile.Toggle.Rests ?? (tile.Shown ? tile.Toggle.When : !tile.Toggle.When)));
             }
 
             return defaults;

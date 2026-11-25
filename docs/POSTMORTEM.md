@@ -363,3 +363,116 @@ there was something to look at. None of it has run in the client.
   ARKit set, a poorer match in style and better as a source of shapes.
   Licences are as the pages stated them on 2026-11-16 and want reading
   again at intake.
+
+## Third session: notes from wearing it
+
+The avatar was worn at an event on 2026-11-19, briefly, and the session of
+that night and the next morning worked through what was noticed. Most of
+it is in the README; this is what does not belong there.
+
+### What changed
+
+- **The model.** The vest's armholes were recut and its weights taken from
+  the sweater under it; the speaking shapes hide the teeth; the neck is
+  thicker; the boots are closed inside and the legs go down into them. The
+  skirt's front hangs from two bones that the thighs carry. The skirt and
+  the vest rest on.
+- **A second wardrobe**, `cyber`, and with it a variant per wardrobe, an
+  emission mask for the atlas, and `cass-quickhack`, the first variant to
+  carry a bought asset that is not in the repository.
+- **Hands.** A feature that uses a hand as a button now says so, and the
+  avatar shows no expression for that hand meanwhile. The portal is aimed
+  with a raycast and set down with a fist; the laser's ping no longer
+  grins.
+- **Modules.** The shape collector's shapes are solids and its gate a
+  portcullis skinned between its posts; every sound sits at one loudness,
+  six decibels up; the carry seat turns through a pivot held in the world;
+  the censor draws only where the avatar has marked the stencil.
+
+### What went wrong
+
+- **The editor stood blocked for a quarter of an hour** behind "The open
+  scene(s) have been modified externally". The previous session had put
+  the validation scene's file back with `git checkout` after an upload
+  saved the build framework's hidden object into it, and the next refresh
+  asked what to do. A modal dialog stops the bridge without a word. It
+  was answered with "Ignore", which discards nothing, and `CassUpload.Tidy`
+  now keeps that object out of the saved scene so the file has no reason
+  to be put back.
+- **Thickening the neck changed the face.** The step that draws the head's
+  neck in works through the neck bone's weights, which reach to the mouth,
+  and it also catches everything near the neck opening, which is where the
+  inside of the mouth sits. Nobody had noticed because the old radius was
+  almost the source's own. The jaw is now drawn in exactly as before and
+  only four rings of the stub follow the new radius; the check was a
+  vertex-by-vertex comparison of the head against the committed model.
+- **Unity and Blender disagree about many-sided faces.** The new armhole
+  cut left pentagons and worse. Blender draws them correctly; Unity
+  discarded two that crossed themselves (they turned out to be older, the
+  neckerchief's corners) and fanned a concave one into a pale patch on the
+  vest's back. The generator now triangulates what its cuts leave.
+- **The mobile build could not take the new resting outfit whole.** With
+  the vest it is about 16,300 triangles against Medium's 15,000, so the
+  vest is cut from mobile builds; and the skirt's physics is several times
+  the mobile PhysBone limits, so there the skirt is carried by its lifts
+  alone. Both are per-platform exceptions in the specs, not accidents of
+  what happens to rest hidden.
+- **Two sessions edited `garments.py` at once**, one of them a helper
+  building the second wardrobe, which at one point restored the file from
+  its own copy. Every edit was found afterwards, by looking for each.
+- **The model build is not quite repeatable.** A set of faces was handed
+  to the triangulator in whatever order the set had, which differs from
+  run to run; the vest's triangle count moved by a dozen between builds of
+  the same code. That one is sorted now. Others may remain.
+
+### Gotchas, added
+
+- **A PhysBone collider is not enough to keep fast limbs out of cloth.**
+  It tests once a frame, and at an event's frame rate a knee crosses a
+  chain's thickness between two tests; a hinged chain that is hit off its
+  axis is also pushed sideways and snapped back inside. What is certain is
+  only what is kinematic: a bone the limb itself turns.
+- **`VRCRaycast`** (version 1.1 in SDK 3.10.6) is cast on every viewer's
+  client, may not have its own transform or a parent of it as its result,
+  reports a miss while disabled, and counts for rank on its own row (PC:
+  one is Excellent, four Good; mobile: one and two).
+- **A constraint's `SmoothingFactor` is a time in seconds**: it covers 63%
+  of what is left every that long, whatever the frame rate. Whether it
+  eases an object that its own parent has just moved is not documented,
+  which is why the seat's pivot is held in the world.
+- **lilToon exposes the stencil as material properties** on both its
+  surface and its outline passes, which is all a per-avatar mask needs.
+- **A stored agreement survives script reloads** (the SDK keeps it in the
+  editor's session state), but it was recorded again after a reload
+  anyway.
+- **Booth terms differ per asset and are in the archive**, not on the
+  page. The ones met so far license the purchaser alone and forbid public
+  uploads and use as training data; such an asset is imported locally,
+  never read into anything that leaves the machine beyond its file names
+  and its terms, and referred to by GUID.
+
+### Open, from this session
+
+Nothing here has run in the client except as noted in the README's
+status.
+
+- **The hand lock** rests on parameter drivers that run on every viewer's
+  client and on a release rule (the hand relaxes, or 1.2 s pass) that has
+  never met a controller.
+- **Aiming.** Whether the preview trails the hand, what "the world" means
+  to a raycast in a given world, and whether a fist is a usable click on
+  each kind of controller. There is no menu button to set down with.
+- **The skirt's lifts** take half the thigh's turn on PC and four fifths
+  on mobile; both numbers are from pictures of poses. A stride swings the
+  front of the skirt with it, which may be too much.
+- **The seat** trades a jolt for a turn that takes a second and a half.
+- **The censor** on an avatar whose materials do not mark the stencil
+  draws nothing, and anything else that marks the same bit is pixelated
+  where it shows through the outline.
+- **The cyber wardrobe** was judged from renders alone: the collar comes a
+  centimetre through the vest's neck edge with the arms raised, and the
+  tail passes through the back of the skirt, as it does through the
+  gingham one.
+- **Whose licence.** The bought prop was a gift. Its terms license the
+  purchaser alone, so the upload is only in order if it was given through
+  the shop's own gifting, or bought on the wearer's account.

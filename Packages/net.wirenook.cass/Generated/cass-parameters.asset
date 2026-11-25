@@ -62,7 +62,7 @@ MonoBehaviour:
   - name: Outfit/Skirt
     valueType: 2
     saved: 1
-    defaultValue: 0
+    defaultValue: 1
     networkSynced: 1
     bitWidth: 8
     useCustomLerpDuration: 0
@@ -71,7 +71,7 @@ MonoBehaviour:
   - name: Outfit/Vest
     valueType: 2
     saved: 1
-    defaultValue: 0
+    defaultValue: 1
     networkSynced: 1
     bitWidth: 8
     useCustomLerpDuration: 0

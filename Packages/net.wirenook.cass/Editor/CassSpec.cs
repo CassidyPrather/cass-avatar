@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using UnityEditor;
 using UnityEngine;
 using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
@@ -25,6 +26,16 @@ namespace Wirenook.Cass.Editor
         /// take their meshes from here (see <see cref="CassBuildPlugin"/>).
         /// </summary>
         public const string LiteModelPath = ExportFolder + "/cass-lite.fbx";
+
+        /// <summary>
+        /// The export a build takes its meshes from: one per wardrobe and
+        /// fidelity level, all on the same skeleton. No wardrobe named is
+        /// the first one, the one the prefabs hold.
+        /// </summary>
+        public static string ModelFor(string wardrobe, bool lite)
+        {
+            return ExportFolder + "/cass" + (string.IsNullOrEmpty(wardrobe) ? "" : "-" + wardrobe) + (lite ? "-lite" : "") + ".fbx";
+        }
         public const string GeneratedFolder = Package + "/Generated";
         public const string PrefabFolder = Package + "/Prefabs";
 
@@ -65,6 +76,7 @@ namespace Wirenook.Cass.Editor
                     Column = (int)token["column"],
                     Row = (int)token["row"],
                     Shown = (bool)token["shown"],
+                    Mobile = (bool?)token["mobile"] ?? true,
                     Hides = token["hides"]?.Select(zone => (string)zone).ToList() ?? new List<string>(),
                     Toggle = toggle == null
                         ? null
@@ -74,6 +86,7 @@ namespace Wirenook.Cass.Editor
                             Label = (string)toggle["label"],
                             Icon = (string)toggle["icon"],
                             When = (bool?)toggle["when"] ?? true,
+                            Rests = (bool?)toggle["rests"],
                             Needs = toggle["needs"]?.Select(parameter => (string)parameter).ToList() ?? new List<string>(),
                             Unless = toggle["unless"]?.Select(parameter => (string)parameter).ToList() ?? new List<string>(),
                         },
@@ -122,23 +135,33 @@ namespace Wirenook.Cass.Editor
             }
 
             var skeleton = Skeleton();
-            foreach (var entry in (JObject)json["poses"] ?? new JObject())
+            Dictionary<string, Dictionary<string, BoneTurn>> PosesIn(JObject table)
             {
-                var turns = new Dictionary<string, BoneTurn>();
-                foreach (var bone in (JObject)entry.Value)
+                var poses = new Dictionary<string, Dictionary<string, BoneTurn>>();
+                foreach (var entry in table ?? new JObject())
                 {
-                    var degrees = bone.Value.Select(value => (float)value).ToList();
-                    if (degrees.Count != 3)
-                        throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" needs [forward, out, twist] for " + bone.Key + ".");
-                    var sided = skeleton.IsExtra(bone.Key);
-                    if (!sided && !(skeleton.IsExtra(bone.Key + ".L") && skeleton.IsExtra(bone.Key + ".R")))
-                        throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" turns \"" + bone.Key +
-                                                       "\", which is not an extra bone in skeleton.json. Poses may not move humanoid bones.");
-                    turns[bone.Key] = new BoneTurn { Forward = degrees[0], Out = degrees[1], Twist = degrees[2] };
+                    var turns = new Dictionary<string, BoneTurn>();
+                    foreach (var bone in (JObject)entry.Value)
+                    {
+                        var degrees = bone.Value.Select(value => (float)value).ToList();
+                        if (degrees.Count != 3)
+                            throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" needs [forward, out, twist] for " + bone.Key + ".");
+                        var sided = skeleton.IsExtra(bone.Key);
+                        if (!sided && !(skeleton.IsExtra(bone.Key + ".L") && skeleton.IsExtra(bone.Key + ".R")))
+                            throw new InvalidDataException("gestures.json: pose \"" + entry.Key + "\" turns \"" + bone.Key +
+                                                           "\", which is not an extra bone in skeleton.json. Poses may not move humanoid bones.");
+                        turns[bone.Key] = new BoneTurn { Forward = degrees[0], Out = degrees[1], Twist = degrees[2] };
+                    }
+
+                    poses[entry.Key] = turns;
                 }
 
-                layout.Poses[entry.Key] = turns;
+                return poses;
             }
+
+            layout.Poses = PosesIn((JObject)json["poses"]);
+            foreach (var worn in (JObject)json["posesWhile"] ?? new JObject())
+                layout.PosesWhile[worn.Key] = PosesIn((JObject)worn.Value);
 
             var shapes = Blendshapes();
             Require(layout.Validate(shapes.All().ToList(), Tiles().Tiles.Select(tile => tile.Id).ToList()), "gestures.json");
@@ -159,12 +182,17 @@ namespace Wirenook.Cass.Editor
             foreach (var token in json["extra"] ?? new JArray())
             {
                 var twist = token["twist"];
+                var follow = token["follow"];
                 spec.Extra.Add(new ExtraBone
                 {
                     Name = (string)token["name"],
                     Parent = (string)token["parent"],
                     Physics = (string)token["physics"],
                     Tile = (string)token["tile"],
+                    PcOnly = (bool?)token["pcOnly"] ?? false,
+                    FollowSource = follow == null ? null : (string)follow["source"],
+                    FollowWeight = follow == null ? 0f : (float)follow["weight"],
+                    FollowWeightAlone = follow == null ? 0f : (float?)follow["weightAlone"] ?? (float)follow["weight"],
                     TwistSource = twist == null ? null : (string)twist["source"],
                     TwistWeight = twist == null ? 0f : (float)twist["weight"],
                 });
@@ -195,11 +223,20 @@ namespace Wirenook.Cass.Editor
                     Slug = (string)token["slug"],
                     Extends = (string)token["extends"],
                     Lite = (string)token["model"] == "lite",
+                    Wardrobe = (string)token["wardrobe"],
                     WorstRank = (string)token["worstRank"] ?? "Good",
                     WorstRankMobile = (string)token["worstRankMobile"] ?? (string)token["worstRank"] ?? "Good",
                     Platforms = token["platforms"]?.Select(name => WirenookPlatform.Parse((string)name)).ToList()
                                 ?? new List<Platform> { Platform.Pc, Platform.Android, Platform.Ios },
                     Features = token["features"]?.Select(path => (string)path).ToList() ?? new List<string>(),
+                    Local = token["local"]?.Select(asset => new LocalAsset
+                    {
+                        Guid = (string)asset["guid"],
+                        Name = (string)asset["name"],
+                        Author = (string)asset["author"],
+                        Url = (string)asset["url"],
+                        AtView = (bool?)asset["atView"] ?? false,
+                    }).ToList() ?? new List<LocalAsset>(),
                 });
             }
 
@@ -260,6 +297,9 @@ namespace Wirenook.Cass.Editor
         /// <summary>The helpers that follow a neighbour's twist.</summary>
         public IEnumerable<ExtraBone> TwistBones() => Extra.Where(bone => bone.TwistSource != null);
 
+        /// <summary>The bones that are carried part of the way with a limb.</summary>
+        public IEnumerable<ExtraBone> FollowBones() => Extra.Where(bone => bone.FollowSource != null);
+
         /// <summary>The capsules that keep physics chains off the body.</summary>
         public List<BoneCollider> Colliders = new List<BoneCollider>();
 
@@ -284,6 +324,21 @@ namespace Wirenook.Cass.Editor
         /// for chains that are always worn.
         /// </summary>
         public string Tile;
+
+        /// <summary>
+        /// On the first bone of a chain: its physics is more than Android and
+        /// iOS have room for, and builds for them leave it out.
+        /// </summary>
+        public bool PcOnly;
+
+        /// <summary>On a bone that is carried with a limb: the bone it turns with. Null elsewhere.</summary>
+        public string FollowSource;
+
+        /// <summary>How much of the source's turn from rest such a bone takes, 0 to 1.</summary>
+        public float FollowWeight;
+
+        /// <summary>The same for a build that leaves the bone's physics out, where nothing else keeps the limb from coming through.</summary>
+        public float FollowWeightAlone;
 
         /// <summary>On a twist helper: the bone whose turn about its length it follows. Null elsewhere.</summary>
         public string TwistSource;
@@ -325,6 +380,9 @@ namespace Wirenook.Cass.Editor
         /// <summary>Builds from the low-polygon model on every platform, not only on mobile.</summary>
         public bool Lite;
 
+        /// <summary>The wardrobe the variant is built wearing; null is the first one, which the prefabs hold.</summary>
+        public string Wardrobe;
+
         /// <summary>The worst VRChat performance rank this variant may build to on PC.</summary>
         public string WorstRank;
 
@@ -338,5 +396,35 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Asset paths of the feature prefabs this variant adds.</summary>
         public List<string> Features;
+
+        /// <summary>
+        /// Prefabs this variant adds that are not in the repository: things
+        /// whose terms do not allow passing them on, kept only on the
+        /// machine of whoever holds the licence. A variant with any of them
+        /// can only be made where they are all present, and uploads private.
+        /// </summary>
+        public List<LocalAsset> Local = new List<LocalAsset>();
+
+        /// <summary>The local assets that are not in this project, by name.</summary>
+        public List<LocalAsset> Absent() => Local.Where(asset => string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(asset.Guid))).ToList();
+    }
+
+    /// <summary>
+    /// A prefab known only by its GUID, which is all the repository holds of
+    /// it. The GUID is the one in the asset's own .meta file as its author
+    /// shipped it, so importing the author's package is enough to find it.
+    /// </summary>
+    public sealed class LocalAsset
+    {
+        public string Guid;
+        public string Name;
+        public string Author;
+        public string Url;
+
+        /// <summary>Placed at the avatar's view position instead of its feet (a visor, a HUD).</summary>
+        public bool AtView;
+
+        /// <summary>How an avatar that carries it credits it.</summary>
+        public string Credit => Name + " by " + Author + " (" + Url + ")";
     }
 }

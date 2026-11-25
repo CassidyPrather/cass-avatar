@@ -926,66 +926,6 @@ ModelImporter:
       rotation: {x: -0.00000001862643, y: 0.000000007436145, z: 0.0000000074361433,
         w: 1}
       scale: {x: 1, y: 1, z: 1}
-    - name: SkirtFront1.L
-      parentName: SkirtRoot
-      position: {x: -0.021322628, y: -0.000000034299042, z: 0.12092663}
-      rotation: {x: -0.085530244, y: 0.1698648, z: 0.9816037, w: 0.016874906}
-      scale: {x: 1.0000027, y: 1.0000008, z: 1.0000008}
-    - name: SkirtFront2.L
-      parentName: SkirtFront1.L
-      position: {x: 0.0000000067520887, y: 0.21519125, z: -0.000000004656613}
-      rotation: {x: -0.0338451, y: 0.00012451876, z: 0.00038975105, w: 0.999427}
-      scale: {x: 1.0000005, y: 1.0000005, z: 1}
-    - name: SkirtFront3.L
-      parentName: SkirtFront2.L
-      position: {x: -0.000000005820766, y: 0.23096372, z: -0.000000022351742}
-      rotation: {x: -0.009614539, y: 0.00003432407, z: 0.00012600035, w: 0.9999538}
-      scale: {x: 1.0000038, y: 1.0000025, z: 0.99999994}
-    - name: SkirtFront1.R
-      parentName: SkirtRoot
-      position: {x: 0.021322628, y: -0.000000034299042, z: 0.12092663}
-      rotation: {x: 0.085530244, y: 0.1698648, z: 0.9816037, w: -0.016874906}
-      scale: {x: 1.0000027, y: 1.0000008, z: 1.0000008}
-    - name: SkirtFront2.R
-      parentName: SkirtFront1.R
-      position: {x: -0.0000000067520887, y: 0.21519125, z: -0.000000004656613}
-      rotation: {x: -0.0338451, y: -0.00012451876, z: -0.00038975105, w: 0.999427}
-      scale: {x: 1.0000005, y: 1.0000005, z: 1}
-    - name: SkirtFront3.R
-      parentName: SkirtFront2.R
-      position: {x: 0.000000005820766, y: 0.23096372, z: -0.000000022351742}
-      rotation: {x: -0.009614539, y: -0.00003432407, z: -0.00012600035, w: 0.9999538}
-      scale: {x: 1.0000038, y: 1.0000025, z: 0.99999994}
-    - name: SkirtThigh1.L
-      parentName: SkirtRoot
-      position: {x: -0.07785721, y: -0.000000033135574, z: 0.11542806}
-      rotation: {x: -0.287344, y: 0.15554467, z: 0.9435513, w: 0.05431642}
-      scale: {x: 1.000005, y: 1.0000037, z: 1.0000006}
-    - name: SkirtThigh2.L
-      parentName: SkirtThigh1.L
-      position: {x: -0.000000013038516, y: 0.21428367, z: -0.000000029802322}
-      rotation: {x: -0.03691626, y: 0.00038163963, z: 0.0012608356, w: 0.99931747}
-      scale: {x: 0.9999997, y: 1.000001, z: 0.9999998}
-    - name: SkirtThigh3.L
-      parentName: SkirtThigh2.L
-      position: {x: -0.0000000060535967, y: 0.22981732, z: 0.000000007450581}
-      rotation: {x: -0.0043343194, y: 0.000105165265, z: 0.0004071293, w: 0.9999906}
-      scale: {x: 1.0000008, y: 1.0000017, z: 0.9999996}
-    - name: SkirtThigh1.R
-      parentName: SkirtRoot
-      position: {x: 0.07785721, y: -0.000000033135574, z: 0.11542806}
-      rotation: {x: 0.287344, y: 0.15554467, z: 0.9435513, w: -0.05431642}
-      scale: {x: 1.000005, y: 1.0000037, z: 1.0000006}
-    - name: SkirtThigh2.R
-      parentName: SkirtThigh1.R
-      position: {x: 0.000000013038516, y: 0.21428367, z: -0.000000029802322}
-      rotation: {x: -0.03691626, y: -0.00038163963, z: -0.0012608356, w: 0.99931747}
-      scale: {x: 0.9999997, y: 1.000001, z: 0.9999998}
-    - name: SkirtThigh3.R
-      parentName: SkirtThigh2.R
-      position: {x: 0.0000000060535967, y: 0.22981732, z: 0.000000007450581}
-      rotation: {x: -0.0043343194, y: -0.000105165265, z: -0.0004071293, w: 0.9999906}
-      scale: {x: 1.0000008, y: 1.0000017, z: 0.9999996}
     - name: SkirtSide1.L
       parentName: SkirtRoot
       position: {x: -0.1717258, y: -0.000000018447896, z: 0.046013787}
@@ -1076,6 +1016,76 @@ ModelImporter:
       position: {x: 0.000000005122274, y: 0.23262155, z: 0.000000014901161}
       rotation: {x: -0.008278484, y: -0.00008095503, z: -0.00026985267, w: 0.9999657}
       scale: {x: 0.9999997, y: 1.0000066, z: 1.0000058}
+    - name: SkirtLift.L
+      parentName: Hips
+      position: {x: -0.07821307, y: -0.060582165, z: -0.032707047}
+      rotation: {x: -0.00000007450589, y: 0.0000000074361455, z: 7.321321e-24, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: SkirtFront1.L
+      parentName: SkirtLift.L
+      position: {x: 0.056890447, y: 0.1676814, z: 0.1417856}
+      rotation: {x: -0.08553022, y: 0.16986477, z: 0.9816037, w: 0.016874937}
+      scale: {x: 1.0000025, y: 1.0000014, z: 1.0000001}
+    - name: SkirtFront2.L
+      parentName: SkirtFront1.L
+      position: {x: -2.3283064e-10, y: 0.21519125, z: -0.0000000027939677}
+      rotation: {x: -0.033845097, y: 0.00012452528, z: 0.0003897529, w: 0.999427}
+      scale: {x: 1.0000005, y: 1.000001, z: 0.9999999}
+    - name: SkirtFront3.L
+      parentName: SkirtFront2.L
+      position: {x: 0.000000003259629, y: 0.23096366, z: -0.0000000037252903}
+      rotation: {x: -0.009614603, y: 0.000034298577, z: 0.0001259845, w: 0.9999538}
+      scale: {x: 1.0000014, y: 1.0000032, z: 1.0000004}
+    - name: SkirtThigh1.L
+      parentName: SkirtLift.L
+      position: {x: 0.00035586028, y: 0.16768141, z: 0.13628703}
+      rotation: {x: -0.28734383, y: 0.15554479, z: 0.9435513, w: 0.054316644}
+      scale: {x: 1.0000027, y: 1.0000036, z: 0.9999996}
+    - name: SkirtThigh2.L
+      parentName: SkirtThigh1.L
+      position: {x: -0.000000006519258, y: 0.21428375, z: 0.000000022351742}
+      rotation: {x: -0.036916237, y: 0.00038153538, z: 0.0012608059, w: 0.9993175}
+      scale: {x: 1.0000005, y: 1.0000002, z: 1.0000011}
+    - name: SkirtThigh3.L
+      parentName: SkirtThigh2.L
+      position: {x: -0.000000007450581, y: 0.22981745, z: 0.000000014901161}
+      rotation: {x: -0.0043344237, y: 0.00010516573, z: 0.00040714085, w: 0.9999906}
+      scale: {x: 1.0000074, y: 1.0000062, z: 1.0000007}
+    - name: SkirtLift.R
+      parentName: Hips
+      position: {x: 0.07821307, y: -0.060582165, z: -0.032707054}
+      rotation: {x: -0.00000003725294, y: 0.0000000074361455, z: 1.8863524e-24, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: SkirtFront1.R
+      parentName: SkirtLift.R
+      position: {x: -0.05689044, y: 0.16768141, z: 0.1417856}
+      rotation: {x: 0.08553022, y: 0.1698648, z: 0.9816037, w: -0.01687494}
+      scale: {x: 1.0000026, y: 1.0000013, z: 1.0000001}
+    - name: SkirtFront2.R
+      parentName: SkirtFront1.R
+      position: {x: 0.000000003259629, y: 0.21519129, z: -0.00000004656613}
+      rotation: {x: -0.033845082, y: -0.00012453063, z: -0.000389738, w: 0.999427}
+      scale: {x: 1.0000007, y: 1.0000005, z: 0.9999999}
+    - name: SkirtFront3.R
+      parentName: SkirtFront2.R
+      position: {x: 0.0000000013969839, y: 0.23096377, z: -0.000000005122274}
+      rotation: {x: -0.009614573, y: -0.000034321816, z: -0.00012598801, w: 0.9999538}
+      scale: {x: 1.0000035, y: 1.0000031, z: 0.9999999}
+    - name: SkirtThigh1.R
+      parentName: SkirtLift.R
+      position: {x: -0.0003558639, y: 0.16768141, z: 0.13628703}
+      rotation: {x: 0.28734398, y: 0.15554471, z: 0.94355124, w: -0.054316543}
+      scale: {x: 0.9999999, y: 1.0000001, z: 1.0000001}
+    - name: SkirtThigh2.R
+      parentName: SkirtThigh1.R
+      position: {x: -0.000000008381903, y: 0.21428359, z: -0.000000014901161}
+      rotation: {x: -0.03691625, y: -0.00038148186, z: -0.0012608357, w: 0.9993175}
+      scale: {x: 1, y: 0.9999985, z: 0.9999995}
+    - name: SkirtThigh3.R
+      parentName: SkirtThigh2.R
+      position: {x: 0.0000000027939677, y: 0.22981738, z: -0.000000007450581}
+      rotation: {x: -0.0043343753, y: -0.000105166546, z: -0.00040713366, w: 0.9999906}
+      scale: {x: 1.000004, y: 1.000005, z: 1.0000004}
     - name: Tail1
       parentName: Hips
       position: {x: -0.0000000010157337, y: -0.028367095, z: -0.09666417}

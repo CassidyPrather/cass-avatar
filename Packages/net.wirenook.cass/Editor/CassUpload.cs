@@ -57,7 +57,7 @@ namespace Wirenook.Cass.Editor
             try
             {
                 var record = Compose(instance, default, out var dropped);
-                var problems = Check(record);
+                var problems = Check(record, instance);
                 return "name: " + record.Name + "\n" +
                        "description: " + record.Description + "\n" +
                        "tags: " + string.Join(", ", record.Tags) + "\n" +
@@ -75,13 +75,14 @@ namespace Wirenook.Cass.Editor
         /// <summary>What VRChat currently holds for a variant that has been uploaded.</summary>
         public static async Task<string> Live(string slug)
         {
-            var pipeline = CassBuild.LoadVariant(slug).GetComponent<PipelineManager>();
+            var variant = CassBuild.LoadVariant(slug);
+            var pipeline = variant.GetComponent<PipelineManager>();
             var blueprint = pipeline != null ? pipeline.blueprintId : "";
             if (string.IsNullOrEmpty(blueprint)) return slug + " has not been uploaded.";
 
             await SignedIn();
             var live = await VRCApi.GetAvatar(blueprint, true);
-            var problems = Check(live);
+            var problems = Check(live, variant);
             return "id: " + live.ID + "\n" +
                    "name: " + live.Name + "\n" +
                    "description: " + live.Description + "\n" +
@@ -140,7 +141,7 @@ namespace Wirenook.Cass.Editor
         {
             var live = await VRCApi.GetAvatar(blueprint, true);
             var record = Compose(instance, live, out _);
-            var problems = Check(record);
+            var problems = Check(record, instance);
             if (problems.Count > 0)
                 throw new InvalidOperationException("Refused by the upload policy:\n  " + string.Join("\n  ", problems));
 
@@ -209,7 +210,7 @@ namespace Wirenook.Cass.Editor
                 foreach (var tag in dropped)
                     Debug.LogWarning("[cass] Tag " + tag + " was dropped: VRChat accepts " + Wirenook.Assets.Core.FeatureTags.Limit + " tags per avatar.");
 
-                var problems = Check(record);
+                var problems = Check(record, instance);
                 if (problems.Count > 0)
                     throw new InvalidOperationException("Upload refused by the upload policy:\n  " + string.Join("\n  ", problems));
 
@@ -230,8 +231,8 @@ namespace Wirenook.Cass.Editor
                 // when the SDK reserved the id, not the one composed here,
                 // and that one is private. Send ours once the avatar exists.
                 var live = await VRCApi.GetAvatar(assigned, true);
-                if (Check(live).Count > 0) live = await SendRecord(instance, assigned);
-                var drift = Check(live);
+                if (Check(live, instance).Count > 0) live = await SendRecord(instance, assigned);
+                var drift = Check(live, instance);
                 return "Uploaded " + slug + " for " + WirenookPlatform.Name(platform) + " as " + assigned + " (" + report.performanceRank + ")." +
                        (drift.Count == 0
                            ? " VRChat's record matches the upload policy."
@@ -264,9 +265,18 @@ namespace Wirenook.Cass.Editor
             foreach (var leftover in leftovers) UnityEngine.Object.DestroyImmediate(leftover);
             if (!string.IsNullOrEmpty(scene.path))
             {
+                // The build framework keeps a hidden object of its own in every open
+                // scene. Saved, it is a change to a committed file after every upload,
+                // and putting the file back makes Unity stop and ask what to do about
+                // a scene changed behind its back. It is kept out of the file instead.
+                var passing = scene.GetRootGameObjects()
+                    .Where(root => root.name.StartsWith("nadena.dev.ndmf", StringComparison.Ordinal))
+                    .ToDictionary(root => root, root => root.hideFlags);
+                foreach (var root in passing.Keys) root.hideFlags |= HideFlags.DontSaveInEditor;
                 // Unity skips saving a scene it believes unchanged.
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
                 UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+                foreach (var root in passing) root.Key.hideFlags = root.Value;
             }
 
             return leftovers.Count;
@@ -310,13 +320,16 @@ namespace Wirenook.Cass.Editor
             var kept = (existing.Tags ?? new List<string>())
                 .Where(tag => !tag.StartsWith(Wirenook.Assets.Core.FeatureTags.Prefix, StringComparison.Ordinal));
             record.Tags = CassBuild.ComposeTags(avatar, out dropped).Concat(kept).Distinct().ToList();
-            record.ReleaseStatus = new UploadPolicy().ReleaseStatus;
+            record.ReleaseStatus = profile.Policy().ReleaseStatus;
             return record;
         }
 
-        public static List<string> Check(VRCAvatar record)
+        /// <param name="avatar">The variant the record is for; its profile says which policy applies.</param>
+        public static List<string> Check(VRCAvatar record, GameObject avatar)
         {
-            return UploadGuard.Check(new UploadPolicy(), record.Name, record.Description, record.Tags, record.ReleaseStatus);
+            var profile = avatar != null ? avatar.GetComponent<AvatarUploadProfile>() : null;
+            var policy = profile != null ? profile.Policy() : new UploadPolicy();
+            return UploadGuard.Check(policy, record.Name, record.Description, record.Tags, record.ReleaseStatus);
         }
 
         private static string Blueprint(GameObject avatar)
@@ -383,7 +396,7 @@ namespace Wirenook.Cass.Editor
                 return;
             }
 
-            var problems = CassUpload.Check(pending);
+            var problems = CassUpload.Check(pending, avatar.gameObject);
             if (problems.Count == 0) return;
 
             builder.CancelUpload();

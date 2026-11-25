@@ -71,10 +71,11 @@ def zones(mesh):
     return [SEGMENT_ZONE[SEGMENTS[index]] for index in face_segments(mesh)]
 
 
-def fit_neck(obj, seam_centre, seam_radius, overlap):
-    """Flares the top of the neck to the head's neck opening and trims what would sit inside the head.
+def fit_neck(obj, seam_centre, seam_radius, overlap, girth=1.0):
+    """Thickens the neck, flares its top to the head's neck opening and trims what would sit inside the head.
 
-    The neck keeps its own shape at its base and reaches `seam_radius` at the
+    The neck keeps its own shape where it leaves the shoulders, is `girth`
+    times as thick a little above that, and reaches `seam_radius` at the
     height of `seam_centre`, a hair inside the head's opening so the two
     surfaces never share a depth.
     """
@@ -87,6 +88,14 @@ def fit_neck(obj, seam_centre, seam_radius, overlap):
         neck[list(mesh.polygons[index].vertices)] = True
     base = co[neck][:, 2].min()
     top = seam_centre[2]
+
+    if girth != 1.0:
+        # About the neck's own axis, which leans: from the middle of its base to the seam's centre.
+        foot = co[neck & (co[:, 2] < base + 0.012)][:, :2].mean(axis=0)
+        along = np.clip((co[:, 2] - base) / (top - base), 0.0, 1.0)[:, None]
+        axis = foot + (np.array(seam_centre[:2]) - foot) * along
+        swell = 1.0 + (girth - 1.0) * common.smoothstep(base, base + 0.45 * (top - base), co[:, 2])
+        co[neck, :2] = axis[neck] + (co[neck, :2] - axis[neck]) * swell[neck, None]
 
     ring = neck & (np.abs(co[:, 2] - top) < 0.02)
     offsets = co[ring][:, :2] - np.array(seam_centre[:2])

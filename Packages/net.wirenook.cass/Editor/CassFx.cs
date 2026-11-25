@@ -7,6 +7,7 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 using VRC.SDKBase;
+using Wirenook.Assets;
 using Wirenook.Assets.Editor;
 using Wirenook.Cass.Core;
 
@@ -56,6 +57,15 @@ namespace Wirenook.Cass.Editor
             var renderers = BodyMaterialRenderers();
 
             var fx = ControllerBuilder.Rebuild(ControllerPath);
+            // A hand some feature is using as a button shows no expression (HandLayers).
+            // Everything below reads the gesture a hand is making through these names.
+            var claims = HandClaims();
+            _gesture = new Dictionary<Hand, string>
+            {
+                { Hand.Left, claims[Hand.Left].Count > 0 ? "Hands/Left" : "GestureLeft" },
+                { Hand.Right, claims[Hand.Right].Count > 0 ? "Hands/Right" : "GestureRight" },
+            };
+
             fx.Int("GestureLeft").Int("GestureRight")
                 .Bool(UserFaceTracking).Bool(UserEyeTracking)
                 .Bool(TrackingEnabled, true)
@@ -68,9 +78,110 @@ namespace Wirenook.Cass.Editor
             foreach (var region in GestureLayout.TrackedRegions) HandoverLayer(fx, region, gestures);
             BlinkLayer(fx, shapes.Mesh, gestures);
             OutfitLayers(fx, tiles, renderers);
-            PoseLayer(fx, gestures);
+            PoseLayer(fx, gestures, tiles);
+            // Last: nothing may come before the two gesture layers, and a frame's delay is nothing here.
+            foreach (var hand in new[] { Hand.Left, Hand.Right }) HandLayer(fx, hand, claims[hand]);
 
             fx.Save();
+        }
+
+        /// <summary>
+        /// The animator parameter each hand's gesture is read from: VRChat's
+        /// own, or the one <see cref="HandLayer"/> keeps for a hand that
+        /// features use as a button. Set by <see cref="Rebuild"/>.
+        /// </summary>
+        private static Dictionary<Hand, string> _gesture;
+
+        /// <summary>How long a hand goes on resting after a feature lets go of it, if it has not relaxed by then.</summary>
+        private const float HandRelease = 1.2f;
+
+        /// <summary>
+        /// The parameters that say a hand is in use as a button, by hand:
+        /// every <see cref="WirenookHandClaim"/> on a feature any variant
+        /// lists. The controller is shared by all variants, so it knows them
+        /// all; in a variant without the feature the parameter is never on.
+        /// </summary>
+        private static Dictionary<Hand, List<string>> HandClaims()
+        {
+            var claims = new Dictionary<Hand, List<string>> { { Hand.Left, new List<string>() }, { Hand.Right, new List<string>() } };
+            foreach (var path in CassSpec.Variants().Variants.SelectMany(variant => variant.Features).Distinct())
+            {
+                var feature = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (feature == null) continue;
+                foreach (var claim in feature.GetComponentsInChildren<WirenookHandClaim>(true))
+                {
+                    if (string.IsNullOrWhiteSpace(claim.parameter)) continue;
+                    var list = claims[claim.hand == WirenookHand.Left ? Hand.Left : Hand.Right];
+                    if (!list.Contains(claim.parameter)) list.Add(claim.parameter);
+                }
+            }
+
+            foreach (var list in claims.Values) list.Sort(string.CompareOrdinal);
+            return claims;
+        }
+
+        /// <summary>
+        /// Keeps the gesture a hand counts as making, for a hand that some
+        /// feature uses as a button (a trigger pull that pings, or sets
+        /// something down). While any of the features' parameters is on,
+        /// that is no gesture at all, so the click is not also a grin; it
+        /// stays so afterwards until the hand has relaxed, or a moment has
+        /// passed, so that the fist that confirmed is never read as an
+        /// expression either. Otherwise it is the gesture VRChat reports.
+        ///
+        /// Every state sets the parameter with a driver, and drivers that
+        /// are not marked local run for every viewer, so everyone's copy of
+        /// the avatar agrees. The expressions, the blink, the tracking
+        /// hand-over and the ear poses all read this parameter for such a
+        /// hand. A hand no feature claims is read from VRChat directly and
+        /// has no layer.
+        /// </summary>
+        private static void HandLayer(ControllerBuilder fx, Hand hand, List<string> claims)
+        {
+            if (claims.Count == 0) return;
+            var source = hand == Hand.Left ? "GestureLeft" : "GestureRight";
+            var kept = _gesture[hand];
+            fx.Int(kept);
+            foreach (var claim in claims) fx.Bool(claim);
+
+            void Keep(StateBuilder state, int value) => state.Behaviour<VRCAvatarParameterDriver>(driver =>
+            {
+                driver.localOnly = false;
+                driver.parameters = new List<VRC_AvatarParameterDriver.Parameter>
+                {
+                    new VRC_AvatarParameterDriver.Parameter { type = VRC_AvatarParameterDriver.ChangeType.Set, name = kept, value = value },
+                };
+            });
+
+            var layer = fx.Layer("Hand In Use: " + hand);
+            // The first state is the layer's default: a free hand making no gesture.
+            var free = Enumerable.Range(0, 8).Select(value =>
+            {
+                var state = layer.State("Free " + value);
+                Keep(state, value);
+                return state;
+            }).ToList();
+            var busy = layer.State("In Use");
+            Keep(busy, 0);
+            var releasing = layer.State("Let Go", fx.Clip("hand let go", clip => clip.Hold(HandRelease)));
+
+            foreach (var from in Enumerable.Range(0, 8))
+            {
+                foreach (var to in Enumerable.Range(0, 8).Where(value => value != from))
+                    free[from].To(free[to]).Equal(source, to);
+            }
+
+            var claimed = layer.Any(busy);
+            for (var i = 0; i < claims.Count; i++)
+            {
+                if (i > 0) claimed.Or();
+                claimed.IfTrue(claims[i]);
+            }
+
+            var letGo = busy.To(releasing);
+            foreach (var claim in claims) letGo.IfFalse(claim);
+            releasing.To(free[0]).Equal(source, 0);
+            foreach (var value in Enumerable.Range(1, 7)) releasing.To(free[value]).AfterTime(1f).Equal(source, value);
         }
 
         /// <summary>
@@ -93,7 +204,7 @@ namespace Wirenook.Cass.Editor
         private static void GestureLayer(ControllerBuilder fx, Hand hand, GestureLayout gestures, BlendshapeSpec shapes,
             TileLayout tiles, List<string> renderers)
         {
-            var parameter = hand == Hand.Left ? "GestureLeft" : "GestureRight";
+            var parameter = _gesture[hand];
             var layer = fx.Layer(hand + " Hand");
             var neutral = layer.State("Neutral");
             var mapped = gestures.For(hand);
@@ -112,7 +223,7 @@ namespace Wirenook.Cass.Editor
             var yieldsTo = hand == Hand.Left
                 ? gestures.For(Hand.Right).Keys.OrderBy(value => value).ToList()
                 : new List<int>();
-            foreach (var value in yieldsTo) toNeutral.Or().Equal("GestureRight", value);
+            foreach (var value in yieldsTo) toNeutral.Or().Equal(_gesture[Hand.Right], value);
 
             foreach (var pair in mapped.OrderBy(entry => entry.Key))
             {
@@ -122,12 +233,12 @@ namespace Wirenook.Cass.Editor
 
                 var toTracked = layer.Any(tracked).Fade(ExpressionFade)
                     .Equal(parameter, pair.Key).IfTrue(TrackingEnabled).IfTrue(UserFaceTracking);
-                foreach (var value in yieldsTo) toTracked.NotEqual("GestureRight", value);
+                foreach (var value in yieldsTo) toTracked.NotEqual(_gesture[Hand.Right], value);
                 var toFull = layer.Any(full).Fade(ExpressionFade)
                     .Equal(parameter, pair.Key).IfFalse(TrackingEnabled);
-                foreach (var value in yieldsTo) toFull.NotEqual("GestureRight", value);
+                foreach (var value in yieldsTo) toFull.NotEqual(_gesture[Hand.Right], value);
                 toFull.Or().Equal(parameter, pair.Key).IfFalse(UserFaceTracking);
-                foreach (var value in yieldsTo) toFull.NotEqual("GestureRight", value);
+                foreach (var value in yieldsTo) toFull.NotEqual(_gesture[Hand.Right], value);
             }
         }
 
@@ -175,15 +286,15 @@ namespace Wirenook.Cass.Editor
                 if (!first) toTracked.Or();
                 first = false;
                 toTracked.IfTrue(TrackingEnabled).IfTrue(source);
-                foreach (var gesture in left) toTracked.NotEqual("GestureLeft", gesture);
-                foreach (var gesture in right) toTracked.NotEqual("GestureRight", gesture);
+                foreach (var gesture in left) toTracked.NotEqual(_gesture[Hand.Left], gesture);
+                foreach (var gesture in right) toTracked.NotEqual(_gesture[Hand.Right], gesture);
             }
 
             var toAnimated = tracked.To(animated).IfFalse(TrackingEnabled);
             toAnimated.Or();
             foreach (var source in Sources(region)) toAnimated.IfFalse(source);
-            foreach (var gesture in left) toAnimated.Or().Equal("GestureLeft", gesture);
-            foreach (var gesture in right) toAnimated.Or().Equal("GestureRight", gesture);
+            foreach (var gesture in left) toAnimated.Or().Equal(_gesture[Hand.Left], gesture);
+            foreach (var gesture in right) toAnimated.Or().Equal(_gesture[Hand.Right], gesture);
         }
 
         /// <summary>An eye tracker alone is enough to drive the eyes; the rest of the face needs a face tracker.</summary>
@@ -259,15 +370,15 @@ namespace Wirenook.Cass.Editor
 
             var stop = layer.Any(suppressed).Fade(0.05f).IfTrue(TrackingEnabled).IfTrue(UserFaceTracking);
             stop.Or().IfTrue(TrackingEnabled).IfTrue(UserEyeTracking);
-            foreach (var gesture in left) stop.Or().Equal("GestureLeft", gesture);
-            foreach (var gesture in right) stop.Or().Equal("GestureRight", gesture);
+            foreach (var gesture in left) stop.Or().Equal(_gesture[Hand.Left], gesture);
+            foreach (var gesture in right) stop.Or().Equal(_gesture[Hand.Right], gesture);
 
             var resume = suppressed.To(pick).IfFalse(TrackingEnabled);
-            foreach (var gesture in left) resume.NotEqual("GestureLeft", gesture);
-            foreach (var gesture in right) resume.NotEqual("GestureRight", gesture);
+            foreach (var gesture in left) resume.NotEqual(_gesture[Hand.Left], gesture);
+            foreach (var gesture in right) resume.NotEqual(_gesture[Hand.Right], gesture);
             resume.Or().IfFalse(UserFaceTracking).IfFalse(UserEyeTracking);
-            foreach (var gesture in left) resume.NotEqual("GestureLeft", gesture);
-            foreach (var gesture in right) resume.NotEqual("GestureRight", gesture);
+            foreach (var gesture in left) resume.NotEqual(_gesture[Hand.Left], gesture);
+            foreach (var gesture in right) resume.NotEqual(_gesture[Hand.Right], gesture);
 
             // Away, the eyes stay shut. Like the blink, this is the tracking
             // eyelid shapes and not the MMD ones.
@@ -304,27 +415,46 @@ namespace Wirenook.Cass.Editor
         /// on the model at rest. The PhysBones on these chains are marked as
         /// animated, so physics swings around the pose instead of the rest.
         /// </summary>
-        private static void PoseLayer(ControllerBuilder fx, GestureLayout gestures)
+        private static void PoseLayer(ControllerBuilder fx, GestureLayout gestures, TileLayout tiles)
         {
             if (gestures.Poses.Count == 0) return;
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(CassSpec.ModelPath);
             if (model == null) throw new System.IO.FileNotFoundException("Export the model from Blender first: " + CassSpec.ModelPath);
             var skeleton = CassSpec.Skeleton();
 
-            var turns = gestures.Poses.Keys.ToDictionary(pose => pose, pose => gestures.ExpandPose(pose, skeleton.IsExtra));
+            // A garment can ask for the poses to be held another way while it
+            // is worn (the hat, whose brim the ears stand in). Each pose is
+            // then two states, and which one is entered goes by the garment's
+            // own switch.
+            if (gestures.PosesWhile.Count > 1)
+                throw new InvalidOperationException("gestures.json gives poses for more than one garment; the pose layer knows how to follow one.");
+            var garment = gestures.PosesWhile.Keys.FirstOrDefault();
+            var worn = default(Condition);
+            if (garment != null)
+            {
+                var shown = TileLayout.ShownWhen(tiles.Get(garment));
+                if (shown.Count != 1)
+                    throw new InvalidOperationException("Poses can follow a garment with a switch of its own; " + garment + " is shown by " + shown.Count + " conditions.");
+                worn = shown[0];
+            }
+
+            var names = gestures.Poses.Keys.ToList();
+            var free = names.ToDictionary(pose => pose, pose => gestures.ExpandPose(pose, skeleton.IsExtra));
+            var under = names.Where(pose => garment != null && gestures.PosesWhile[garment].ContainsKey(pose))
+                .ToDictionary(pose => pose, pose => gestures.ExpandPose(pose, skeleton.IsExtra, garment));
             var transforms = model.GetComponentsInChildren<Transform>(true);
             // Every clip writes every posed bone, so no pose can leave another's bones where they were.
-            var bones = turns.Values.SelectMany(pose => pose.Keys).Distinct().OrderBy(name => name)
+            var bones = free.Values.Concat(under.Values).SelectMany(pose => pose.Keys).Distinct().OrderBy(name => name)
                 .Select(name => transforms.FirstOrDefault(transform => transform.name == name) ??
                                 throw new InvalidOperationException("The model has no bone named \"" + name + "\"."))
                 .ToList();
 
-            AnimationClip Clip(string pose) => fx.Clip("pose " + (pose ?? "rest"), clip =>
+            AnimationClip Clip(string name, Dictionary<string, BoneTurn> turns) => fx.Clip("pose " + name, clip =>
             {
                 foreach (var bone in bones)
                 {
                     var turn = default(BoneTurn);
-                    if (pose != null) turns[pose].TryGetValue(bone.name, out turn);
+                    turns?.TryGetValue(bone.name, out turn);
                     var rotation = Turned(model.transform, bone, turn);
                     var path = AnimationUtility.CalculateTransformPath(bone, model.transform);
                     clip.Constant(path, typeof(Transform), "m_LocalRotation.x", rotation.x)
@@ -335,9 +465,26 @@ namespace Wirenook.Cass.Editor
             });
 
             var layer = fx.Layer("Poses");
-            var rest = layer.State("Rest", Clip(null));
-            var states = gestures.Expressions.Values.Select(expression => expression.Pose).Where(pose => pose != null).Distinct()
-                .OrderBy(pose => pose).ToDictionary(pose => pose, pose => layer.State(pose, Clip(pose)));
+            var rest = layer.State("Rest", Clip("rest", null));
+            var held = gestures.Expressions.Values.Select(expression => expression.Pose)
+                .Append(gestures.Poses.ContainsKey(AwayPose) ? AwayPose : null).Where(pose => pose != null).Distinct()
+                .OrderBy(pose => pose).ToList();
+            var states = held.ToDictionary(pose => pose, pose => layer.State(pose, Clip(pose, free[pose])));
+            var statesUnder = held.Where(under.ContainsKey)
+                .ToDictionary(pose => pose, pose => layer.State(pose + " under " + garment, Clip(pose + " under " + garment, under[pose])));
+
+            // One transition for a pose that is held one way, two for a pose the garment changes.
+            IEnumerable<TransitionBuilder> Into(string pose, float fade)
+            {
+                if (pose == null || !statesUnder.ContainsKey(pose))
+                {
+                    yield return layer.Any(pose == null ? rest : states[pose]).Fade(fade);
+                    yield break;
+                }
+
+                yield return layer.Any(states[pose]).Fade(fade).When(worn.Parameter, worn.Value ? AnimatorConditionMode.IfNot : AnimatorConditionMode.If);
+                yield return layer.Any(statesUnder[pose]).Fade(fade).When(worn.Parameter, worn.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot);
+            }
 
             for (var right = 0; right <= 7; right++)
             {
@@ -346,23 +493,26 @@ namespace Wirenook.Cass.Editor
                 if (decided != null && gestures.For(Hand.Right).ContainsKey(right) &&
                     gestures.Expressions[gestures.For(Hand.Right)[right]].Pose != null)
                 {
-                    layer.Any(states[decided]).Fade(PoseFade).Equal("GestureRight", right);
+                    foreach (var transition in Into(decided, PoseFade)) transition.Equal(_gesture[Hand.Right], right);
                     continue;
                 }
 
                 for (var left = 0; left <= 7; left++)
                 {
-                    var pose = gestures.PoseFor(left, right);
-                    layer.Any(pose == null ? rest : states[pose]).Fade(PoseFade)
-                        .Equal("GestureRight", right).Equal("GestureLeft", left);
+                    foreach (var transition in Into(gestures.PoseFor(left, right), PoseFade))
+                        transition.Equal(_gesture[Hand.Right], right).Equal(_gesture[Hand.Left], left);
                 }
             }
 
-            // Away, the ears hang.
+            // Away, the ears hang. The transitions the layer has so far stand
+            // down while away, or they would pull it straight back out.
             if (gestures.Poses.ContainsKey(AwayPose))
             {
-                var hanging = states.TryGetValue(AwayPose, out var known) ? known : layer.State(AwayPose, Clip(AwayPose));
-                WhileAway(layer, hanging, rest, 0.5f);
+                foreach (var transition in layer.Machine.anyStateTransitions)
+                    transition.AddCondition(AnimatorConditionMode.IfNot, 0f, Afk);
+                foreach (var transition in Into(AwayPose, 0.5f)) transition.IfTrue(Afk);
+                states[AwayPose].To(rest).Fade(0.5f).IfFalse(Afk);
+                if (statesUnder.TryGetValue(AwayPose, out var hanging)) hanging.To(rest).Fade(0.5f).IfFalse(Afk);
             }
         }
 

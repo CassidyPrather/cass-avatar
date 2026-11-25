@@ -1,5 +1,5 @@
 {
-  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. Features that cannot work on mobile say so themselves and are left out of those builds.",
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. `wardrobe` names another set of clothes the variant is built wearing: Blender exports each wardrobe as a model of its own on the same skeleton (BlenderExports/cass-<wardrobe>.fbx and its -lite), and the build exchanges the meshes by name. Features that cannot work on mobile say so themselves and are left out of those builds. `local` lists prefabs a variant adds that are not in the repository, each by the GUID its author shipped it with, with the name, author and address it is credited by; `atView` stands it at the avatar's view position. They are bought assets whose terms forbid passing them on. A variant with any is only made, built or uploaded in a project where all of them have been imported (every command skips it elsewhere and says why), its description credits them, and it uploads private and without the licence tag.",
   "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.",
   "variants": [
     {
@@ -118,6 +118,36 @@
         "pc"
       ],
       "worstRankMobile": "Medium"
+    },
+    {
+      "slug": "cass-cyber",
+      "extends": "cass",
+      "wardrobe": "cyber",
+      "about": "The everyday build in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model.",
+      "worstRank": "Good",
+      "features": [],
+      "worstRankMobile": "Medium"
+    },
+    {
+      "slug": "cass-quickhack",
+      "extends": "cass",
+      "wardrobe": "cyber",
+      "about": "The everyday build carrying Quick Hack by DiNe Shop, a bought prop. The prop is not in the repository: its terms do not allow passing it on, or uploading it where others could clone it. So this variant can only be made where its package has been imported (see `local`), and it uploads private. PC only, as the prop is.",
+      "worstRank": "VeryPoor",
+      "features": [],
+      "local": [
+        {
+          "guid": "7a6072127bb81f740ad2559478590c43",
+          "name": "Quick Hack",
+          "author": "DiNe Shop",
+          "url": "dineshop.booth.pm/items/9153292",
+          "atView": true
+        }
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
     }
   ]
 }

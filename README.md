@@ -89,8 +89,8 @@ These talk to the Unity editor you already have open; nothing needs to be
 closed or restarted.
 
 ```bash
-scripts/cass.sh build             # sources + modelled parts -> blender/cass.blend, cass-lite.blend
-scripts/cass.sh export            # Blender -> BlenderExports/cass.fbx, cass-lite.fbx, validated
+scripts/cass.sh build             # sources + modelled parts -> blender/cass.blend, cass-lite.blend, and each other wardrobe's
+scripts/cass.sh export            # Blender -> BlenderExports/cass.fbx, cass-lite.fbx, and each other wardrobe's, validated
 scripts/cass.sh rebuild           # regenerate materials, animators, menus, prefabs
 scripts/cass.sh verify cass       # build the variant as an upload would, and check it
 scripts/cass.sh verify cass android   # the same for another platform's build
@@ -118,7 +118,10 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   bone they follow, and the first bone of each physics chain (ears, tail,
   hair, skirt) names its PhysBone settings. A chain that carries one
   garment also names that garment's UV tile, and `colliders` lists the
-  capsules along the legs that keep the skirt's chains off them.
+  capsules along the legs that keep the skirt's chains off them. A bone
+  with `follow` is turned part of the way with a limb by a constraint (the
+  skirt's two lifts, with the thighs), and a chain marked `pcOnly` has
+  physics that Android and iOS builds leave out.
 - **`blendshapes.json`**: the shapes the `Body` mesh (the head) carries.
   - the 15 VRChat visemes (`vrc.v_*`);
   - VRChat's native face-tracking keys (Unified Expressions names, 102 in
@@ -133,7 +136,11 @@ is written down once, in `Packages/net.wirenook.cass/Spec/`.
   rule: the value of its parameter that shows it, what else it needs and
   what it gives way to. The shorts give way to the skirt, the vest is only
   shown over the sweater it is fitted to, and the short and the long hair
-  are one switch. The grid is four by four, the most the shader has, and
+  are one switch. A switch can name the value it `rests` at where its
+  tile's resting state does not say (the shorts rest hidden under the
+  skirt with their switch on), and a tile marked `"mobile": false` rests
+  shown on PC and is cut from Android and iOS builds, which have no room
+  for it. The grid is four by four, the most the shader has, and
   every tile is now in use. It is one float per
   group on the material rather than a renderer per toggle, which is what
   lets the whole avatar be one mesh and one material slot.
@@ -220,9 +227,25 @@ perked, spread, relaxed, drooping, pinned back, or one ear cocked for a
 wink. A pose turns the ear and tail bones, given per bone as degrees
 forward, outward and of twist about the avatar's own axes. A layer of its
 own reads both hands (the right hand wins when its expression has a pose),
-so it keeps working in MMD worlds and with a face tracker. The ears pass
-through holes in the hat's brim just above their roots, so poses bend them
-higher up; their PhysBones swing around whatever pose is held.
+so it keeps working in MMD worlds and with a face tracker. The ears bend
+from the base: the first bone takes most of each turn. They pass through
+holes in the hat's brim just above their roots, though, so `posesWhile`
+gives a second set for while the hat is worn, which bends them higher up
+and barely moves the base; the layer follows the hat's switch. Their
+PhysBones swing around whatever pose is held, and may swing furthest at
+the base too.
+
+**A hand that is busy makes no face.** A feature that uses a hand's
+gesture as a button says so with a `WirenookHandClaim`
+(`net.wirenook.assets`): the laser pointer that pings on a fist, and
+anything that is aimed before it is set down (below). While such a
+feature's parameter is on, and afterwards until that hand has relaxed or
+1.2 s have passed, the expressions, the blink, the tracking hand-over and
+the ear poses all read that hand as making no gesture, so a trigger pull
+that places a portal is not also a grin. The other hand's expressions go
+on working. The generator finds the claims on every feature a variant
+lists and gives the avatar one small layer per claimed hand, after the two
+gesture layers.
 
 **Away.** While VRChat marks the wearer as away (AFK), the eyes close and
 the ears hang, whatever the hands are doing. Both are done in layers that
@@ -247,23 +270,52 @@ children.
 | `cass-shapes` | The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. Its course is a third skinned mesh, which is Medium. |
 | `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
 | `cass-gaits` | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
+| `cass-cyber` | The everyday build in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
+| `cass-quickhack` | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 
 **The Outfit menu** has a switch for each garment (sweater, shorts, boots,
 hat) and three for what came from the original design: a tiered gingham
 skirt, which replaces the shorts while it is on; an open vest with a
 neckerchief, worn over the sweater; and long hair in place of the short.
-All three rest off. With all of them on the avatar is the design in the
-reference art.
+The skirt and the vest rest on, so the avatar as it loads is the design in
+the reference art but for the hair; the shorts' switch rests on as well,
+and they show when the skirt is taken off.
 
-**The skirt** is cloth on physics. It hangs from the hips on ten chains of
-three bones, jointed at the seams between its tiers, with two chains in
-front of each thigh. One PhysBone swings them all, each on a hinge that
-lets it move straight out from the body or back in, and capsules along the
-upper and lower legs push them: a raised knee carries the front of the
-skirt up, sitting lays it over the thighs, and a heel kicked back lifts the
-hem behind. Walking does not reach it, since it stands well clear of the
-legs, so there it only sways. The PhysBone is switched with the skirt, and
-is not simulated while the shorts are worn.
+**The skirt** is cloth on physics, carried by the legs. It hangs on ten
+chains of three bones, jointed at the seams between its tiers. The four
+chains in front of the thighs hang from two lifts, one at each hip joint,
+that a rotation constraint turns half of the way with its thigh; the six
+round the sides and back hang from a root that stays with the hips. A knee
+that comes up therefore takes its cloth with it at once, however fast it
+comes: left to physics alone, a quick knee went straight through. Three
+PhysBones do the rest, each chain on a hinge that lets it swing straight
+out from the body or back in, with capsules along the upper and lower legs
+to push them: sitting lays the cloth over the thighs, and a heel kicked
+back lifts the hem behind. A stride swings the front of the skirt with it,
+by half the thigh's angle. The PhysBones are switched with the skirt and
+are not simulated while the shorts are worn.
+
+### Wardrobes
+
+The outfit above is the `western` wardrobe. The generator can dress the
+same figure in another: `cyber` so far, in the Wirenook palette pushed
+towards cyberpunk. Blender exports each wardrobe as a model of its own
+(`cass-cyber.fbx`, `cass-cyber-lite.fbx`) on the same skeleton, with the
+same mesh names, blendshapes and UV tiles, and a variant that names a
+`wardrobe` in `variants.json` has its meshes exchanged by name at build
+time, the way the low-polygon model is exchanged for the full one. So a
+wardrobe is not a toggle and costs nothing in the menu, the material or
+the rank: it is a different avatar to upload, with every switch, physics
+chain, expression and feature of the first. The Outfit menu's labels stay
+"Sweater", "Hat" and so on, which in the cyber wardrobe are the jacket and
+the headset.
+
+The cyber wardrobe's cyan and magenta lines are the palette's two glowing
+swatches, and they do glow: the build bakes an emission mask for the atlas
+(`cass-atlas-emission.png`, the palette's own mask in the atlas's layout)
+and the material uses it. Nothing in the western wardrobe is on a glowing
+swatch. Mobile shaders have no emission, so there the lines are only
+bright.
 
 **The walk** comes from `net.wirenook.locomotion`, baked on this avatar's
 own skeleton: `scripts/cass.sh gaits` measures the legs, hips and feet of
@@ -304,7 +356,43 @@ It refuses to upload if the description does not mention
 the avatar would not be public. A hook applies the same check to uploads
 made by hand from the SDK panel. These are guardrails against forgetting,
 not locks: the policy is `Runtime/Core/UploadGuard.cs`, and removing the
-upload profile from an avatar switches the check off.
+upload profile from an avatar switches the check off. A variant that
+carries someone else's asset is held to the opposite on one point: it must
+be private (next section).
+
+### Assets that are not in the repository
+
+A variant can carry a prefab that this repository does not contain: a
+bought asset whose terms forbid passing it on. `Spec/variants.json` lists
+such a thing under `local`, by the GUID its author shipped it with, and
+with the name, author and address it is credited by. That GUID is all the
+repository holds of it. Whoever holds a licence imports the author's own
+package into their checkout, where it lands in a folder that `.gitignore`
+names, and the generator finds the prefab by GUID and stands it in the
+variant.
+
+- Where the asset is absent, every command skips the variant and says
+  why: `rebuild` leaves its prefab exactly as committed, `verify` reports
+  "not checked" and passes, and `upload` refuses.
+- The description credits it ("Carries, not from that source or under its
+  licence: name by author (address)") after the usual link to this source.
+- It uploads **private** and without the `agplv3` tag, and the policy
+  refuses to send it public: such terms as a rule forbid an upload others
+  can clone, and the avatar as a whole is no longer under this
+  repository's licence.
+
+```bash
+scripts/unity-bridge.py invoke Wirenook.Validation.Editor.LocalAssets.Import <path to the author's .unitypackage>
+scripts/unity-bridge.py invoke Wirenook.Validation.Editor.LocalAssets.List     # what is needed, and whether it is here
+scripts/cass.sh rebuild && scripts/cass.sh verify cass-quickhack
+```
+
+`cass-quickhack` carries [Quick Hack by DiNe Shop](https://dineshop.booth.pm/items/9153292).
+Its terms license it to the purchaser alone, allow use on that person's own
+avatars, and forbid redistribution, public or cloneable uploads, and use as
+training data for machine learning; read them before adding it anywhere.
+The prop draws effects over the view of whoever it is aimed at, for those
+who have the avatar's shaders shown.
 
 VRChat asks whoever uploads to confirm they hold the rights to the
 content. That dialog is left to you. It can come up as a window of its
@@ -382,7 +470,9 @@ What that costs on Android and iOS:
 
 | Left out | Why |
 | --- | --- |
-| Garment toggles (the Outfit menu), and with them the skirt, the vest and the long hair; expressions that swap UV tiles | They work by discarding UV tiles |
+| Garment toggles (the Outfit menu), and with them the shorts and the long hair; expressions that swap UV tiles | They work by discarding UV tiles |
+| The vest | It rests on, but with it the avatar is about 16,300 triangles and Medium ends at 15,000 (`"mobile": false` in `uv-tiles.json`) |
+| The skirt's physics | Thirty bones against four colliders are several times the PhysBone limits. The skirt is worn, and its lifts still carry the front of it with the thighs (by four fifths there, with no collider to do the rest), but the cloth does not swing or drape |
 | The outfit shuffle (`cass-shuffle` is not built for mobile at all) | The same |
 | The beacon, the censor, the picture on the seats' screen | Drawn by custom shaders |
 | The nap's Zs | A third material slot is past Medium there; the nap itself is kept |
@@ -393,19 +483,20 @@ What that costs on Android and iOS:
 
 | Variant | Mobile rank | Triangles | Skinned + static meshes | Material slots |
 | --- | --- | --- | --- | --- |
-| `cass`, `cass-lite` | Medium | 14,648 | 2 + 0 | 2 |
-| `cass-adv` | Very Poor | 18,092 | 2 + 3 | 7 |
-| `cass-event` | Very Poor | 19,076 | 2 + 6 | 10 |
-| `cass-party` | Very Poor | 15,557 | 2 + 1 | 5 |
-| `cass-shapes` | Very Poor | 15,180 | 3 + 0 | 3 |
-| `cass-flashlight` | Very Poor | 17,504 | 2 + 4 | 8 |
-| `cass-lantern` | Very Poor | 17,650 | 2 + 5 | 9 |
+| `cass`, `cass-lite` | Medium | 14,700 | 2 + 0 | 2 |
+| `cass-cyber` | Medium | 14,636 | 2 + 0 | 2 |
+| `cass-adv` | Very Poor | 18,144 | 2 + 3 | 7 |
+| `cass-event` | Very Poor | 19,128 | 2 + 6 | 10 |
+| `cass-party` | Very Poor | 15,609 | 2 + 1 | 5 |
+| `cass-shapes` | Very Poor | 16,154 | 3 + 0 | 3 |
+| `cass-flashlight` | Very Poor | 17,556 | 2 + 4 | 8 |
+| `cass-lantern` | Very Poor | 17,702 | 2 + 5 | 9 |
 
-`cass` is 352 triangles under Medium's limit of 15,000, so anything added to
-what the lite level shows at rest has to be paid for there. What rests
-hidden (the skirt, the vest, the long hair) is cut out of the mobile build
-and costs it nothing; the skirt's PhysBone, its leg colliders and its 31
-bones go with it. The face is 8,500 of them, because
+`cass` is 300 triangles under Medium's limit of 15,000, so anything added to
+what the lite level shows at rest has to be paid for there; that is what
+keeps the vest off mobile. What rests hidden (the shorts, the long hair) or
+is marked as too much for mobile (the vest) is cut out of the mobile build
+and costs it nothing. The face is 8,500 of them, because
 it is the same mesh at both levels; the stitched details are left out of
 the lite level altogether, as are the folded edges of the waistband,
 hems and collar.
@@ -484,16 +575,18 @@ copy:
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 58,852 | 2 + 0 | 3 | 112 | 8 of 256 |
-| `cass-lite` | Good | 18,955 | 2 + 0 | 3 | 112 | 8 of 256 |
-| `cass-adv` | Good | 62,630 | 2 + 4 | 8 | 132 | 96 of 256 |
-| `cass-event` | Medium | 63,620 | 2 + 9 | 13 | 132 | 165 of 256 |
-| `cass-party` | Good | 59,905 | 2 + 2 | 6 | 116 | 85 of 256 |
-| `cass-shuffle` | Good | 58,853 | 2 + 1 | 4 | 112 | 8 of 256 |
-| `cass-shapes` | Medium | 59,384 | 3 + 0 | 4 | 127 | 74 of 256 |
-| `cass-flashlight` | Poor (one light) | 62,042 | 2 + 5 | 9 | 127 | 162 of 256 |
-| `cass-lantern` | Poor (one light) | 62,188 | 2 + 6 | 10 | 127 | 162 of 256 |
-| `cass-gaits` | Good | 58,852 | 2 + 0 | 3 | 112 | 16 of 256 |
+| `cass` | Good | 60,716 | 2 + 0 | 3 | 112 | 8 of 256 |
+| `cass-lite` | Good | 19,613 | 2 + 0 | 3 | 112 | 8 of 256 |
+| `cass-adv` | Good | 64,494 | 2 + 4 | 8 | 132 | 97 of 256 |
+| `cass-event` | Medium | 65,484 | 2 + 9 | 13 | 132 | 166 of 256 |
+| `cass-party` | Good | 61,769 | 2 + 2 | 6 | 116 | 85 of 256 |
+| `cass-shuffle` | Good | 60,717 | 2 + 1 | 4 | 112 | 8 of 256 |
+| `cass-shapes` | Medium | 62,170 | 3 + 0 | 4 | 134 | 74 of 256 |
+| `cass-flashlight` | Poor (one light) | 63,906 | 2 + 5 | 9 | 127 | 163 of 256 |
+| `cass-lantern` | Poor (one light) | 64,052 | 2 + 6 | 10 | 127 | 163 of 256 |
+| `cass-gaits` | Good | 60,716 | 2 + 0 | 3 | 112 | 16 of 256 |
+| `cass-cyber` | Good | 55,744 | 2 + 0 | 3 | 102 | 8 of 256 |
+| `cass-quickhack` | Very Poor (the prop's 38 meshes and 56 material slots) | 58,544 | 3 + 38 | 59 | 102 | 20 of 256 |
 
 Thirty of each variant's bones are the skirt's chains. Good allows 150.
 
@@ -511,13 +604,20 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Ten variants are uploaded and public**, each for every platform it is
-built for, as this page describes them; the uploads were last made on
-2026-11-18. **The fourth pass of the model has not been worn, and nothing
-added since the first pass has run in the VRChat client.** That includes
-the skirt's physics, the stiffer ears, the locomotion baked for this
-skeleton, its own crouch, jump and landings, and the walk styles of
-`cass-gaits`.
+**Twelve variants are uploaded**, eleven public and `cass-quickhack`
+private, each for every platform it is built for, as this page describes
+them; the uploads were last made on 2026-11-20.
+
+The build before this one was worn at an event on 2026-11-19, briefly.
+What was noticed there is what this one changes: the vest's armholes, the
+teeth in the speaking shapes, ears that bent in the middle, a knee coming
+through the skirt, the thin neck, the open boots, the shape collector's
+shapes and gate, how loud the sounds are, the carry seat in a turn, and a
+censor that blurred the room as well. **None of those changes has itself
+been worn.** Neither have the things added alongside them: the skirt and
+vest as the resting outfit, the hand lock, the aimed portal, the cyber
+wardrobe and `cass-quickhack`. The walk styles of `cass-gaits` are still
+unchosen.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -531,29 +631,32 @@ skeleton, its own crouch, jump and landings, and the walk styles of
 | `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC, Android, iOS |
 | `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC, Android, iOS |
 | `cass-gaits` | `avtr_05927e20-4f35-4d3f-a94a-bacbef962f89` | PC |
+| `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
+| `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 
 The first pass of the model, as `cass` and `cass-adv`, was worn in the
 client on PC. That is where the portal's pop-out, the notices' early exit
 and the thumbnails were found wanting, and the fixes for those have still
 not been tried there. Everything since was checked in Blender, in the
 Unity editor, against VRChat's API, or headless. `docs/POSTMORTEM.md` has
-the history, the gotchas and the open issues, in two parts: the pipeline,
-and the session of 2026-11-16 and 17 that added most of what is listed
-below as unchecked.
+the history, the gotchas and the open issues, in three parts: the
+pipeline, the session of 2026-11-16 and 17 that added most of what is
+listed below as unchecked, and the session of 2026-11-19 and 20 that
+answered the notes from wearing it.
 
 That session ran unattended. The uploads were made with the owner's
 written certification that they hold the rights to the content, given
 beforehand for the purpose; it was recorded for each avatar id through the
 SDK's own agreement call, not by anyone answering the SDK's dialog. The
-uploads of 2026-11-18 ran overnight the same way, on a certification the
-owner gave that evening.
+uploads of 2026-11-18 and of 2026-11-20 ran overnight the same way, each
+on a certification the owner gave that evening.
 
 Checked:
 
 - Both Blender exports validate against the specs with no errors, and each
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- All ten variants build through Modular Avatar and Avatar Optimizer for
+- All twelve variants build through Modular Avatar and Avatar Optimizer for
   the platforms they are built for, and pass `scripts/cass.sh verify`: the
   rank each is held to, the MMD mesh name and layer order intact after the
   build, every viseme, required tracking key and MMD shape still present,
@@ -576,7 +679,7 @@ Checked:
 - All uploads went through `scripts/cass.sh upload`, and VRChat's records
   read back matching the upload policy (source link, required tags,
   public).
-- Headless tests: 28 for the avatar's core logic, 11 for the thumbnail
+- Headless tests: 36 for the avatar's core logic, 11 for the thumbnail
   composer, and each submodule's own suite (56 in locomotion).
 
 Not checked, because only the client can:
@@ -608,15 +711,23 @@ Not checked, because only the client can:
   generated and build cleanly, but nothing has seen them move. The long
   hair hangs on six more bones under the same PhysBone, with settings that
   were chosen for the short hair. The ears were stiffened after a note
-  from wearing them (more pull, less spring, a 25° limit); how stiff that
-  feels is still to be seen.
-- **The skirt's physics.** The bones, weights and colliders are checked in
-  Blender, where `preview.py` lays the chains over posed legs and the cloth
-  covers them sitting, running and kicking. That is geometry, not a
-  simulation: how the PhysBone's pull, spring, gravity and hinge feel, and
-  whether a fast leg gets through between two chains, only a client shows.
-  The numbers are in `CassPrefabs` (`"skirt"`) and `skeleton.json`
-  (`colliders`).
+  from wearing them (more pull, less spring), and after a second note
+  bend from the base, in their poses and in their swing (30° at the base,
+  a third of that at the tip); neither has been seen since.
+- **The skirt.** Worn once on physics alone, where a quick knee came
+  straight through it. The lifts that now carry its front with the thighs,
+  and the mobile build's skirt that has only those, are checked in Blender,
+  where `preview.py` turns the lifts, lays the chains over posed legs and
+  the cloth covers them sitting, running, kicking and with a knee raised
+  high. That is geometry, not a simulation: how much a stride swings the
+  skirt, and how the PhysBones' pull, spring, gravity and hinge feel, only
+  a client shows. The numbers are in `skeleton.json` (`follow`,
+  `colliders`) and `CassPrefabs` (`"skirt"`).
+- **Hands, aiming and the wardrobe.** The hand lock's layer, the portal's
+  aiming layers and the cyber wardrobe's meshes are in the built avatars
+  (read back with `FxProbe`, rendered in the editor, ranked by `verify`).
+  Whether a fist reads as a click, whether the preview keeps up with the
+  hand, and how the outfit sits in motion, nobody has seen.
 
 Known gaps:
 
@@ -636,14 +747,19 @@ Known gaps:
   waistband goes round the untucked sweater, so the waist is wide, and with
   the sweater off the lining shows in the gap.
 - The vest is fitted to the sweater and is only shown over it. With the
-  skirt on, its fringe is inside the skirt's waistband.
+  skirt on, its fringe is inside the skirt's waistband. The sweater still
+  comes a few millimetres through the tops of its shoulder straps when
+  the arms are raised high. Mobile builds do not have the vest at all.
+- The tail passes through the back of the skirt, which rests on now.
+- The open vowels show the upper row of teeth as one pale band.
 - Long hair turns rigidly with the head until physics moves it, and has no
   collider to keep it out of the shoulders.
 - The sweater's collar stands a little, and a twist wrinkles its front.
 - The ears clip the hat's brim when a pose or physics bends them far;
   they have holes to stand in, not room to move.
 - Under the chin, the face texture's painted shadow is stretched where the
-  head's neck was narrowed to meet the body's.
+  head's neck meets the body's, which was made a third thicker than the
+  body base's own.
 - The hair is fitted under the hat, so with the hat switched off it is a
   little flattened where the hat sits, and the top edge of its lengths
   shows as a faint line round the head.

@@ -24,10 +24,22 @@ namespace Wirenook.Cass
         [Tooltip("Tags beyond the required ones and those the variant's features contribute.")]
         public List<string> extraTags = new List<string>();
 
+        [Tooltip("One line for each asset the variant carries that is not part of the avatar's source, such as a bought prop: " +
+                 "\"name by author\". Any entry here makes the upload private and adds the credits to the description.")]
+        public List<string> carries = new List<string>();
+
         /// <summary>The description as it is sent to VRChat.</summary>
         public string ComposeDescription()
         {
-            return (description ?? "").Trim();
+            var text = (description ?? "").Trim();
+            if (carries.Count > 0) text += " Carries, not from that source or under its licence: " + string.Join("; ", carries) + ".";
+            return text;
+        }
+
+        /// <summary>What an upload of this variant has to satisfy.</summary>
+        public Core.UploadPolicy Policy()
+        {
+            return carries.Count > 0 ? Core.UploadPolicy.Carrying(carries) : new Core.UploadPolicy();
         }
     }
 }

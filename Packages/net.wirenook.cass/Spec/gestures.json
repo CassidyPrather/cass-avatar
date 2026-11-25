@@ -1,5 +1,5 @@
 {
-  "$comment": "Cassidy's learned gesture layout. Each hand picks one expression; the right hand's layer sits above the left's, so where both touch the same blendshape the right hand wins. `shapes` are blendshape weights (0-100) from blendshapes.json; a trailing * expands to the Left and Right pair. `owns` lists the face regions the expression takes away from face tracking while it is held: with tracking live, shapes in regions it does not own are left to the tracker, so a tracked mouth keeps talking under closed gesture eyes. `tiles` flips UV discard tiles from uv-tiles.json (true = shown). `pose` names an entry of `poses`, held by the ears (and any other extra bone) with the expression. A pose lists, per bone, [forward, out, twist] in degrees about the avatar's own axes: tipped towards the way it faces, leant away from the middle of the body, turned about the vertical. A bone name without .L or .R stands for both sides, mirrored. The ears pass through the hat's brim just above their roots, so poses bend them at Ear2 and Ear3 and barely move Ear1.",
+  "$comment": "Cassidy's learned gesture layout. Each hand picks one expression; the right hand's layer sits above the left's, so where both touch the same blendshape the right hand wins. `shapes` are blendshape weights (0-100) from blendshapes.json; a trailing * expands to the Left and Right pair. `owns` lists the face regions the expression takes away from face tracking while it is held: with tracking live, shapes in regions it does not own are left to the tracker, so a tracked mouth keeps talking under closed gesture eyes. `tiles` flips UV discard tiles from uv-tiles.json (true = shown). `pose` names an entry of `poses`, held by the ears (and any other extra bone) with the expression. A pose lists, per bone, [forward, out, twist] in degrees about the avatar's own axes: tipped towards the way it faces, leant away from the middle of the body, turned about the vertical. A bone name without .L or .R stands for both sides, mirrored. The ears bend from the base: Ear1 takes most of each turn and the bones above it follow. `posesWhile` gives, by tile, the turns a pose has instead while that garment is worn. The ears pass through the hat's brim just above their roots, so under the hat the same poses bend at Ear2 and Ear3 and barely move Ear1.",
   "gestureValues": {
     "neutral": 0,
     "fist": 1,
@@ -116,12 +116,23 @@
     }
   },
   "poses": {
-    "perked": { "Ear1": [3, -3, 0], "Ear2": [6, -4, 0], "Ear3": [2, 0, 0] },
-    "spread": { "Ear1": [4, 5, 0], "Ear2": [8, 12, 0], "Ear3": [4, 6, 0], "Tail1": [14, 0, 0] },
-    "relaxed": { "Ear1": [0, 5, 0], "Ear2": [-8, 28, 0], "Ear3": [0, 20, 0] },
-    "droop": { "Ear1": [0, 7, 0], "Ear2": [-10, 58, 0], "Ear3": [-5, 34, 0], "Tail1": [-18, 0, 0] },
-    "back": { "Ear1": [-10, 4, 0], "Ear2": [-52, 10, 0], "Ear3": [-24, 0, 0], "Tail1": [-10, 0, 0] },
-    "cocked-left": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.L": [68, 6, 0], "Ear3.L": [44, 0, 0] },
-    "cocked-right": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.R": [68, 6, 0], "Ear3.R": [44, 0, 0] }
+    "perked": { "Ear1": [8, -6, 0], "Ear2": [3, -2, 0], "Ear3": [1, 0, 0] },
+    "spread": { "Ear1": [8, 16, 0], "Ear2": [5, 6, 0], "Ear3": [3, 3, 0], "Tail1": [14, 0, 0] },
+    "relaxed": { "Ear1": [-6, 30, 0], "Ear2": [-3, 14, 0], "Ear3": [0, 8, 0] },
+    "droop": { "Ear1": [-8, 62, 0], "Ear2": [-6, 24, 0], "Ear3": [-3, 12, 0], "Tail1": [-18, 0, 0] },
+    "back": { "Ear1": [-50, 8, 0], "Ear2": [-22, 4, 0], "Ear3": [-12, 0, 0], "Tail1": [-10, 0, 0] },
+    "cocked-left": { "Ear1": [6, -4, 0], "Ear2": [3, -2, 0], "Ear1.L": [58, 6, 0], "Ear2.L": [34, 2, 0], "Ear3.L": [20, 0, 0] },
+    "cocked-right": { "Ear1": [6, -4, 0], "Ear2": [3, -2, 0], "Ear1.R": [58, 6, 0], "Ear2.R": [34, 2, 0], "Ear3.R": [20, 0, 0] }
+  },
+  "posesWhile": {
+    "outfit.default.hat": {
+      "perked": { "Ear1": [3, -3, 0], "Ear2": [6, -4, 0], "Ear3": [2, 0, 0] },
+      "spread": { "Ear1": [4, 5, 0], "Ear2": [8, 12, 0], "Ear3": [4, 6, 0], "Tail1": [14, 0, 0] },
+      "relaxed": { "Ear1": [0, 5, 0], "Ear2": [-8, 28, 0], "Ear3": [0, 20, 0] },
+      "droop": { "Ear1": [0, 7, 0], "Ear2": [-10, 58, 0], "Ear3": [-5, 34, 0], "Tail1": [-18, 0, 0] },
+      "back": { "Ear1": [-10, 4, 0], "Ear2": [-52, 10, 0], "Ear3": [-24, 0, 0], "Tail1": [-10, 0, 0] },
+      "cocked-left": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.L": [68, 6, 0], "Ear3.L": [44, 0, 0] },
+      "cocked-right": { "Ear1": [3, -2, 0], "Ear2": [6, -3, 0], "Ear2.R": [68, 6, 0], "Ear3.R": [44, 0, 0] }
+    }
   }
 }

@@ -65,6 +65,49 @@ namespace Wirenook.Cass.Tests
             var problems = UploadGuard.Check(new UploadPolicy(), "", null, null, null);
             Assert.AreEqual(5, problems.Count);
         }
+
+        private const string Credit = "Quick Hack by DiNe Shop (dineshop.booth.pm/items/9153292)";
+
+        [Test]
+        public void AnAvatarCarryingSomeoneElsesAssetGoesUpPrivateWithoutTheLicenceTag()
+        {
+            var policy = UploadPolicy.Carrying(new[] { Credit });
+            var description = Description + " Carries, not from that source: " + Credit + ".";
+            var problems = UploadGuard.Check(policy, "cass-quickhack", description, new[] { "author_tag_ai" }, "private");
+            Assert.AreEqual(0, problems.Count, string.Join(" ", problems));
+        }
+
+        [Test]
+        public void AnAvatarCarryingSomeoneElsesAssetMayNotGoUpPublic()
+        {
+            var policy = UploadPolicy.Carrying(new[] { Credit });
+            var description = Description + " Carries, not from that source: " + Credit + ".";
+            var problems = UploadGuard.Check(policy, "cass-quickhack", description, new[] { "author_tag_ai" }, "public");
+            Assert.AreEqual(1, problems.Count);
+            StringAssert.Contains("private", problems[0]);
+        }
+
+        [Test]
+        public void WhatAnAvatarCarriesHasToBeCreditedAndTheSourceStillLinked()
+        {
+            var policy = UploadPolicy.Carrying(new[] { Credit });
+            var problems = UploadGuard.Check(policy, "cass-quickhack", Description, new[] { "author_tag_ai" }, "private");
+            Assert.AreEqual(1, problems.Count);
+            StringAssert.Contains("Quick Hack", problems[0]);
+
+            problems = UploadGuard.Check(policy, "cass-quickhack", "Carries " + Credit, new[] { "author_tag_ai" }, "private");
+            Assert.AreEqual(1, problems.Count);
+            StringAssert.Contains("github.com/CassidyPrather/cass-avatar", problems[0]);
+        }
+
+        [Test]
+        public void TheCreditIsFoundAsVRChatStoresIt()
+        {
+            // VRChat swaps punctuation for lookalikes in stored descriptions.
+            var stored = (Description + " Carries, not from that source: " + Credit + ".").Replace('.', '\u2024').Replace('/', '\u2044');
+            var problems = UploadGuard.Check(UploadPolicy.Carrying(new[] { Credit }), "cass-quickhack", stored, new[] { "author_tag_ai" }, "private");
+            Assert.AreEqual(0, problems.Count, string.Join(" ", problems));
+        }
     }
 
     public class TileLayoutTests
@@ -177,6 +220,44 @@ namespace Wirenook.Cass.Tests
 
             shown = Wearing(("Bottom", false));
             Assert.IsTrue(shown["body.hips"], "with neither, the hips show");
+        }
+
+        /// <summary>The wardrobe with the skirt worn at rest, over shorts whose switch stays on.</summary>
+        private static TileLayout SkirtAtRest()
+        {
+            var layout = Wardrobe();
+            layout.Get("skirt").Shown = true;
+            layout.Get("shorts").Shown = false;
+            layout.Get("shorts").Toggle.Rests = true;
+            return layout;
+        }
+
+        [Test]
+        public void ASwitchCanRestOnUnderAGarmentThatHidesItsTile()
+        {
+            var layout = SkirtAtRest();
+            Assert.AreEqual(0, layout.Validate().Count, string.Join(" ", layout.Validate()));
+            Assert.IsTrue(layout.Defaults().Contains(new Condition("Bottom", true)));
+            Assert.IsTrue(layout.Defaults().Contains(new Condition("Skirt", true)));
+
+            var resting = layout.ResolveFor();
+            Assert.IsTrue(resting["skirt"]);
+            Assert.IsFalse(resting["shorts"]);
+
+            // Taking the skirt off shows the shorts, without touching their switch.
+            var without = layout.ResolveFor(new Dictionary<string, bool> { { "Skirt", false } });
+            Assert.IsTrue(without["shorts"]);
+            Assert.IsFalse(without["body.hips"]);
+        }
+
+        [Test]
+        public void ASwitchThatRestsAgainstItsTilesMarkIsStillAProblem()
+        {
+            // Resting on with nothing over them, the shorts would show; marked hidden, that is a contradiction.
+            var layout = Wardrobe();
+            layout.Get("shorts").Shown = false;
+            layout.Get("shorts").Toggle.Rests = true;
+            Assert.IsTrue(layout.Validate().Any(problem => problem.Contains("shorts")));
         }
 
         [Test]
@@ -391,6 +472,44 @@ namespace Wirenook.Cass.Tests
             Assert.AreEqual(60f, pose["Ear2.R"].Forward);
             Assert.AreEqual(0f, pose["Ear2.R"].Out);
             Assert.AreEqual(-15f, pose["Tail1"].Forward);
+        }
+
+        [Test]
+        public void APoseCanBeHeldAnotherWayUnderAGarment()
+        {
+            var layout = Posed();
+            layout.PosesWhile["hat"] = new Dictionary<string, Dictionary<string, BoneTurn>>
+            {
+                { "back", new Dictionary<string, BoneTurn> { { "Ear2", new BoneTurn { Forward = -50 } } } },
+            };
+            var bones = new[] { "Ear1.L", "Ear1.R", "Ear2.L", "Ear2.R", "Tail1" };
+
+            var free = layout.ExpandPose("back", name => bones.Contains(name));
+            CollectionAssert.AreEquivalent(new[] { "Ear1.L", "Ear1.R" }, free.Keys.ToList());
+
+            var under = layout.ExpandPose("back", name => bones.Contains(name), "hat");
+            CollectionAssert.AreEquivalent(new[] { "Ear2.L", "Ear2.R" }, under.Keys.ToList());
+            Assert.AreEqual(-50f, under["Ear2.L"].Forward);
+
+            // A pose the garment says nothing about is held as it always is.
+            var droop = layout.ExpandPose("droop", name => bones.Contains(name), "hat");
+            Assert.AreEqual(60f, droop["Ear2.R"].Forward);
+        }
+
+        [Test]
+        public void PosesUnderAGarmentNeedAKnownTileAndAPoseOfTheSameName()
+        {
+            var layout = Posed();
+            var known = new[] { "EyeClosedLeft", "EyeClosedRight", "MouthSmile", "Blush", "BrowDown", "MouthFrown" };
+            layout.PosesWhile["hat"] = new Dictionary<string, Dictionary<string, BoneTurn>>
+            {
+                { "back", new Dictionary<string, BoneTurn>() },
+            };
+            Assert.AreEqual(0, layout.Validate(known, new[] { "hat" }).Count);
+            Assert.AreEqual(1, layout.Validate(known, new string[0]).Count, "the tile is not in the layout");
+
+            layout.PosesWhile["hat"]["sideways"] = new Dictionary<string, BoneTurn>();
+            Assert.AreEqual(1, layout.Validate(known, new[] { "hat" }).Count, "no pose of that name to stand in for");
         }
 
         [Test]

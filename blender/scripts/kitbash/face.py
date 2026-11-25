@@ -243,7 +243,7 @@ def neck_opening(obj, below):
     return loop, centre, radius
 
 
-def narrow_neck(obj, loop, centre, radius, target, reach):
+def narrow_neck(obj, loop, centre, radius, target, reach, jaw_target=None, rings=0):
     """Draws the head's neck stub in to `target` radius.
 
     The source's neck is much thicker than the body's. The open loop moves
@@ -251,6 +251,15 @@ def narrow_neck(obj, loop, centre, radius, target, reach):
     the neck bone, which already fades smoothly into the jaw, or by how close
     it is to the loop, whichever is more; the underside of the jaw stretches
     inwards instead of creasing.
+
+    That weight reaches a long way up the face, so how far the stub is drawn
+    in also sets how the jaw and the mouth sit. With `jaw_target`, the loop
+    goes to `target` and the surface above it passes, over `rings` rings of
+    vertices, to being drawn in as for `jaw_target`, as is everything else:
+    the neck can be made thicker without the face changing. It has to go by
+    rings along the surface. The chin hangs lower than the loop and the
+    inside of the mouth lies right over it, so neither height nor distance
+    tells the stub from the rest.
     """
     mesh = obj.data
     blocks = mesh.shape_keys.key_blocks
@@ -260,7 +269,18 @@ def narrow_neck(obj, loop, centre, radius, target, reach):
     amount = np.maximum(by_weight, 1.0 - common.smoothstep(0.0, reach, to_loop))
     offset = basis[:, :2] - np.array(centre[:2])
     delta = np.zeros_like(basis)
-    delta[:, :2] = offset * ((target / radius) - 1.0) * amount[:, None]
+    wanted = np.full(len(basis), float(target))
+    if jaw_target is not None:
+        steps = np.full(len(basis), rings, dtype=np.float64)
+        steps[loop] = 0.0
+        reached = set(loop)
+        for step in range(1, rings):
+            reached = {v for edge in mesh.edges for v in edge.vertices
+                       if (edge.vertices[0] in reached) != (edge.vertices[1] in reached) and steps[v] > step}
+            steps[list(reached)] = step
+            reached |= set(np.flatnonzero(steps < step))
+        wanted += (jaw_target - target) * common.smoothstep(0.0, float(rings), steps)
+    delta[:, :2] = offset * ((wanted / radius) - 1.0)[:, None] * amount[:, None]
     # The same offset goes on every key, so no expression sees the neck move.
     for block in blocks:
         common.set_key_coords(block, common.key_coords(block) + delta)
@@ -311,6 +331,41 @@ def _lip_line(basis, deltas):
     return basis[both if both.any() else carried][:, 2].max()
 
 
+# Speaking shapes: the visemes, and the MMD vowels made from them. The source face opens the
+# mouth onto both rows of teeth in every one of them, the closed consonants included, which
+# reads as a mouthful of teeth on a face this small. Speaking hides the lower row always and
+# the upper row except in the open vowels named here.
+SPOKEN = {f"vrc.v_{v}" for v in ("pp", "ff", "th", "dd", "kk", "ch", "ss", "nn", "rr", "aa", "e", "ih", "oh", "ou")} | set("あいうえお")
+UPPER_TEETH_SHOWN = {"vrc.v_aa", "vrc.v_e", "vrc.v_ih", "あ", "い", "え"}
+TEETH_TUCK = 0.35  # how far behind itself a hidden row of teeth is gathered to a point, as a share of its own depth
+
+
+def _teeth(mesh, basis, deltas):
+    """The vertices of the upper and of the lower row of teeth.
+
+    Both are loose parts in the middle of the mouth, alike in size; the
+    tongue is the third such part, and is the one `tongueOut` moves. The
+    lower row is the one the jaw carries.
+    """
+    island = _islands(mesh)
+    jaw, tongue = np.linalg.norm(deltas["jawOpen"], axis=1), np.linalg.norm(deltas["tongueOut"], axis=1)
+    lips = np.linalg.norm(deltas["vrc.v_pp"], axis=1)
+    mouth = basis[lips > 0.3 * lips.max()]
+    low, high = mouth.min(axis=0), mouth.max(axis=0)
+    rows = []
+    for identifier in np.unique(island):
+        members = np.flatnonzero(island == identifier)
+        if len(members) > 2000 or tongue[members].max() > 1e-5:
+            continue
+        centre = basis[members].mean(axis=0)
+        if abs(centre[0]) < 0.1 * (high[0] - low[0]) and low[2] - (high[2] - low[2]) < centre[2] < high[2] + (high[2] - low[2])                 and jaw[members].max() > 1e-5:
+            rows.append(members)
+    if len(rows) != 2:
+        raise RuntimeError(f"expected two rows of teeth in the mouth, found {len(rows)} loose parts there")
+    rows.sort(key=lambda members: jaw[members].mean())
+    return rows[0], rows[1]
+
+
 def rebuild_shape_keys(obj, wanted, blend_width):
     """Replaces the source's shape keys with the spec's names. Returns the names that have no recipe."""
     mesh = obj.data
@@ -338,6 +393,14 @@ def rebuild_shape_keys(obj, wanted, blend_width):
         for region in regions:
             delta *= masks[region][:, None]
         built[name] = delta
+
+    upper_teeth, lower_teeth = _teeth(mesh, basis, deltas)
+    for name in SPOKEN & set(built):
+        for row in (lower_teeth,) if name in UPPER_TEETH_SHOWN else (lower_teeth, upper_teeth):
+            # To one point, inside the head behind the mouth: no area to draw, and nowhere to be seen from.
+            point = basis[row].mean(axis=0)
+            point[1] = basis[row][:, 1].max() + TEETH_TUCK * (basis[row][:, 1].max() - basis[row][:, 1].min())
+            built[name][row] = point - basis[row]
 
     obj.shape_key_clear()
     obj.shape_key_add(name="Basis", from_mix=False)

@@ -255,6 +255,7 @@ MonoBehaviour:
   description: 'Cassidy''s avatar. AGPLv3. github.com/CassidyPrather/cass-avatar
     Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.'
   extraTags: []
+  carries: []
 --- !u!4 &6605985845067762930 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,

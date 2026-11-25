@@ -52,6 +52,16 @@ namespace Wirenook.Cass.Editor
             var spec = CassSpec.Variants();
             foreach (var variant in spec.Variants)
             {
+                // A variant that carries something kept out of the repository can only
+                // be made where that thing is. Elsewhere its prefab is left exactly as
+                // it was committed; touching it would drop the reference.
+                var absent = variant.Absent();
+                if (absent.Count > 0)
+                {
+                    Debug.Log("[cass] Variant " + variant.Slug + " is left as it is: " + Unavailable(variant, absent));
+                    continue;
+                }
+
                 var parent = variant.Extends == null ? RootPath : VariantPath(variant.Extends);
                 EnsureVariantOf(parent, VariantPath(variant.Slug));
                 Edit(VariantPath(variant.Slug), root => ConfigureVariant(root, variant, spec));
@@ -175,6 +185,8 @@ namespace Wirenook.Cass.Editor
 
             foreach (var twist in skeleton.TwistBones())
                 ConfigureTwist(Find(root, twist.Name), Find(root, twist.TwistSource), twist.TwistWeight);
+            foreach (var follow in skeleton.FollowBones())
+                ConfigureFollow(Find(root, follow.Name), Find(root, follow.FollowSource), follow.FollowWeight);
             UnifyRenderers(root, skeleton);
             ConfigureOptimizer(root);
 
@@ -419,7 +431,11 @@ namespace Wirenook.Cass.Editor
                     bone.gravity = 0f;
                     bone.immobile = 0.4f;
                     bone.radius = 0.03f;
-                    bone.maxAngleX = 25f;
+                    // An ear turns where it meets the head and stays nearly
+                    // straight above that: the base may swing this far, the
+                    // tip a third of it.
+                    bone.maxAngleX = 30f;
+                    bone.maxAngleXCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.35f);
                     Touchable(bone, true);
                     bone.grabMovement = 0.6f;
                     bone.maxStretch = 0.5f;
@@ -461,9 +477,11 @@ namespace Wirenook.Cass.Editor
                     bone.stretchMotion = 0f;
                     break;
                 case "skirt":
-                    // Cloth on ten chains of three bones. The root does not move; each
-                    // chain swings on a hinge, straight out from the body or back in, so
-                    // a leg that lifts a chain cannot shed it to one side. Low pull and
+                    // Cloth on ten chains of three bones, hung from three roots: one that
+                    // stays with the hips, and a lift for each leg that a constraint turns
+                    // part of the way with the thigh (ConfigureFollow). Physics moves no
+                    // root; each chain swings on a hinge, straight out from the body or
+                    // back in, so a leg that lifts a chain cannot shed it to one side. Low pull and
                     // some spring let the hem trail and settle; gravity is felt only away
                     // from rest, so the skirt keeps its flare standing and drapes when
                     // it is lifted or the hips tilt. Part of the wearer's own travel is
@@ -509,7 +527,8 @@ namespace Wirenook.Cass.Editor
             var lengths = new List<float>();
             foreach (Transform first in skirtRoot)
             {
-                var outward = avatar.InverseTransformDirection(first.position - skirtRoot.position);
+                // Out from the middle of the body, not from the root: a lift sits at a hip joint, to one side.
+                var outward = avatar.InverseTransformDirection(first.position - skirtRoot.parent.position);
                 outward.y = 0f;
                 var faces = avatar.InverseTransformDirection(first.forward);
                 if (Vector3.Dot(faces, outward.normalized) < 0.7f)
@@ -584,6 +603,42 @@ namespace Wirenook.Cass.Editor
         }
 
         /// <summary>
+        /// A bone that is carried part of the way with a limb: the skirt's
+        /// lifts, which the chains in front of each thigh hang from. Both
+        /// are children of the hips, and the constraint works on their
+        /// rotations against the hips, so the helper takes the given share
+        /// of however far the limb has turned from rest, on every axis. The
+        /// cloth is then where the leg is going before any physics has run.
+        /// </summary>
+        public static void ConfigureFollow(Transform helper, Transform source, float weight)
+        {
+            if (helper.parent != source.parent)
+                throw new InvalidDataException(helper.name + " follows " + source.name + " but does not share its parent; the constraint measures both against it.");
+            var constraint = Ensure<VRCRotationConstraint>(helper.gameObject);
+            // Measured from rest: a helper left turned by an earlier weight would bake that turn in.
+            constraint.IsActive = false;
+            helper.localRotation = RestRotation(helper);
+            constraint.ClearSources();
+            constraint.AddSource(new VRCConstraintSource { SourceTransform = source, Weight = 1f });
+            constraint.GlobalWeight = weight;
+            constraint.SolveInLocalSpace = true;
+            constraint.AffectsRotationX = true;
+            constraint.AffectsRotationY = true;
+            constraint.AffectsRotationZ = true;
+            constraint.FreezeToWorld = false;
+            constraint.RebakeOffsetsWhenUnfrozen = false;
+            constraint.ActivateConstraint();
+        }
+
+        /// <summary>A bone's rotation in the model as imported.</summary>
+        private static Quaternion RestRotation(Transform bone)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(CassSpec.ModelPath);
+            var resting = model.GetComponentsInChildren<Transform>(true).FirstOrDefault(candidate => candidate.name == bone.name);
+            return resting != null ? resting.localRotation : bone.localRotation;
+        }
+
+        /// <summary>
         /// Avatar Optimizer's Trace and Optimize does the lossless build-time
         /// work: merging the meshes into one, merging identical material
         /// slots, dropping unused blendshapes and bones. Its components are
@@ -601,6 +656,36 @@ namespace Wirenook.Cass.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        /// <summary>Why a variant cannot be made, built or uploaded in this project.</summary>
+        public static string Unavailable(Variant variant, List<LocalAsset> absent)
+        {
+            return variant.Slug + " needs " + string.Join(" and ", absent.Select(asset => asset.Credit)) +
+                   ", which is not in this project. It is not part of the repository; whoever holds a licence imports it themselves.";
+        }
+
+        /// <summary>
+        /// Puts a variant's local assets under its root, each once. They are
+        /// found by GUID, never by path, and are not Wirenook features: no
+        /// marker, no tag, and nothing here looks inside them.
+        /// </summary>
+        private static void PlaceLocalAssets(GameObject root, Variant variant)
+        {
+            foreach (var asset in variant.Local)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(asset.Guid));
+                if (prefab == null) throw new InvalidDataException("The asset with GUID " + asset.Guid + " (" + asset.Name + ") is not a prefab.");
+                var placed = root.transform.Cast<Transform>().FirstOrDefault(child =>
+                    PrefabUtility.GetCorrespondingObjectFromOriginalSource(child.gameObject) == prefab ||
+                    PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) == prefab);
+                if (placed == null) placed = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, root.transform)).transform;
+                if (asset.AtView)
+                {
+                    placed.localPosition = root.GetComponent<VRCAvatarDescriptor>().ViewPosition;
+                    placed.localRotation = Quaternion.identity;
+                }
+            }
+        }
+
         private static void ConfigureVariant(GameObject root, Variant variant, VariantSpec spec)
         {
             root.name = variant.Slug;
@@ -608,10 +693,16 @@ namespace Wirenook.Cass.Editor
             var profile = Ensure<AvatarUploadProfile>(root);
             profile.avatarName = variant.Slug;
             profile.description = spec.Description;
+            profile.carries = variant.Local.Select(asset => asset.Credit).ToList();
+            PlaceLocalAssets(root, variant);
 
             var lite = root.GetComponent<CassLiteModel>();
             if (variant.Lite) Ensure<CassLiteModel>(root);
             else if (lite != null) UnityEngine.Object.DestroyImmediate(lite, true);
+
+            var wardrobe = root.GetComponent<CassWardrobe>();
+            if (!string.IsNullOrEmpty(variant.Wardrobe)) Ensure<CassWardrobe>(root).wardrobe = variant.Wardrobe;
+            else if (wardrobe != null) UnityEngine.Object.DestroyImmediate(wardrobe, true);
 
             // A feature this variant used to list was placed here by an
             // earlier rebuild, and is taken out again. Only what was added

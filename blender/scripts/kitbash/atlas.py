@@ -261,6 +261,27 @@ def build_normal(face_normal_png, body_normal_pngs, out_png):
     bpy.data.images.remove(image)
 
 
+def build_emission(palette_emission_png, out_png):
+    """Writes the atlas's emission mask: white where a swatch glows, black everywhere else.
+
+    Only swatches glow, and the palette is the atlas's bottom-left quarter of
+    each axis, so the mask is the palette's own at its own size, in that
+    corner of a picture four times as wide. It need be no finer: the face
+    and the gingham, which fill the rest of the atlas, do not glow.
+    """
+    mask = _load(palette_emission_png)[..., :3]
+    size = mask.shape[0] * int(PALETTE_SHRINK)
+    whole = np.zeros((size, size, 4), dtype=np.float32)
+    whole[..., 3] = 1.0
+    whole[:mask.shape[0], :mask.shape[1], :3] = mask
+    image = bpy.data.images.new("cass-atlas-emission-bake", size, size, alpha=False)
+    image.pixels.foreach_set(whole.ravel())
+    image.filepath_raw = str(out_png)
+    image.file_format = "PNG"
+    image.save()
+    bpy.data.images.remove(image)
+
+
 def build(face_png, palette_png, palette_json, out_png, out_json, overlays, skin_uvs):
     """Writes the atlas and returns {swatch name: (u, v)}.
 

@@ -6,10 +6,11 @@
     --keys NAME=1,NAME=0.5                 shape key values on Body (bare NAME means 1)
     --each-key NAME,NAME | all             also render the face once per listed key, alone at 1 (key_NNN.png)
     --pose NAME[,NAME]                     render in a pose instead of the rest pose; several give one set of
-                                           pictures each (rest, test, down, forward, raised, twist, sit, walk, run, kick);
+                                           pictures each (rest, test, down, forward, raised, twist, reach, sit, walk, run, kick, knee);
                                            the skirt is then laid over the legs as its physics would lay it
     --shaded                               studio light instead of flat, to see how the surface shades
     --bare                                 leave the garments out and show the skin zones they hide
+    --stiff                                pose the skirt as a build without its PhysBones holds it (Android, iOS)
     --tiles ID=0,ID=1                      override the default shown state of discard tiles
     --shot NAME:CX,CY,CZ:DX,DY,DZ:H        an extra view: centre, direction the camera looks from, frame height (repeatable)
     --tag TEXT                             appended to the output file names
@@ -84,11 +85,18 @@ POSES = {
     "run": {**_arms(down=60.0, elbow=80.0), "UpperLeg.L": (-58, 0, 0), "LowerLeg.L": (75, 0, 0), "UpperLeg.R": (22, 0, 0),
             "LowerLeg.R": (95, 0, 0)},
     "kick": {**_arms(down=40.0), "UpperLeg.L": (-105, 0, 0), "LowerLeg.L": (12, 0, 0), "UpperLeg.R": (8, 0, 0)},
+    # Hands held out in front at chest height, elbows bent: where a headset wearer's arms spend their time.
+    "reach": _arms(down=48.0, forward=42.0, elbow=75.0),
+    # A knee brought up fast, as high as it goes.
+    "knee": {**_arms(down=72.0), "UpperLeg.L": (-110, 0, 0), "LowerLeg.L": (115, 0, 0)},
 }
 
 # The skirt's PhysBone, as Unity sets it up (CassPrefabs, "skirt"): how thick a chain is, and how far its hinge lets a bone turn.
 SKIRT_RADIUS = 0.03
 SKIRT_LIMIT = 80.0
+# Whether the skirt's chains are laid over the legs as their PhysBones would lay them. Off, the
+# picture is of a build that leaves those out (Android and iOS; --stiff).
+SKIRT_PHYSICS = True
 
 
 def parse_args():
@@ -101,6 +109,7 @@ def parse_args():
     parser.add_argument("--pose", default="")
     parser.add_argument("--shaded", action="store_true")
     parser.add_argument("--bare", action="store_true")
+    parser.add_argument("--stiff", action="store_true")
     parser.add_argument("--tiles", default="")
     parser.add_argument("--shot", action="append", default=[])
     parser.add_argument("--tag", default="")
@@ -185,39 +194,75 @@ def _clear(point, capsules):
     return True
 
 
-def settle_skirt(armature):
-    """Lays the skirt's chains over the posed legs, standing in for the physics Unity gives them.
+def _carried(armature, bone, follow, share):
+    """Where a bone with `follow` (skeleton.json) stands in the pose: turned part of the way with its source."""
+    parent = bone.parent
+    source = armature.pose.bones[follow["source"]]
+    resting = parent.bone.matrix_local.inverted() @ source.bone.matrix_local
+    posed = parent.matrix.inverted() @ source.matrix
+    turned = (posed @ resting.inverted()).to_quaternion()
+    part = Matrix.Identity(4).to_quaternion().slerp(turned, share).to_matrix().to_4x4()
+    own = parent.bone.matrix_local.inverted() @ bone.bone.matrix_local
+    pivot = Matrix.Translation(own.translation)
+    return parent.matrix @ pivot @ part @ pivot.inverted() @ own
 
-    It is not a simulation. Each bone of a chain, from the waist down, hangs
-    as it does at rest unless that puts it inside one of the skeleton spec's
-    colliders; then it is turned outward on its hinge, a degree at a time,
-    until it is clear or at its limit. That is where a hinged chain under
-    gravity comes to rest on a leg, which is enough to see whether the cloth
-    then covers the leg.
+
+def settle_skirt(armature):
+    """Lays the skirt's chains over the posed legs, standing in for what Unity does to them.
+
+    It is not a simulation. First the bones the front chains hang from are
+    turned part of the way with the thighs, as their constraints turn them
+    (skeleton.json, `follow`). Then each bone of a chain, from the waist
+    down, hangs as near to how it hangs at rest as its hinge lets it, unless
+    that puts it inside one of the skeleton spec's colliders; then it is
+    turned outward on its hinge, a degree at a time, until it is clear or at
+    its limit. That is where a hinged chain under gravity comes to rest on a
+    leg, which is enough to see whether the cloth then covers the leg.
+
+    With SKIRT_PHYSICS off the chains stay as they rest on what carries
+    them, which is all a build without the skirt's PhysBones does.
     """
     skeleton = cass_spec.load_skeleton()
-    root = armature.pose.bones.get("SkirtRoot")
-    if root is None:
+    roots = [entry for entry in skeleton["extra"] if entry.get("physics") == "skirt" and entry["name"] in armature.pose.bones]
+    if not roots:
         return
     capsules = [(armature.pose.bones[entry["bone"]].head.copy(), armature.pose.bones[entry["to"]].head.copy(), entry["radius"])
                 for entry in skeleton.get("colliders", []) if "skirt" in entry["physics"]]
-    for first in root.children:
-        parent, parent_matrix, turned = root, root.matrix.copy(), 0.0
-        bone = first
-        while bone is not None:
-            base = parent_matrix @ parent.bone.matrix_local.inverted() @ bone.bone.matrix_local
-            hanging = max(-SKIRT_LIMIT, min(SKIRT_LIMIT, -turned))
-            angle = hanging
-            while True:
-                matrix = base @ Matrix.Rotation(math.radians(angle), 4, "X")
-                if angle >= SKIRT_LIMIT or all(_clear(matrix @ Vector((0.0, bone.bone.length * t, 0.0)), capsules)
-                                               for t in (0.25, 0.5, 0.75, 1.0)):
-                    break
-                angle = min(SKIRT_LIMIT, angle + 1.0)
-            bone.matrix_basis = Matrix.Rotation(math.radians(angle), 4, "X")
-            turned += angle
-            parent, parent_matrix = bone, matrix
-            bone = bone.children[0] if bone.children else None
+    hips = armature.pose.bones["Hips"]
+    for entry in roots:
+        root = armature.pose.bones[entry["name"]]
+        root.matrix_basis = Matrix.Identity(4)
+        bpy.context.view_layer.update()
+        root_matrix = root.matrix.copy()
+        if "follow" in entry:
+            follow = entry["follow"]
+            root_matrix = _carried(armature, root, follow, follow["weight"] if SKIRT_PHYSICS else follow.get("weightAlone", follow["weight"]))
+            root.matrix = root_matrix
+            bpy.context.view_layer.update()
+        for first in root.children:
+            parent, parent_matrix = root, root_matrix
+            bone = first
+            while bone is not None:
+                base = parent_matrix @ parent.bone.matrix_local.inverted() @ bone.bone.matrix_local
+                if not SKIRT_PHYSICS:
+                    bone.matrix_basis = Matrix.Identity(4)
+                    parent, parent_matrix = bone, base
+                    bone = bone.children[0] if bone.children else None
+                    continue
+                # The way the bone points at rest, carried with the hips, seen from where it now hangs.
+                rest = (hips.matrix @ hips.bone.matrix_local.inverted() @ bone.bone.matrix_local).to_3x3() @ Vector((0.0, 1.0, 0.0))
+                seen = base.to_3x3().inverted() @ rest
+                hanging = max(-SKIRT_LIMIT, min(SKIRT_LIMIT, math.degrees(math.atan2(seen.z, seen.y))))
+                angle = hanging
+                while True:
+                    matrix = base @ Matrix.Rotation(math.radians(angle), 4, "X")
+                    if angle >= SKIRT_LIMIT or all(_clear(matrix @ Vector((0.0, bone.bone.length * t, 0.0)), capsules)
+                                                   for t in (0.25, 0.5, 0.75, 1.0)):
+                        break
+                    angle = min(SKIRT_LIMIT, angle + 1.0)
+                bone.matrix_basis = Matrix.Rotation(math.radians(angle), 4, "X")
+                parent, parent_matrix = bone, matrix
+                bone = bone.children[0] if bone.children else None
 
 
 def bounds():
@@ -287,7 +332,9 @@ def render(path):
 
 
 def main():
+    global SKIRT_PHYSICS
     args = parse_args()
+    SKIRT_PHYSICS = not args.stiff
     out = pathlib.Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     apply_discards(args.bare, args.tiles)
@@ -330,4 +377,5 @@ def main():
         render(out / f"key_{index:03d}{tag}.png")
 
 
-main()
+if __name__ == "__main__":
+    main()

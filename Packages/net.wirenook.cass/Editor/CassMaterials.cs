@@ -22,6 +22,9 @@ namespace Wirenook.Cass.Editor
         /// </summary>
         public const string NormalPath = CassSpec.Package + "/Textures/cass-atlas-normal.png";
 
+        /// <summary>White where the atlas glows: the palette's glowing swatches, which only some wardrobes wear.</summary>
+        public const string EmissionPath = CassSpec.Package + "/Textures/cass-atlas-emission.png";
+
         /// <summary>lilToon's opaque shader with an outline pass; the editor picks it the same way.</summary>
         private const string OutlineShader = "Hidden/lilToonOutline";
 
@@ -98,7 +101,11 @@ namespace Wirenook.Cass.Editor
             var material = AssetFolders.LoadOrCreate(PathFor("cass"), () => new Material(Shader.Find(ToonMaterial.ShaderName)));
             // Double-sided: hair strands, the hat's brim and the open ends of
             // garments are single sheets that are seen from both sides.
-            ToonMaterial.Configure(material, atlas, null, doubleSided: true);
+            // Configure also makes the surface and its outline mark the
+            // stencil (ToonMaterial.AvatarStencil), which is how the mosaic
+            // censor knows the avatar from the room behind it.
+            // The mask is optional: without it nothing glows, as before it existed.
+            ToonMaterial.Configure(material, atlas, AssetDatabase.LoadAssetAtPath<Texture2D>(EmissionPath), doubleSided: true);
             Look(material, atlas);
 
             // Bake the resting look into the asset, so the avatar is dressed in

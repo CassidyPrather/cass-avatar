@@ -18,6 +18,9 @@ PALETTE_PNG = PACKAGE / "Textures" / "cass-palette.png"
 ATLAS_JSON = PACKAGE / "Textures" / "cass-atlas.json"
 ATLAS_PNG = PACKAGE / "Textures" / "cass-atlas.png"
 ATLAS_NORMAL_PNG = PACKAGE / "Textures" / "cass-atlas-normal.png"
+# White where the atlas glows: the palette's own emission mask, laid out as the atlas is.
+PALETTE_EMISSION_PNG = PACKAGE / "Textures" / "cass-palette-emission.png"
+ATLAS_EMISSION_PNG = PACKAGE / "Textures" / "cass-atlas-emission.png"
 BLEND_PATH = REPO / "blender" / "cass.blend"
 SOURCES_DIR = REPO / "blender" / "sources"
 FBX_PATH = PACKAGE / "BlenderExports" / "cass.fbx"
@@ -39,6 +42,21 @@ LEVELS = {
              "max_triangles": 17000, "max_hidden_triangles": 8000},
 }
 LEVEL_PROP = "wirenook_level"
+
+# Wardrobes: sets of garments built by the same generator onto the same body, face, hair, ears,
+# tail and skeleton, each at both levels. Every wardrobe has the same mesh names, bones,
+# blendshapes and UV tiles, so Unity exchanges one for another by mesh name, as it does the
+# levels. The value is what a wardrobe adds to the file names: cass-cyber.blend, cass-cyber-lite.fbx.
+WARDROBES = {"western": "", "cyber": "-cyber"}
+WARDROBE_PROP = "wirenook_wardrobe"
+
+
+def outputs(level, wardrobe="western"):
+    """The .blend and the FBX of a wardrobe at a level; the budgets are the level's own (LEVELS)."""
+    if wardrobe == "western":
+        return {"blend": LEVELS[level]["blend"], "fbx": LEVELS[level]["fbx"]}
+    stem = "cass" + WARDROBES[wardrobe] + ("" if level == "full" else f"-{level}")
+    return {"blend": REPO / "blender" / f"{stem}.blend", "fbx": PACKAGE / "BlenderExports" / f"{stem}.fbx"}
 
 EXPORT_COLLECTION = "Export"
 MATERIAL_NAME = "cass"

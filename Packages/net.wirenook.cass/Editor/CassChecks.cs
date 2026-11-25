@@ -39,6 +39,10 @@ namespace Wirenook.Cass.Editor
             var variant = CassSpec.Variants().Variants.First(candidate => candidate.Slug == slug);
             if (!variant.Platforms.Contains(platform))
                 return slug + " (" + WirenookPlatform.Name(platform) + "): not built for this platform" + System.Environment.NewLine + "ok";
+            // Not a failure of this checkout: the variant is for whoever holds the asset.
+            var absent = variant.Absent();
+            if (absent.Count > 0)
+                return slug + ": not checked. " + CassPrefabs.Unavailable(variant, absent) + System.Environment.NewLine + "ok";
 
             WrittenControllers(slug, problems);
             var report = CassBuild.Measure(slug, out var built);
@@ -88,8 +92,11 @@ namespace Wirenook.Cass.Editor
                 return;
             }
 
+            var policy = profile.Policy();
             problems.AddRange(Core.UploadGuard.Check(
-                new Core.UploadPolicy(), profile.avatarName, profile.ComposeDescription(), report.apiTags, "public"));
+                policy, profile.avatarName, profile.ComposeDescription(), report.apiTags, policy.ReleaseStatus));
+            if (policy.ReleaseStatus != "public")
+                notes.Add("uploads " + policy.ReleaseStatus + ": it carries " + string.Join("; ", profile.carries));
             foreach (var tag in report.droppedTags)
                 notes.Add("tag " + tag + " does not fit in VRChat's " + FeatureTags.Limit + " tags and is left out");
         }

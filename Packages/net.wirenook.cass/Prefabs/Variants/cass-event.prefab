@@ -237,6 +237,41 @@ PrefabInstance:
       propertyPath: m_Name
       value: Wirenook Stations (Event)
       objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.0018128052
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.07205941
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.024579596
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.00021693733
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.028784556
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.67916155
+      objectReference: {fileID: 0}
+    - target: {fileID: 7307563433720107068, guid: d163ca7ea2a3ca34da33ba08ca6c0d73,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.73342425
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

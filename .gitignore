@@ -73,3 +73,9 @@ __pycache__/
 
 # Third-party source archives; blender/scripts/intake.py trims them into blender/sources/
 ref/*.zip
+
+# Bought assets a variant can carry (Spec/variants.json, `local`). Their terms do not allow passing
+# them on, so they exist only on the machine of whoever holds the licence; the repository refers
+# to them by GUID alone. Each author's package chooses its own folder; list it here.
+/Assets/_DiNe_Shop_/
+/Assets/_DiNe_Shop_.meta

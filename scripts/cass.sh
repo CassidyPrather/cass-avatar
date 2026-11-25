@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The avatar's day-to-day commands, run against the open Unity editor.
 #
-#   scripts/cass.sh build             sources and modelled parts -> blender/cass.blend and cass-lite.blend
-#   scripts/cass.sh export            Blender -> BlenderExports/cass.fbx and cass-lite.fbx (validated)
+#   scripts/cass.sh build             sources and modelled parts -> blender/cass.blend and cass-lite.blend, and each other wardrobe's
+#   scripts/cass.sh export            Blender -> BlenderExports/cass.fbx and cass-lite.fbx, and each other wardrobe's (validated)
 #   scripts/cass.sh rebuild           regenerate materials, animators, menus and prefabs
 #   scripts/cass.sh gaits             bake the walk for the avatar's own skeleton (after its legs or feet change)
 #   scripts/cass.sh gaits styles      bake every walk style into cass-gaits, the variant that switches between them
@@ -83,18 +83,26 @@ verify() {
     unity invoke Wirenook.Cass.Editor.CassChecks.Verify "$1" | tee /dev/stderr | grep -qx "ok"
 }
 
+# The wardrobes Blender builds (blender/scripts/cass_spec.py, WARDROBES). The first is the one the prefabs hold.
+WARDROBES="western cyber"
+
 command=${1:-}
 slug=${2:-cass}
 platform=${3:-}
 
 case "$command" in
     build)
-        scripts/blender-build.sh --level full
-        scripts/blender-build.sh --level lite
+        # Every wardrobe at both fidelity levels: the same body and skeleton, different clothes.
+        for wardrobe in $WARDROBES; do
+            scripts/blender-build.sh --wardrobe "$wardrobe" --level full
+            scripts/blender-build.sh --wardrobe "$wardrobe" --level lite
+        done
         ;;
     export)
-        scripts/blender-export.sh --level full
-        scripts/blender-export.sh --level lite
+        for wardrobe in $WARDROBES; do
+            scripts/blender-export.sh --wardrobe "$wardrobe" --level full
+            scripts/blender-export.sh --wardrobe "$wardrobe" --level lite
+        done
         scripts/unity-refresh.sh
         ;;
     rebuild)

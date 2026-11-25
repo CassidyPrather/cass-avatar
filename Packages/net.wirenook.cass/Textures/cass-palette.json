@@ -324,6 +324,70 @@
         0.3125
       ],
       "emissive": false
+    },
+    "cyber-night": {
+      "color": "#13153f",
+      "uv": [
+        0.0625,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-deep": {
+      "color": "#0b0c25",
+      "uv": [
+        0.1875,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-slate": {
+      "color": "#242949",
+      "uv": [
+        0.3125,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-ink": {
+      "color": "#271452",
+      "uv": [
+        0.4375,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-indigo": {
+      "color": "#5f37be",
+      "uv": [
+        0.5625,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-violet": {
+      "color": "#6d2c95",
+      "uv": [
+        0.6875,
+        0.1875
+      ],
+      "emissive": false
+    },
+    "cyber-glow-cyan": {
+      "color": "#73f4ff",
+      "uv": [
+        0.0625,
+        0.0625
+      ],
+      "emissive": true
+    },
+    "cyber-glow-magenta": {
+      "color": "#ff00e6",
+      "uv": [
+        0.1875,
+        0.0625
+      ],
+      "emissive": true
     }
   }
 }

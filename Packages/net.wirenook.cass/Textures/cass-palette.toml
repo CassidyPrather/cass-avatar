@@ -48,3 +48,19 @@ swatches = [
   ["sweater-stripe", "#5f8fd0"], ["void", "#0c0a10"], ["vest", "#7d5233"], ["vest-shade", "#5e3b24"],
   ["bandana", "#c9483f"], ["bandana-shade", "#9a2f2f"],
 ]
+
+# The cyber wardrobe (blender/scripts/kitbash/cyber.py): wirenook.net's night colours for the
+# cloth, with ink, indigo and violet panels. Taken from wirenook-palette.json.
+[[row]]
+swatches = [
+  ["cyber-night", "#13153f"], ["cyber-deep", "#0b0c25"], ["cyber-slate", "#242949"], ["cyber-ink", "#271452"],
+  ["cyber-indigo", "#5f37be"], ["cyber-violet", "#6d2c95"],
+]
+
+# Its light lines. The row is marked emissive, which puts it in cass-palette-emission.png;
+# the avatar's material does not read that mask yet, so for now these are only bright.
+[[row]]
+emissive = true
+swatches = [
+  ["cyber-glow-cyan", "#73f4ff"], ["cyber-glow-magenta", "#ff00e6"],
+]

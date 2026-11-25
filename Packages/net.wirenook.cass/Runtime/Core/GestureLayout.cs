@@ -65,6 +65,14 @@ namespace Wirenook.Cass.Core
         /// </summary>
         public Dictionary<string, Dictionary<string, BoneTurn>> Poses = new Dictionary<string, Dictionary<string, BoneTurn>>();
 
+        /// <summary>
+        /// Other turns for some of the poses, held instead while a garment is
+        /// worn: by the id of the garment's tile, then by pose name. A pose
+        /// that is not named here is held as it is in <see cref="Poses"/>.
+        /// </summary>
+        public Dictionary<string, Dictionary<string, Dictionary<string, BoneTurn>>> PosesWhile =
+            new Dictionary<string, Dictionary<string, Dictionary<string, BoneTurn>>>();
+
         public Dictionary<int, string> For(Hand hand) => hand == Hand.Left ? Left : Right;
 
         /// <summary>Expands the <c>Name*</c> shorthand to its Left and Right blendshapes.</summary>
@@ -127,16 +135,21 @@ namespace Wirenook.Cass.Core
         /// from where the bone is. A sided entry overrides an unsided one.
         /// </summary>
         /// <param name="isBone">Whether a name is a bone of the skeleton as it stands.</param>
-        public Dictionary<string, BoneTurn> ExpandPose(string pose, Func<string, bool> isBone)
+        /// <param name="wearing">The tile of a garment being worn, to get the pose as it is held under it.</param>
+        public Dictionary<string, BoneTurn> ExpandPose(string pose, Func<string, bool> isBone, string wearing = null)
         {
+            var turns = Poses[pose];
+            if (wearing != null && PosesWhile.TryGetValue(wearing, out var worn) && worn.TryGetValue(pose, out var under))
+                turns = under;
+
             var expanded = new Dictionary<string, BoneTurn>();
-            foreach (var pair in Poses[pose].Where(pair => !isBone(pair.Key)))
+            foreach (var pair in turns.Where(pair => !isBone(pair.Key)))
             {
                 expanded[pair.Key + ".L"] = pair.Value;
                 expanded[pair.Key + ".R"] = pair.Value;
             }
 
-            foreach (var pair in Poses[pose].Where(pair => isBone(pair.Key))) expanded[pair.Key] = pair.Value;
+            foreach (var pair in turns.Where(pair => isBone(pair.Key))) expanded[pair.Key] = pair.Value;
             return expanded;
         }
 
@@ -177,6 +190,14 @@ namespace Wirenook.Cass.Core
 
                 if (expression.Pose != null && !Poses.ContainsKey(expression.Pose))
                     problems.Add("Expression " + expression.Id + " holds the pose \"" + expression.Pose + "\", which gestures.json does not define.");
+            }
+
+            foreach (var worn in PosesWhile)
+            {
+                if (!knownTiles.Contains(worn.Key))
+                    problems.Add("Poses are given for while the tile \"" + worn.Key + "\" is worn, which uv-tiles.json does not define.");
+                foreach (var pose in worn.Value.Keys.Where(pose => !Poses.ContainsKey(pose)))
+                    problems.Add("The pose \"" + pose + "\" is given for while " + worn.Key + " is worn, but not on its own.");
             }
 
             return problems;

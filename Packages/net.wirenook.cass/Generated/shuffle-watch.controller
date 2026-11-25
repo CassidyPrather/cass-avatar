@@ -12,7 +12,7 @@ AnimatorController:
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Hold
-    m_StateMachine: {fileID: 7979769283068912235}
+    m_StateMachine: {fileID: 4452807865455247218}
     m_Mask: {fileID: 0}
     m_Motions: []
     m_Behaviours: []
@@ -22,7 +22,7 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
---- !u!74 &2511278855059019318
+--- !u!74 &1698046292154622307
 AnimationClip:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -142,7 +142,7 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events: []
---- !u!1107 &7979769283068912235
+--- !u!1107 &4452807865455247218
 AnimatorStateMachine:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -152,7 +152,7 @@ AnimatorStateMachine:
   m_Name: Hold
   m_ChildStates:
   - serializedVersion: 1
-    m_State: {fileID: 9025486209593958657}
+    m_State: {fileID: 5604961906549242502}
     m_Position: {x: 260, y: 0, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
@@ -163,8 +163,8 @@ AnimatorStateMachine:
   m_EntryPosition: {x: 0, y: -160, z: 0}
   m_ExitPosition: {x: 600, y: -160, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
-  m_DefaultState: {fileID: 9025486209593958657}
---- !u!1102 &9025486209593958657
+  m_DefaultState: {fileID: 5604961906549242502}
+--- !u!1102 &5604961906549242502
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
@@ -184,7 +184,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 2511278855059019318}
+  m_Motion: {fileID: 1698046292154622307}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

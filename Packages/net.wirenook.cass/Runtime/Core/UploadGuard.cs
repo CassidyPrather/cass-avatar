@@ -17,6 +17,30 @@ namespace Wirenook.Cass.Core
         public IReadOnlyList<string> RequiredTags = new[] { "author_tag_ai", "author_tag_agplv3" };
 
         public string ReleaseStatus = "public";
+
+        /// <summary>
+        /// What else the description has to say: one credit for each asset
+        /// the avatar carries that is not part of its source.
+        /// </summary>
+        public IReadOnlyList<string> Credits = new string[0];
+
+        /// <summary>
+        /// The policy for an avatar that carries assets under someone
+        /// else's terms (a bought prop, kept out of the repository). Such
+        /// terms as a rule forbid a public, cloneable upload, and the avatar
+        /// as a whole is then not AGPL, so it goes up private, without the
+        /// licence tag, and its description credits each such asset. It
+        /// still says where the rest of it comes from.
+        /// </summary>
+        public static UploadPolicy Carrying(IEnumerable<string> credits)
+        {
+            return new UploadPolicy
+            {
+                RequiredTags = new[] { "author_tag_ai" },
+                ReleaseStatus = "private",
+                Credits = credits.ToList(),
+            };
+        }
     }
 
     /// <summary>
@@ -44,6 +68,12 @@ namespace Wirenook.Cass.Core
                 problems.Add(
                     "The description must say where to get the avatar: include " +
                     string.Join(" or ", policy.DistributionMarkers) + ".");
+            }
+
+            foreach (var credit in policy.Credits)
+            {
+                if (text.IndexOf(credit, StringComparison.OrdinalIgnoreCase) < 0)
+                    problems.Add("The description must credit what the avatar carries from elsewhere: include \"" + credit + "\".");
             }
 
             var present = new HashSet<string>(tags ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);

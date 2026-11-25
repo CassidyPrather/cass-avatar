@@ -49,6 +49,10 @@ namespace Wirenook.Cass.Editor
 
         public static GameObject LoadVariant(string slug)
         {
+            var variant = CassSpec.Variants().Variants.FirstOrDefault(candidate => candidate.Slug == slug);
+            var absent = variant?.Absent() ?? new List<LocalAsset>();
+            if (absent.Count > 0) throw new InvalidOperationException(CassPrefabs.Unavailable(variant, absent));
+
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CassPrefabs.VariantPath(slug));
             if (prefab == null)
                 throw new FileNotFoundException("No variant \"" + slug + "\"; variants are listed in Spec/variants.json.", CassPrefabs.VariantPath(slug));
@@ -58,8 +62,8 @@ namespace Wirenook.Cass.Editor
         /// <summary>The tags a variant uploads with: the required ones, then its features' by priority.</summary>
         public static List<string> ComposeTags(GameObject avatar, out List<string> dropped)
         {
-            var policy = new UploadPolicy();
             var profile = avatar.GetComponent<AvatarUploadProfile>();
+            var policy = profile != null ? profile.Policy() : new UploadPolicy();
             var candidates = avatar.GetComponentsInChildren<WirenookFeature>(true)
                 .Where(feature => !string.IsNullOrWhiteSpace(feature.tag))
                 .Select(feature => new FeatureTags.Candidate(feature.tag, feature.tagPriority))

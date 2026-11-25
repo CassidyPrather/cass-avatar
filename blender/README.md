@@ -21,6 +21,36 @@ more coarsely in `lite`, which also leaves out the stitched details, the
 knit lines of the sweater's ribbing and the folds of the skirt's gathers.
 The face is the same mesh in both.
 
+## Wardrobes
+
+The generator can dress the same figure in a second set of garments:
+`--wardrobe cyber` (`kitbash/cyber.py`) builds `cass-cyber.blend` and
+`cass-cyber-lite.blend` and exports `cass-cyber.fbx` and
+`cass-cyber-lite.fbx`. `western`, the default, is everything described
+below. A wardrobe changes what the six `Outfit_` meshes look like and
+nothing else: their names, the tiles they are on, the bones and the shape
+keys are the same, and the lite budgets are the level's own, so Unity can
+exchange one wardrobe for another by mesh name as it exchanges the levels.
+
+| Mesh | Tile | western | cyber |
+| --- | --- | --- | --- |
+| `Outfit_Sweater` | `outfit.default.top` | sweater | techwear jacket with a stand collar |
+| `Outfit_Shorts` | `outfit.default.bottom` | denim shorts | the same cut in dark cloth |
+| `Outfit_Skirt` | `outfit.skirt.bottom` | tiered gingham skirt | short pleated skirt |
+| `Outfit_Vest` | `outfit.vest.layer` | suede vest and neckerchief | cropped utility vest |
+| `Outfit_Boots` | `outfit.default.shoes` | cowboy boots | platform boots |
+| `Outfit_Hat` | `outfit.default.hat` | cowboy hat | headset, wholly below the ears' roots |
+
+An exchanged mesh is skinned to the bones where the avatar has them, so a
+wardrobe must not move a bone. That is why the cyber jacket is finished from
+the sweater's own shell (`garments.top_shell`), its shorts are the denim
+shorts' cut exactly (the top's tube is sized round them, and the skirt's
+chains are placed by that tube), its short skirt hangs on the upper two
+bones of the long skirt's chains (`build_skirt(ctx, cut)`), and its boots
+close their shafts at the height the cowboy boots do, which keeps the skin's
+tiles the same. `Body`, `Skin`, `Ears` and `Tail` come out identical in both
+wardrobes; `Hair` differs by where its long lengths hang clear of the top.
+
 ## Files
 
 | Path | Purpose |
@@ -34,6 +64,7 @@ The face is the same mesh in both.
 | `scripts/validate.py` | Checks the open `.blend` against the contracts. Runnable, and importable as `validate.validate()`. |
 | `scripts/export.py` | Validates, exports the FBX, reads it back and compares it with the scene. |
 | `scripts/preview.py` | Renders flat-lit PNG previews for checking a headless session by eye. |
+| `scripts/poke.py` | Measures, pose by pose, how far one garment comes out through the one worn over it. |
 
 | Module | What it makes |
 | --- | --- |
@@ -56,6 +87,8 @@ scripts/cass.sh build                            # both levels -> blender/cass.b
 scripts/cass.sh export                           # validate, export and verify both FBX files, refresh Unity
 scripts/blender-build.sh --level lite            # one level; --force overwrites a hand-edited file
 scripts/blender-export.sh --level lite
+scripts/blender-build.sh --wardrobe cyber --level full    # the other wardrobe -> blender/cass-cyber.blend (and -lite)
+scripts/blender-export.sh --wardrobe cyber --level full   # -> BlenderExports/cass-cyber.fbx (and -lite)
 blender -b --factory-startup blender/cass.blend --python blender/scripts/validate.py    # validate only
 blender -b --factory-startup blender/cass.blend --python blender/scripts/preview.py -- --out some/dir
 ```
@@ -78,13 +111,24 @@ The first check exists because the second cannot see an orientation error in
 the bone nodes: Blender's importer rebuilds bones from the bind pose. Run
 `preview.py` with `-- --help` for its options (views, extra shots, shape key
 values, poses, tile overrides). `--pose down,walk,run,sit,kick` renders one
-set of pictures per pose, which is how the clothes are checked in motion.
-In a pose the skirt's chains are laid over the legs as its physics would
-leave them: each bone hangs as at rest unless that puts it inside one of
-the spec's leg colliders, and is then turned out on its hinge until it is
-clear. It is a stand-in for the PhysBone, not a simulation of it. And
-`--tiles outfit.skirt.bottom=1,outfit.default.bottom=0,hair.long=1,hair.short=0,outfit.vest.layer=1`
-shows the alternatives, which are hidden at rest. Its cavity shading draws
+set of pictures per pose, which is how the clothes are checked in motion
+(`reach` is where a headset wearer's arms spend their time, and `knee` a
+knee brought up as high as it goes). In a pose the skirt is laid over the
+legs as Unity would leave it: the two lifts are turned with the thighs by
+the share `skeleton.json` gives them, and then each bone of a chain hangs
+as near to how it rests as its hinge allows unless that puts it inside one
+of the spec's leg colliders, and is then turned out until it is clear. It
+is a stand-in for the constraints and the PhysBones, not a simulation of
+them. `--stiff` shows the skirt as a mobile build holds it, with the lifts
+and no physics. And
+`--tiles outfit.skirt.bottom=0,outfit.default.bottom=1,hair.long=1,hair.short=0,outfit.vest.layer=0`
+shows the alternatives to what rests on.
+
+`poke.py` puts numbers on what the pictures show: for each pose, how many
+vertices of one garment stand outside the garment worn over it, and how
+far (`--pairs Outfit_Sweater:Outfit_Vest`, the default). Only vertices the
+outer garment covers at rest are counted, so a sleeve that leaves through
+an armhole is not a fault. The vest's armholes were recut by its numbers. Its cavity shading draws
 faint marks around the mouth after it has deleted hidden faces; they are not
 in the model.
 

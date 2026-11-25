@@ -104,7 +104,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: e35bd4ad92fd49b489045f794729bc17, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GlitterColorTex:
@@ -330,7 +330,7 @@ Material:
     - _EmissionBlendMode: 1
     - _EmissionFluorescence: 0
     - _EmissionGradSpeed: 1
-    - _EmissionMainStrength: 0
+    - _EmissionMainStrength: 1
     - _EmissionMap_UVMode: 0
     - _EmissionParallaxDepth: 0
     - _EmissionUseGrad: 0
@@ -471,10 +471,10 @@ Material:
     - _OutlineSrcBlendFA: 1
     - _OutlineStencilComp: 8
     - _OutlineStencilFail: 0
-    - _OutlineStencilPass: 0
+    - _OutlineStencilPass: 2
     - _OutlineStencilReadMask: 255
-    - _OutlineStencilRef: 0
-    - _OutlineStencilWriteMask: 255
+    - _OutlineStencilRef: 128
+    - _OutlineStencilWriteMask: 128
     - _OutlineStencilZFail: 0
     - _OutlineVectorScale: 1
     - _OutlineVectorUVMode: 0
@@ -548,10 +548,10 @@ Material:
     - _SrcBlendFA: 1
     - _StencilComp: 8
     - _StencilFail: 0
-    - _StencilPass: 0
+    - _StencilPass: 2
     - _StencilReadMask: 255
-    - _StencilRef: 0
-    - _StencilWriteMask: 255
+    - _StencilRef: 128
+    - _StencilWriteMask: 128
     - _StencilZFail: 0
     - _SubpassCutoff: 0.5
     - _TessEdge: 10
@@ -570,11 +570,11 @@ Material:
     - _UDIMDiscardRow1_2: 0
     - _UDIMDiscardRow1_3: 1
     - _UDIMDiscardRow2_0: 0
-    - _UDIMDiscardRow2_1: 0
+    - _UDIMDiscardRow2_1: 1
     - _UDIMDiscardRow2_2: 0
     - _UDIMDiscardRow2_3: 0
-    - _UDIMDiscardRow3_0: 1
-    - _UDIMDiscardRow3_1: 1
+    - _UDIMDiscardRow3_0: 0
+    - _UDIMDiscardRow3_1: 0
     - _UDIMDiscardRow3_2: 0
     - _UDIMDiscardRow3_3: 1
     - _UDIMDiscardUV: 1
@@ -585,7 +585,7 @@ Material:
     - _UseBumpMap: 1
     - _UseClippingCanceller: 0
     - _UseDither: 0
-    - _UseEmission: 0
+    - _UseEmission: 1
     - _UseEmission2nd: 0
     - _UseGlitter: 0
     - _UseMain2ndTex: 0

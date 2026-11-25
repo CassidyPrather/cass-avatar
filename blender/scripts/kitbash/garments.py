@@ -16,6 +16,9 @@ whether the laid-on details are made at all.
 """
 
 import math
+import types
+
+import bmesh
 
 import numpy as np
 from mathutils import Vector
@@ -59,8 +62,14 @@ def _oval_ring(co, centre_y, half_width, half_depth, z, square=None):
     return np.stack([co[:, 0] / rho, centre_y + (co[:, 1] - centre_y) / rho, np.full(len(co), z)], axis=1)
 
 
-def build_sweater(ctx):
-    """An oversized crew-neck sweater: a plain tube below the arms, bloused into ribbed bands at hem, cuffs and neck."""
+def top_shell(ctx, swatch):
+    """The shell every top is finished from: a tube below the arms, loose sleeves, a neckline cut and faired.
+
+    Returns its open rims (`hem`, `cuffs` by side, `collar`) and the numbers
+    the bands are grown with. What is worn with a top is fitted to this shape
+    (the skirt's waistband to the tube, the layer over it to the drape and the
+    neckline), so every wardrobe's top starts here and differs in its bands.
+    """
     armature, detail = ctx["armature"], ctx["detail"]
     shoulder = np.array(rig.head_of(armature, "UpperArm.L"))
     wrist = np.array(rig.head_of(armature, "Hand.L"))
@@ -68,7 +77,7 @@ def build_sweater(ctx):
     neck = np.array(rig.head_of(armature, "Neck"))
     armpit = shoulder[2] - 0.065
 
-    shell = Shell(ctx["skin"], SWEATER_SEGMENTS, "sweater")
+    shell = Shell(ctx["skin"], SWEATER_SEGMENTS, swatch)
     shell.inflate(0.010)
 
     # Rims: each is cut straight, just inside the saw-toothed edge of the body segment.
@@ -161,6 +170,57 @@ def build_sweater(ctx):
     ctx["sweater_collar"] = shell.faired
     rim = np.array([v.co[:] for v in collar])
     print(f"sweater: collar x {rim[:, 0].min():.3f}..{rim[:, 0].max():.3f}, y {rim[:, 1].min():.3f}..{rim[:, 1].max():.3f}, z {rim[:, 2].min():.3f}..{rim[:, 2].max():.3f}")
+    return types.SimpleNamespace(shell=shell, hem=hem, cuffs=cuffs, collar=collar, waist=waist, low=low, top=top, bottom=bottom,
+                                 armpit=armpit, opening=opening, middle=middle, neck_axis=neck_axis, shoulder=shoulder,
+                                 wrist=wrist, crew=crew)
+
+
+def lean_ring(co, opening, neck_axis, rise, inward):
+    """A ring moved up out of the neckline and in towards the neck by so many metres."""
+    out = co + opening * rise
+    radial = out[:, :2] - neck_axis
+    distance = np.maximum(np.linalg.norm(radial, axis=1, keepdims=True), 1e-9)
+    out[:, :2] = neck_axis + radial * (1.0 - inward / distance)
+    return out
+
+
+def hem_ring(tube, scale, drop):
+    """A ring set on the tube's oval at the hem, scaled, `drop` below the waist."""
+    half_width, centre_y, half_depth = tube.bottom
+    return lambda co: _oval_ring(co, centre_y, half_width * scale, half_depth * scale, tube.waist - drop)
+
+
+def finish_top(ctx, tube, name="Outfit_Sweater"):
+    """Makes the object, hangs its hem from the waist and leaves what the skirt and the layer over it are fitted to."""
+    obj = tube.shell.to_object(name, "outfit.default.top", ctx["collection"], ctx["armature"], ctx["material"],
+                               ctx["palette"], ctx["tiles"])
+
+    # The hem hangs from the waist. Skin weights sampled from the hips under it would have each
+    # thigh drag its side of the band along; most of that is given back to the hips.
+    table = common.weights_of(obj)
+    co = common.coords(obj.data)
+    hanging = smoothstep(tube.waist + 0.02, tube.waist - 0.03, co[:, 2])
+    table.setdefault("Hips", np.zeros(len(co)))
+    for side in "LR":
+        name = f"UpperLeg.{side}"
+        if name in table:
+            given = table[name] * hanging * SWEATER_HEM_FREE
+            table[name] = table[name] - given
+            table["Hips"] = table["Hips"] + given
+    common.set_weights(obj, table)
+    ctx["sweater"] = obj
+    ctx["sweater_tube"] = {"waist": tube.waist, "low": tube.low, "bottom": tube.bottom, "rib": SWEATER_RIB,
+                           "top": tube.top, "armpit": tube.armpit}
+    return obj
+
+
+def build_sweater(ctx):
+    """An oversized crew-neck sweater: a plain tube below the arms, bloused into ribbed bands at hem, cuffs and neck."""
+    detail = ctx["detail"]
+    tube = top_shell(ctx, "sweater")
+    shell, hem, cuffs, collar, crew = tube.shell, tube.hem, tube.cuffs, tube.collar, tube.crew
+    shoulder, wrist, waist, bottom = tube.shoulder, tube.wrist, tube.waist, tube.bottom
+    opening, middle, neck_axis = tube.opening, tube.middle, tube.neck_axis
 
     for sign, cuff in cuffs.items():
         a, b = shoulder * (sign, 1, 1), wrist * (sign, 1, 1)
@@ -177,19 +237,15 @@ def build_sweater(ctx):
         if detail >= 1.0:
             shell.ribs(made[1], made[2], "sweater", spacing=0.010)
 
-    def hem_ring(scale, drop):
-        half_width, centre_y, half_depth = bottom
-        return lambda co: _oval_ring(co, centre_y, half_width * scale, half_depth * scale, waist - drop)
-
     rib_top = SWEATER_HEM - SWEATER_HEM_RIB
     steps = [
-        (hem_ring(1.012, rib_top * 0.50), "sweater"),
-        (hem_ring(1.000, rib_top - 0.008), "sweater"),
-        (hem_ring(SWEATER_RIB + 0.008, rib_top), "sweater"),
-        (hem_ring(SWEATER_RIB, SWEATER_HEM), "sweater-shade"),
+        (hem_ring(tube, 1.012, rib_top * 0.50), "sweater"),
+        (hem_ring(tube, 1.000, rib_top - 0.008), "sweater"),
+        (hem_ring(tube, SWEATER_RIB + 0.008, rib_top), "sweater"),
+        (hem_ring(tube, SWEATER_RIB, SWEATER_HEM), "sweater-shade"),
     ]
     if detail >= 1.0:
-        steps.append((hem_ring(SWEATER_RIB - 0.045, SWEATER_HEM - 0.003), "sweater-shade"))
+        steps.append((hem_ring(tube, SWEATER_RIB - 0.045, SWEATER_HEM - 0.003), "sweater-shade"))
     made = []
     shell.band(hem, steps, made)
     if detail >= 1.0:
@@ -201,12 +257,7 @@ def build_sweater(ctx):
         return out
 
     def lean(co, rise, inward):
-        """A ring moved up out of the neckline and in towards the neck by so many metres."""
-        out = co + opening * rise
-        radial = out[:, :2] - neck_axis
-        distance = np.maximum(np.linalg.norm(radial, axis=1, keepdims=True), 1e-9)
-        out[:, :2] = neck_axis + radial * (1.0 - inward / distance)
-        return out
+        return lean_ring(co, opening, neck_axis, rise, inward)
 
     if crew:
         # A ribbed band that stands a little proud of the cloth and leans in towards the neck,
@@ -232,33 +283,23 @@ def build_sweater(ctx):
     shell.band(collar, ribbing, made)
     if detail >= 1.0 and crew:
         shell.ribs(made[0], made[1], "sweater", spacing=0.008, width=0.002, inset=0.2)
-    obj = shell.to_object("Outfit_Sweater", "outfit.default.top", ctx["collection"], armature, ctx["material"],
-                          ctx["palette"], ctx["tiles"])
-
-    # The hem hangs from the waist. Skin weights sampled from the hips under it would have each
-    # thigh drag its side of the band along; most of that is given back to the hips.
-    table = common.weights_of(obj)
-    co = common.coords(obj.data)
-    hanging = smoothstep(waist + 0.02, waist - 0.03, co[:, 2])
-    table.setdefault("Hips", np.zeros(len(co)))
-    for side in "LR":
-        name = f"UpperLeg.{side}"
-        if name in table:
-            given = table[name] * hanging * SWEATER_HEM_FREE
-            table[name] = table[name] - given
-            table["Hips"] = table["Hips"] + given
-    common.set_weights(obj, table)
-    ctx["sweater"] = obj
-    ctx["sweater_tube"] = {"waist": waist, "low": low, "bottom": bottom, "rib": SWEATER_RIB}
-    return obj
+    return finish_top(ctx, tube)
 
 
-def build_shorts(ctx):
-    """Denim short-shorts: waistband with belt loops, pockets, fly and seams stitched on, turned-up hems."""
+def build_shorts(ctx, swatches=None):
+    """Denim short-shorts: waistband with belt loops, pockets, fly and seams stitched on, turned-up hems.
+
+    `swatches` renames the colours, so another wardrobe wears the same cut in its own cloth. The
+    cut and everything laid on it stay as they are: the top's tube is sized to pass round these
+    shorts, loops and pockets included, and the skirt's waistband and chains are placed by that tube.
+    `denim-seam` is the stitching of the laid-on details, which is otherwise `denim-stitch` too.
+    """
+    table = {"denim-seam": "denim-stitch", **(swatches or {})}
+    cloth = lambda name: table.get(name, name)
     armature, detail = ctx["armature"], ctx["detail"]
     hip = np.array(rig.head_of(armature, "UpperLeg.L"))
     hips = np.array(rig.head_of(armature, "Hips"))
-    shell = Shell(ctx["skin"], SHORTS_SEGMENTS, "denim")
+    shell = Shell(ctx["skin"], SHORTS_SEGMENTS, cloth("denim"))
     shell.inflate(0.009)
 
     waist = shell.cut_rim(shell.loop_where(lambda c: abs(c[0]) < 0.05 and c[2] > hip[2] + 0.05), (0, 0, 1))
@@ -273,30 +314,30 @@ def build_shorts(ctx):
     for sign, loop in legs.items():
         centre = np.mean([v.co[:] for v in loop], axis=0)[:2]
         hem = [
-            (lambda co, centre=centre: ring_scaled(co, centre, 1.035, -0.012), "denim"),
-            (lambda co, centre=centre: ring_scaled(co, centre, 1.0, -0.004), "denim-stitch"),
-            (lambda co, centre=centre: ring_scaled(co, centre, 1.02, -0.022), "denim-shade"),
+            (lambda co, centre=centre: ring_scaled(co, centre, 1.035, -0.012), cloth("denim")),
+            (lambda co, centre=centre: ring_scaled(co, centre, 1.0, -0.004), cloth("denim-stitch")),
+            (lambda co, centre=centre: ring_scaled(co, centre, 1.02, -0.022), cloth("denim-shade")),
         ]
         if detail >= 1.0:
             # The turn-up has an underside.
             hem += [
-                (lambda co, centre=centre: ring_scaled(co, centre, 0.955, -0.002), "denim-shade"),
-                (lambda co, centre=centre: ring_scaled(co, centre, 0.99, 0.020), "denim-shade"),
+                (lambda co, centre=centre: ring_scaled(co, centre, 0.955, -0.002), cloth("denim-shade")),
+                (lambda co, centre=centre: ring_scaled(co, centre, 0.99, 0.020), cloth("denim-shade")),
             ]
         shell.band(loop, hem)
 
     centre = np.mean([v.co[:] for v in waist], axis=0)[:2]
     top = shell.band(waist, [
-        (lambda co: ring_scaled(co, centre, 1.0, 0.004), "denim-stitch"),
-        (lambda co: ring_scaled(co, centre, 1.0, 0.034), "denim-shade"),
+        (lambda co: ring_scaled(co, centre, 1.0, 0.004), cloth("denim-stitch")),
+        (lambda co: ring_scaled(co, centre, 1.0, 0.034), cloth("denim-shade")),
     ])
     band_top = float(np.mean([v.co.z for v in top]))
     # The waistband is a folded strip: it turns over at the top and comes back down inside.
     # The lite level makes do with the turn.
-    fold = [(lambda co: ring_scaled(co, centre, 0.955, -0.003), "denim-shade")]
+    fold = [(lambda co: ring_scaled(co, centre, 0.955, -0.003), cloth("denim-shade"))]
     if detail >= 1.0:
-        fold = [(lambda co: ring_scaled(co, centre, 0.985, 0.004), "denim-shade")] + fold + [
-            (lambda co: ring_scaled(co, centre, 0.985, -0.026), "denim-shade")]
+        fold = [(lambda co: ring_scaled(co, centre, 0.985, 0.004), cloth("denim-shade"))] + fold + [
+            (lambda co: ring_scaled(co, centre, 0.985, -0.026), cloth("denim-shade"))]
     shell.band(top, fold)
     obj = shell.to_object("Outfit_Shorts", "outfit.default.bottom", ctx["collection"], armature, ctx["material"],
                           ctx["palette"], ctx["tiles"])
@@ -312,7 +353,7 @@ def build_shorts(ctx):
         band_low = band_top - 0.036
         seat = band_low - 0.012
 
-        def line(points, swatch="denim-stitch", width=stitch):
+        def line(points, swatch=cloth("denim-seam"), width=stitch):
             applique.ribbon([surface.around(axis, a, z) for a, z in points], width, swatch)
 
         for sign in (1.0, -1.0):
@@ -335,11 +376,11 @@ def build_shorts(ctx):
         line([(7.0, band_low - 0.004), (7.5, band_low - 0.045), (6.5, band_low - 0.075), (3.0, band_low - 0.092), (0.5, band_low - 0.098)])
         line([(0.0, z) for z in np.linspace(band_low - 0.004, band_low - 0.100, 6)], width=0.003)
         button = [surface.around(axis, 3.0 * math.cos(k * math.pi / 3), band_low + 0.018 + 0.008 * math.sin(k * math.pi / 3)) for k in range(6)]
-        applique.patch(button, "boot-stitch", lift=0.004)
+        applique.patch(button, cloth("boot-stitch"), lift=0.004)
         # Belt loops stand over the waistband.
         for at in (-152.0, -90.0, -28.0, 28.0, 90.0, 152.0, 180.0):
             loop = [surface.around(axis, at + da, z) for da, z in ((-2.6, band_low - 0.004), (2.6, band_low - 0.004), (2.6, band_top + 0.002), (-2.6, band_top + 0.002))]
-            applique.patch(loop, "denim", lift=0.0045)
+            applique.patch(loop, cloth("denim"), lift=0.0045)
         applique.apply(ctx["palette"], ctx["tiles"], "outfit.default.bottom")
     return obj
 
@@ -359,39 +400,52 @@ SKIRT_LINING = 0.014              # how far inside the cloth its dark lining han
 # ahead, mirrored onto both sides. Two stand in front of each thigh, so that a raised leg takes
 # both up and with them the cloth that lies over it; round the sides and the back they are sparser.
 SKIRT_CHAINS = (("Front", 10.0), ("Thigh", 34.0), ("Side", 75.0), ("Rear", 118.0), ("Back", 158.0))
+SKIRT_LIFTED = ("Front", "Thigh")  # the chains a thigh carries with it (see _skirt_bones)
 # Where each chain's bones start, as fractions of the way from waistband to hem: at the seams.
 SKIRT_JOINTS = (0.0,) + SKIRT_TIERS[:-1]
 SKIRT_HANG = 0.07                 # the height below the waistband over which the cloth passes from the hips to its chains
 SKIRT_JOINT_BLEND = 0.04          # half the height over which one bone of a chain takes over from the one above
 
 
-def _skirt_bones(point_at, root):
-    """The skirt bones as rig.add_bones rows: SkirtRoot under Hips, then the chains down the cloth.
+def _skirt_bones(point_at, root, hip):
+    """The skirt bones as rig.add_bones rows: the bones the chains hang from, then the chains down the cloth.
 
-    Each bone's Z axis points out from the body, so its X axis lies along the
-    cloth and a turn about X swings the chain straight out or in. That is the
-    axis a PhysBone's hinge limit turns about (CassPrefabs, "skirt").
+    The chains at the sides and the back hang from SkirtRoot, which stays
+    with the hips. Those in front of a thigh hang from that leg's SkirtLift,
+    a bone at the hip joint that Unity turns part of the way with the thigh
+    (skeleton.json, `follow`), so a knee that comes up carries its cloth with
+    it however fast it comes; physics alone let a quick knee through.
+
+    Each chain bone's Z axis points out from the body, so its X axis lies
+    along the cloth and a turn about X swings the chain straight out or in.
+    That is the axis a PhysBone's hinge limit turns about (CassPrefabs, "skirt").
     """
-    rows = [("SkirtRoot", root, root + np.array((0.0, 0.0, 0.05)), "Hips", (0.0, -1.0, 0.0))]
+    up = np.array((0.0, 0.0, 0.05))
+    rows = [("SkirtRoot", root, root + up, "Hips", (0.0, -1.0, 0.0))]
+    for side, sign in (("L", 1.0), ("R", -1.0)):
+        joint = hip * (sign, 1.0, 1.0)
+        rows.append((f"SkirtLift.{side}", joint, joint + up, "Hips", (0.0, -1.0, 0.0)))
     for stem, bearing in SKIRT_CHAINS:
         theta = math.radians(bearing)
         for side, sign in (("L", 1.0), ("R", -1.0)):
             joints = [point_at(f, theta) * (sign, 1.0, 1.0) for f in SKIRT_JOINTS + (1.0,)]
             out = (sign * math.sin(theta), -math.cos(theta), 0.0)
+            hangs_from = f"SkirtLift.{side}" if stem in SKIRT_LIFTED else "SkirtRoot"
             for number in range(1, len(joints)):
-                parent = "SkirtRoot" if number == 1 else f"Skirt{stem}{number - 1}.{side}"
+                parent = hangs_from if number == 1 else f"Skirt{stem}{number - 1}.{side}"
                 rows.append((f"Skirt{stem}{number}.{side}", joints[number - 1], joints[number], parent, out))
     return rows
 
 
-def _skirt_weights(obj, oval, band_low, drop):
+def _skirt_weights(obj, oval, band_low, drop, chain_drop=None):
     """Hangs the skirt on its chains: the waistband stays with the hips, and below it the cloth goes with the chains.
 
     Every vertex is shared between the two chains it lies between round the
     skirt, and down each chain between the bones on either side of a joint,
     so at most four bones hold it. Only what lies near the cloth hangs: the
     lining does, the shell over the hips and the middle of the floor keep
-    the weights they have.
+    the weights they have. `chain_drop` is the length the chains are jointed
+    along, where that is not the cloth's own (a shorter skirt on the same chains).
     """
     co = common.coords(obj.data)
     f = np.clip((band_low - co[:, 2]) / drop, 0.0, 1.0)
@@ -401,7 +455,7 @@ def _skirt_weights(obj, oval, band_low, drop):
     bearing = np.degrees(np.arctan2(co[:, 0], -(co[:, 1] - centre_y)))
 
     table = {name: values * (1.0 - hanging) for name, values in common.weights_of(obj).items()}
-    seams = [band_low - drop * joint for joint in SKIRT_JOINTS[1:]]
+    seams = [band_low - (drop if chain_drop is None else chain_drop) * joint for joint in SKIRT_JOINTS[1:]]
     # How much of what a bone would hold is handed on to the bones below its lower joint.
     passed = [smoothstep(seam + SKIRT_JOINT_BLEND, seam - SKIRT_JOINT_BLEND, co[:, 2]) for seam in seams]
     chains = sorted([(sign * at, stem, side) for stem, at in SKIRT_CHAINS for side, sign in (("L", 1.0), ("R", -1.0))])
@@ -420,7 +474,7 @@ def _skirt_weights(obj, oval, band_low, drop):
     return table
 
 
-def build_skirt(ctx):
+def build_skirt(ctx, cut=None):
     """A tiered gingham skirt to mid-calf, as an alternative to the shorts: waistband, three gathered tiers, a ruffled hem.
 
     The cloth is painted, not flat: every face is laid on the atlas's patch
@@ -437,8 +491,15 @@ def build_skirt(ctx):
 
     The cloth hangs on its own bones (`_skirt_bones`): ten chains of three
     round the skirt, jointed at the seams between the tiers, which Unity
-    swings with one PhysBone and keeps off the legs with colliders. The
-    legs do not move it by weight.
+    swings with PhysBones and keeps off the legs with colliders. The legs do
+    not move it by weight; the four chains in front of the thighs are
+    carried part of the way with them by a constraint.
+
+    `cut` gives another skirt on the same waistband, lining and chains: its
+    `hem` height, its `sweep` at the hem, and `cloth(frame)`, which makes the
+    outside of it in place of the gingham. The chains do not follow the cut:
+    they are where this skirt's are, whatever hangs on them, because one
+    skeleton carries every wardrobe.
     """
     armature, detail, level = ctx["armature"], ctx["detail"], ctx["level"]
     full = detail >= 1.0
@@ -452,16 +513,28 @@ def build_skirt(ctx):
         waist_size, waist_y, top = SKIRT_WAIST, hip[1] - 0.02, hip[2] + 0.215
     hem_y = hip[1] - 0.008
     band_low = top - SKIRT_BAND
+    hem_height = SKIRT_HEM if cut is None else cut.hem
+    # The chains run down the gingham skirt's own shape, to its hem.
+    chain_drop = band_low - SKIRT_HEM
+    chain_hem_y = hem_y
+    if cut is not None:
+        # A shorter skirt ends where the long one is at that height, not out at the long one's hem.
+        hem_y = waist_y + (hem_y - waist_y) * ((band_low - hem_height) / chain_drop) ** 0.85
     columns = 72 if full else 16
     per_tier = 5 if full else 2
     thetas = np.arange(columns + 1) * (2.0 * math.pi / columns)
     period = atlas.GINGHAM_PERIOD / atlas.GINGHAM_SCALE
 
-    def oval(f, scale=1.0, extra=0.0):
-        """Half-width, half-depth, centre and squareness of the skirt, `f` of the way from waistband to hem."""
-        spread = f ** 0.85
-        return (waist_size[0] + (SKIRT_SWEEP[0] - waist_size[0]) * spread, waist_size[1] + (SKIRT_SWEEP[1] - waist_size[1]) * spread,
-                waist_y + (hem_y - waist_y) * spread, SWEATER_SQUARE + (2.0 - SWEATER_SQUARE) * np.minimum(1.0, f * 2.5), scale, extra)
+    def oval_to(sweep, hem_y):
+        def oval(f, scale=1.0, extra=0.0):
+            """Half-width, half-depth, centre and squareness of the skirt, `f` of the way from waistband to hem."""
+            spread = f ** 0.85
+            return (waist_size[0] + (sweep[0] - waist_size[0]) * spread, waist_size[1] + (sweep[1] - waist_size[1]) * spread,
+                    waist_y + (hem_y - waist_y) * spread, SWEATER_SQUARE + (2.0 - SWEATER_SQUARE) * np.minimum(1.0, f * 2.5), scale, extra)
+        return oval
+
+    chain_oval = oval_to(SKIRT_SWEEP, chain_hem_y)
+    oval = chain_oval if cut is None else oval_to(cut.sweep, hem_y)
 
     def ring(z, shape, wave=None):
         half_width, half_depth, centre_y, square, scale, extra = shape
@@ -490,43 +563,46 @@ def build_skirt(ctx):
                 part.face((upper[j], lower[j], lower[k], upper[k]), "sweater-stripe")
                 painted[len(part.faces) - 1] = {upper[j]: (s0, t0), lower[j]: (s0, t1), lower[k]: (s1, t1), upper[k]: (s1, t0)}
 
-    # The waistband, with an edge turned in at the top to meet the sweater.
-    band = oval(0.0)
-    repeats = max(1, int(round(girth(band) / period)))
-    rim = part.verts(ring(top, band))
-    lip = part.verts(ring(top - 0.003, oval(0.0, scale=0.955)))
-    part.loft([rim, lip], "sweater-stripe", flip=False)
-    seam = part.verts(ring(band_low, band))
-    strip([(rim, 0.0), (seam, SKIRT_BAND)], repeats)
+    drop = band_low - hem_height
+    if cut is not None:
+        cut.cloth(types.SimpleNamespace(part=part, oval=oval, top=top, band_low=band_low, drop=drop, full=full))
+    else:
+        # The waistband, with an edge turned in at the top to meet the sweater.
+        band = oval(0.0)
+        repeats = max(1, int(round(girth(band) / period)))
+        rim = part.verts(ring(top, band))
+        lip = part.verts(ring(top - 0.003, oval(0.0, scale=0.955)))
+        part.loft([rim, lip], "sweater-stripe", flip=False)
+        seam = part.verts(ring(band_low, band))
+        strip([(rim, 0.0), (seam, SKIRT_BAND)], repeats)
 
-    # The tiers: each a strip of cloth gathered into the seam above it and fuller than the last.
-    previous, start = seam, 0.0
-    drop = band_low - SKIRT_HEM
-    for tier, end in enumerate(SKIRT_TIERS):
-        last = tier == len(SKIRT_TIERS) - 1
-        repeats = max(1, int(round(girth(oval(end)) / period)))
-        folds, phase = SKIRT_FOLDS[tier], tier * 1.3
-        rows, t, before = [(previous, -0.004)], 0.0, None
-        for row in range(per_tier + 1):
-            g = row / per_tier
-            f = start + (end - start) * g
-            z = band_low - drop * f - (0.005 if row == 0 else 0.0)
-            # Out from the seam at once, a belly below it, and back in to where the next seam will be.
-            puff = SKIRT_GATHER * (1.0 - g) + 0.007 * 4.0 * g * (1.0 - g)
-            if last:
-                puff += 0.010 * g
-            wave = None
-            if full:
-                depth = (0.004 + 0.018 * g) if last else (0.003 + 0.011 * g)
-                wave = (depth, folds, phase, 0.007 * g if last and row == per_tier else 0.0)
-            shape = oval(f, extra=puff)
-            mean = 0.5 * (shape[0] + shape[1])
-            if before is not None:
-                t += math.hypot(before[0] - z, before[1] - mean)
-            before = (z, mean)
-            rows.append((part.verts(ring(z, shape, wave)), t))
-        strip(rows, repeats)
-        previous, start = rows[-1][0], end
+        # The tiers: each a strip of cloth gathered into the seam above it and fuller than the last.
+        previous, start = seam, 0.0
+        for tier, end in enumerate(SKIRT_TIERS):
+            last = tier == len(SKIRT_TIERS) - 1
+            repeats = max(1, int(round(girth(oval(end)) / period)))
+            folds, phase = SKIRT_FOLDS[tier], tier * 1.3
+            rows, t, before = [(previous, -0.004)], 0.0, None
+            for row in range(per_tier + 1):
+                g = row / per_tier
+                f = start + (end - start) * g
+                z = band_low - drop * f - (0.005 if row == 0 else 0.0)
+                # Out from the seam at once, a belly below it, and back in to where the next seam will be.
+                puff = SKIRT_GATHER * (1.0 - g) + 0.007 * 4.0 * g * (1.0 - g)
+                if last:
+                    puff += 0.010 * g
+                wave = None
+                if full:
+                    depth = (0.004 + 0.018 * g) if last else (0.003 + 0.011 * g)
+                    wave = (depth, folds, phase, 0.007 * g if last and row == per_tier else 0.0)
+                shape = oval(f, extra=puff)
+                mean = 0.5 * (shape[0] + shape[1])
+                if before is not None:
+                    t += math.hypot(before[0] - z, before[1] - mean)
+                before = (z, mean)
+                rows.append((part.verts(ring(z, shape, wave)), t))
+            strip(rows, repeats)
+            previous, start = rows[-1][0], end
 
     # The lining: the inside of the skirt, dark, a little way in from the cloth and not gathered.
     lining = []
@@ -582,16 +658,16 @@ def build_skirt(ctx):
     common.join(obj, void)
 
     def point_at(f, theta):
-        """Where the cloth is at a bearing round the skirt, `f` of the way down it, before any gathering."""
-        half_width, half_depth, centre_y, square = oval(f)[:4]
+        """Where the gingham skirt's cloth is at a bearing round it, `f` of the way down, before any gathering."""
+        half_width, half_depth, centre_y, square = chain_oval(f)[:4]
         x, y = math.sin(theta), -math.cos(theta)
         radius = 1.0 / float(_oval(x, y, half_width, half_depth, square))
-        return np.array((x * radius, centre_y + y * radius, band_low - drop * f))
+        return np.array((x * radius, centre_y + y * radius, band_low - chain_drop * f))
 
-    rig.add_bones(armature, _skirt_bones(point_at, np.array((0.0, waist_y, band_low))))
-    common.set_weights(obj, _skirt_weights(obj, oval, band_low, drop))
-    print(f"skirt: waistband {np.round(waist_size, 3)} at {top:.3f}, hem at {SKIRT_HEM:.3f}, "
-          f"{len(SKIRT_CHAINS) * 2} chains jointed at {[round(band_low - drop * joint, 3) for joint in SKIRT_JOINTS]}")
+    rig.add_bones(armature, _skirt_bones(point_at, np.array((0.0, waist_y, band_low)), hip))
+    common.set_weights(obj, _skirt_weights(obj, oval, band_low, drop, chain_drop))
+    print(f"skirt: waistband {np.round(waist_size, 3)} at {top:.3f}, hem at {hem_height:.3f}, "
+          f"{len(SKIRT_CHAINS) * 2} chains jointed at {[round(band_low - chain_drop * joint, 3) for joint in SKIRT_JOINTS]}")
     return obj
 
 
@@ -599,10 +675,14 @@ def build_skirt(ctx):
 
 VEST_SEGMENTS = ("Chest_01", "Chest_02", "Spine", "Shoulder")
 VEST_EASE = 0.007                 # room between the vest and the sweater under it
+VEST_STRAP_EASE = 0.006           # how much more room than that there is over the tops of the shoulders
 VEST_GAP = 0.034                  # half the width of the open front
 VEST_NECK = 0.078                 # half the width of the front opening where it reaches the shoulders
 VEST_DROP = 0.034                 # how far below the waist the vest's hem hangs
 VEST_FRINGE = 0.046               # the length of the fringe on the hem
+# The armhole, seen from the side: half its depth front to back, half its height, how far its
+# centre lies below the shoulder joint, and how far inboard of the joint the vest is cut away.
+VEST_ARMHOLE = (0.068, 0.078, 0.035, 0.035)
 BANDANA_ROLL = 0.012              # the radius of the neckerchief where it is rolled round the neck
 BANDANA_POINT = 0.125             # how far below the neckline its point hangs on the chest
 
@@ -682,7 +762,12 @@ def _build_bandana(ctx, under):
     for row in range(rows):
         for column in range(columns - 1):
             quad = (grid[row][column], grid[row + 1][column], grid[row + 1][column + 1], grid[row][column + 1])
-            part.face(quad, "bandana-shade" if row == rows - 1 and full else "bandana")
+            # At the cloth's corners two of the four points are one place. Left as a quad that is a
+            # polygon folded onto itself, which Unity throws away on import; it is a triangle.
+            distinct = [index for at, index in enumerate(quad)
+                        if all(np.linalg.norm(np.array(part.co[index]) - np.array(part.co[other])) > 1e-6 for other in quad[:at])]
+            if len(distinct) >= 3:
+                part.face(tuple(distinct), "bandana-shade" if row == rows - 1 and full else "bandana")
 
     # The knot behind: two short ends hanging from the roll.
     for sign in (1.0, -1.0):
@@ -696,14 +781,28 @@ def _build_bandana(ctx, under):
     return obj
 
 
-def build_vest(ctx):
+def vest_cut(**changes):
+    """What a layer over the top is made from; the defaults are the suede vest. See build_vest."""
+    cut = types.SimpleNamespace(swatch="vest", shade="vest-shade", gap=VEST_GAP, neck=VEST_NECK, drop=VEST_DROP,
+                                fringe=VEST_FRINGE, crop=0.0, details=None, bandana=True)
+    cut.__dict__.update(changes)
+    return cut
+
+
+def build_vest(ctx, cut=None):
     """A layer over the sweater, on one tile: an open suede vest with a fringed hem, and a red neckerchief.
 
     The vest is cut from the body like the sweater, shaped by the sweater's
     own drape and then stood off the sweater's surface, so it moves with it
     vertex for vertex. Its front is cut open down the middle and into a V up
     to the shoulders.
+
+    `cut` (vest_cut) gives another wardrobe's layer of the same construction:
+    its colours, how wide it stands open, how far above the waist it is
+    cropped, whether it has the fringe and the neckerchief, and `details(ctx,
+    obj, where)`, which lays its own details on in place of the stitching.
     """
+    look = cut or vest_cut()
     armature, detail = ctx["armature"], ctx["detail"]
     full = detail >= 1.0
     shoulder = np.array(rig.head_of(armature, "UpperArm.L"))
@@ -713,7 +812,7 @@ def build_vest(ctx):
     sweater_tree = common.bvh_of(ctx["sweater"])
     tube = ctx["sweater_tube"]
 
-    shell = Shell(ctx["skin"], VEST_SEGMENTS, "vest")
+    shell = Shell(ctx["skin"], VEST_SEGMENTS, look.swatch)
     shell.inflate(0.010)
     shell.reshape(ctx["sweater_drape"])
     hem = shell.cut_rim(shell.loop_where(lambda c: abs(c[0]) < 0.1 and c[2] < chest[2] - 0.05), (0, 0, -1))
@@ -745,39 +844,99 @@ def build_vest(ctx):
     shell.inflate(VEST_EASE * 0.6)
     for _ in range(2):
         shell.clear_of(sweater_tree, VEST_EASE)
+    # Over the tops of the shoulders the two layers are drawn together whenever an arm moves, and
+    # the usual room was a few millimetres short there. The straps stand a little further off.
+    for vertex in shell.bm.verts:
+        if vertex.co.z < shoulder[2] + 0.015:
+            continue
+        location, normal, _index, _distance = sweater_tree.find_nearest(vertex.co)
+        height = (vertex.co - location).dot(normal)
+        if height < VEST_EASE + VEST_STRAP_EASE:
+            vertex.co = vertex.co + normal * (VEST_EASE + VEST_STRAP_EASE - height)
+    shell.bm.normal_update()
+
+    # The armholes again: cut where the body's segment ends, they hug the armpit, and a sleeve
+    # bunches there as soon as the arm comes down. A vest's armhole is deeper than the arm it
+    # goes round, so each is scooped out to an oval that reaches well below the armpit.
+    for sign in (1.0, -1.0):
+        centre_y, centre_z = shoulder[1], shoulder[2] - VEST_ARMHOLE[2]
+        inner = shoulder[0] - VEST_ARMHOLE[3]
+
+        def near(c, sign=sign):
+            return c[0] * sign > inner - 0.03 and abs(c[2] - centre_z) < VEST_ARMHOLE[1] + 0.03
+
+        def scooped(c, sign=sign):
+            return (c[0] * sign > inner
+                    and ((c[1] - centre_y) / VEST_ARMHOLE[0]) ** 2 + ((c[2] - centre_z) / VEST_ARMHOLE[1]) ** 2 < 1.0)
+
+        planes = [((sign * inner, 0.0, 0.0), (sign, 0.0, 0.0))]
+        # Every plane splits the faces it crosses, which the coarse level cannot afford many of.
+        for turn in np.linspace(0.0, 2.0 * np.pi, 16 if full else 8, endpoint=False):
+            planes.append(((0.0, centre_y + VEST_ARMHOLE[0] * np.cos(turn), centre_z + VEST_ARMHOLE[1] * np.sin(turn)),
+                           (0.0, np.cos(turn) / VEST_ARMHOLE[0], np.sin(turn) / VEST_ARMHOLE[1])))
+        shell.cut_out(planes, where=near, inside=scooped)
+        rim = shell.loop_where(lambda c, sign=sign: c[0] * sign > 0.06 and c[2] > armpit - 0.09)
+        shell.smooth_loop(rim, 4)
+        # The cuts leave many-sided faces along the rim, and easing the rim can fold one over
+        # itself; Unity throws such a polygon away on import, which is a hole. Triangles cannot fold.
+        # In the order the faces have: a set of them comes out in a different order every run.
+        shell.bm.faces.index_update()
+        bmesh.ops.triangulate(shell.bm, faces=sorted({face for vertex in rim for face in vertex.link_faces}, key=lambda face: face.index))
+        shell.bm.normal_update()
+    # The cutting planes leave five- to eight-sided faces further in as well. Blender draws those
+    # correctly whatever their shape; Unity fans them from one corner, and a face that is not
+    # convex then shows a patch of whatever is under it.
+    bmesh.ops.triangulate(shell.bm, faces=[face for face in shell.bm.faces if len(face.verts) > 4])
+    shell.bm.normal_update()
 
     # The front: open down the middle, and widening from the chest up to the shoulders.
     waist = tube["waist"]
-    for vertex in hem:
-        vertex.co.z = waist
+    if look.crop:
+        # Cropped: cut level above the waist, where the tube is somewhere between its top and its hem.
+        waist = waist + look.crop
+        shell.cut((0.0, 0.0, waist), (0.0, 0.0, -1.0))
+        blend = float(smoothstep(tube["waist"] - 0.02, tube["armpit"] - 0.02, waist))
+        half_width, tube_y, half_depth = tube["bottom"] + (tube["top"] - tube["bottom"]) * blend
+    else:
+        for vertex in hem:
+            vertex.co.z = waist
+        half_width, tube_y, half_depth = tube["bottom"]
     low, high = armpit - 0.030, neck[2] + 0.030
-    lean = (VEST_NECK - VEST_GAP) / (high - low)
+    lean = (look.neck - look.gap) / (high - low)
     centre_y = tube["bottom"][1]
 
     def gap(z):
-        return VEST_GAP + max(0.0, z - low) * lean
+        return look.gap + max(0.0, z - low) * lean
 
     planes = []
     for sign in (1.0, -1.0):
-        planes.append(((sign * VEST_GAP, 0.0, low), (sign, 0.0, 0.0)))
-        planes.append(((sign * VEST_GAP, 0.0, low), (sign, 0.0, -lean)))
+        planes.append(((sign * look.gap, 0.0, low), (sign, 0.0, 0.0)))
+        planes.append(((sign * look.gap, 0.0, low), (sign, 0.0, -lean)))
     shell.cut_out(planes, where=lambda c: c[1] < centre_y, inside=lambda c: abs(c[0]) < gap(c[2]))
 
     # The hem hangs a little below the waist, following the sweater's tube, and ends in fringe.
     edge = [v for v in shell.bm.verts if v.is_boundary and abs(v.co.z - waist) < 1e-4]
-    half_width, tube_y, half_depth = tube["bottom"]
     # Wide enough to hang outside the skirt's waistband as well, when that is worn.
     scale = 1.012 + (VEST_EASE + 0.007) / half_width
     made = []
     shell.band(edge, [
-        (lambda co: _oval_ring(co, tube_y, half_width * scale, half_depth * scale, waist - VEST_DROP * 0.5), "vest"),
-        (lambda co: _oval_ring(co, tube_y, half_width * (scale - 0.004), half_depth * (scale - 0.004), waist - VEST_DROP), "vest-shade"),
+        (lambda co: _oval_ring(co, tube_y, half_width * scale, half_depth * scale, waist - look.drop * 0.5), look.swatch),
+        (lambda co: _oval_ring(co, tube_y, half_width * (scale - 0.004), half_depth * (scale - 0.004), waist - look.drop), look.shade),
     ], made)
-    shell.fringe(made[-1], "vest", VEST_FRINGE, 0.011 if full else 0.030, 0.008 if full else 0.020)
+    if look.fringe:
+        shell.fringe(made[-1], look.swatch, look.fringe, 0.011 if full else 0.030, 0.008 if full else 0.020)
     obj = shell.to_object("Outfit_Vest", "outfit.vest.layer", ctx["collection"], armature, ctx["material"],
                           ctx["palette"], ctx["tiles"])
+    # The vest has the body's weights vertex for vertex, and so has the sweater, but each was
+    # relaxed and draped its own way since, so a vertex of one no longer lies over the vertex of
+    # the other that moves like it. Round the shoulder, where the weights change within a
+    # centimetre, that put the sweater through the vest as soon as an arm moved. The vest takes
+    # the weights of the sweater right under it instead.
+    common.set_weights(obj, common.SkinSource(ctx["sweater"]).sample(common.coords(obj.data)))
 
-    if full:
+    if look.details is not None:
+        look.details(ctx, obj, types.SimpleNamespace(axis=(0.0, centre_y), armpit=armpit, hem=waist - look.drop, gap=gap))
+    elif full:
         surface = Surface(obj)
         applique = Applique(surface)
         axis = (0.0, centre_y)
@@ -785,13 +944,15 @@ def build_vest(ctx):
         back = [surface.around(axis, 180.0 + a, armpit + 0.060 - 0.050 * (1.0 - abs(a) / 78.0) ** 1.5) for a in np.linspace(-78.0, 78.0, 15)]
         applique.ribbon(back, 0.004, "boot-stitch")
         for sign in (1.0, -1.0):
-            line = [surface.around(axis, sign * (26.0 + 46.0 * t), armpit - 0.020 + 0.085 * t ** 1.3) for t in np.linspace(0.0, 1.0, 8)]
+            # It stops short of the armhole: laid to the hole's edge, its last piece folded over the rim.
+            line = [surface.around(axis, sign * (26.0 + 34.0 * t), armpit - 0.020 + 0.085 * t ** 1.3) for t in np.linspace(0.0, 1.0, 8)]
             applique.ribbon(line, 0.004, "boot-stitch")
         # A brass star on the left front.
         applique.patch(_star(surface, axis, 33.0, armpit - 0.045, 0.024), "boot-stitch", lift=0.003)
         applique.apply(ctx["palette"], ctx["tiles"], "outfit.vest.layer")
 
-    common.join(obj, _build_bandana(ctx, [sweater_tree, common.bvh_of(obj)]))
+    if look.bandana:
+        common.join(obj, _build_bandana(ctx, [sweater_tree, common.bvh_of(obj)]))
     return obj
 
 
@@ -808,6 +969,7 @@ TOE_HEIGHT = 0.030        # the height of the toe box near its tip
 HEEL_CUP = (0.041, 0.009)  # half-width of the boot round the heel, and how far its back stands behind the skin's
 TOE_SPRING = 0.007        # how far the tip of the sole lifts off the ground
 WELT = 0.011              # the thickness of the sole's edge
+BOOT_FLOOR = 0.024        # how far below the lowest point of the rim the shaft is closed off inside
 
 
 def _shin(armature, z):
@@ -817,7 +979,7 @@ def _shin(armature, z):
     return knee + (ankle - knee) * ((knee[2] - z) / (knee[2] - ankle[2]))
 
 
-def _boot_path(armature, toe, count):
+def _boot_path(armature, toe, count, top=BOOT_TOP):
     """Centre line from the shaft's rim down the shin, round the ankle in a wide bend, and out along the foot.
 
     `toe` is the y of the boot's tip. Stations are spread along it by length, but only thinly
@@ -826,7 +988,7 @@ def _boot_path(armature, toe, count):
     ankle = np.array(rig.head_of(armature, "Foot.L"))
     ball = np.array(rig.head_of(armature, "Toes.L"))
     knots = np.array([
-        _shin(armature, BOOT_TOP), _shin(armature, BOOT_TOP - 0.09), _shin(armature, ankle[2] + 0.15),
+        _shin(armature, top), _shin(armature, top - 0.09), _shin(armature, ankle[2] + 0.15),
         _shin(armature, ankle[2] + 0.085),
         _shin(armature, ankle[2] + 0.035) + (0.0, -0.006, 0.0),
         ankle + (0.0, -0.030, -0.012),
@@ -847,7 +1009,7 @@ def _boot_path(armature, toe, count):
     steps = np.linalg.norm(np.diff(dense, axis=0), axis=1)
     middle = (dense[:-1, 2] + dense[1:, 2]) / 2.0
     # The first few centimetres keep their full share, for the scalloped rim.
-    straight = (middle > ankle[2] + 0.11) & (middle < BOOT_TOP - 0.05)
+    straight = (middle > ankle[2] + 0.11) & (middle < top - 0.05)
     lengths = np.concatenate([[0.0], np.cumsum(steps * np.where(straight, 0.38, 1.0))])
     targets = np.linspace(0.0, 1.0, count) * lengths[-1]
     points = np.stack([np.interp(targets, lengths, dense[:, k]) for k in range(3)], axis=1)
@@ -891,9 +1053,9 @@ def _outline(hull, count):
     return np.array(out)
 
 
-def _rim(azimuth):
+def _rim(azimuth, top=BOOT_TOP, dip=BOOT_DIP):
     """Height of the shaft's rim by bearing (degrees, 0 at the front): high at the sides, a dip front and back."""
-    return BOOT_TOP - BOOT_DIP * abs(math.cos(math.radians(azimuth))) ** 2.4
+    return top - dip * abs(math.cos(math.radians(azimuth))) ** 2.4
 
 
 # The stitched pattern on each side of the shaft, as (bearing, height) on a unit square, one
@@ -902,33 +1064,114 @@ BOOT_FLAME = ((0.0, 1.0), (0.16, 0.84), (0.46, 0.74), (0.40, 0.60), (0.80, 0.44)
 BOOT_LEAF = ((0.0, 0.80), (0.20, 0.60), (0.24, 0.44), (0.14, 0.30), (0.0, 0.20))
 
 
-def build_boots(ctx):
-    """Mid-calf cowboy boots: a scalloped shaft with pull straps and stitched flames, a pointed toe, an underslung stacked heel."""
+def _legs_into_boots(skin, tiles, line):
+    """Keeps the leg above `line` out of the zone the boots hide.
+
+    The boots hide the skin's `body.feet` zone, which is whole segments of
+    the body, and the top one ends in a saw-toothed edge about level with the
+    rim. Looking down into a boot showed that edge and nothing under it.
+    What lies above the line is drawn with the legs instead, so a leg goes
+    down into its boot, and the edge is lower, under the floor the shaft
+    has inside.
+    """
+    mesh = skin.data
+    by_cell = {(tile["column"], tile["row"]): tile["id"] for tile in tiles["tiles"]}
+    uv = common.get_uv(mesh, cass_spec.UV_TILE)
+    co = common.coords(mesh)
+    ids = []
+    for polygon in mesh.polygons:
+        tile = by_cell[tuple(int(math.floor(c)) for c in uv[polygon.loop_start])]
+        if tile == "body.feet" and co[list(polygon.vertices)][:, 2].mean() > line:
+            tile = "body.legs"
+        ids.append(tile)
+    common.set_tiles(mesh, tiles, ids)
+
+
+def boot_cut(**changes):
+    """The numbers and colours a pair of boots is made from; the defaults are the cowboy boots. See build_boots."""
+    cut = types.SimpleNamespace(
+        top=BOOT_TOP, dip=BOOT_DIP, offset=BOOT_OFFSET, toe=BOOT_TOE, heel=HEEL_HEIGHT, undercut=HEEL_UNDERCUT, foot=FOOT,
+        toe_height=TOE_HEIGHT, heel_cup=HEEL_CUP, spring=TOE_SPRING, welt=WELT, floor=BOOT_FLOOR,
+        point=(0.985, 2.6),     # how far the toe is drawn in towards its tip, and how late
+        sole=0.0,               # the thickness of a slab under the whole boot, in place of the stacked heel
+        body="boot", shade="boot-shade", under="boot-sole", edge="boot-sole",
+        paint=None,             # (corners of a face of the upper) -> a swatch for it, or None for `body`
+        details="western")      # the stitched cowboy details, or a function (ctx, obj, cut) that lays on others
+    cut.__dict__.update(changes)
+    return cut
+
+
+def boot_wall(surface, armature, sign, azimuth, z):
+    """The shaft's surface at a bearing and height, found from inside: a ray from outside could start beyond the other boot."""
+    a = math.radians(azimuth)
+    outward = np.array((math.sin(a), -math.cos(a), 0.0))
+    at = _shin(armature, z)
+    origin = Vector((at[0] * sign, at[1], z)) + Vector(outward) * 0.012
+    for _ in range(3):
+        location, normal, _index, _distance = surface.tree.ray_cast(origin, Vector(outward), 0.14)
+        if location is None:
+            return None
+        # The turned-over edge of the rim faces the axis; the wall behind it is the one wanted.
+        if normal.dot(Vector(outward)) > 0.0:
+            return np.array(location), np.array(normal)
+        origin = location + Vector(outward) * 0.0005
+    return None
+
+
+def _sole_slab(part, shape, sign, floor, cut, full):
+    """A thick outsole under the whole boot: the outline of its underside, stood out a little and carried to the ground."""
+    seat = shape[shape[..., 2] <= floor(shape[..., 1]) + 0.003]
+    outline = _outline(_hull(seat[:, :2] * (sign, 1.0)), 20 if full else 8)
+    middle = (outline.min(axis=0) + outline.max(axis=0)) / 2.0
+    away = outline - middle
+    away /= np.maximum(np.linalg.norm(away, axis=1, keepdims=True), 1e-9)
+    rings = []
+    # A ledge in under the upper, the slab's edge, a bulge half-way down, and the tread. The
+    # coarse level has the edge and the tread only.
+    profile = ((-0.014, cut.sole + 0.002), (0.005, cut.sole + 0.002), (0.008, cut.sole * 0.5), (0.004, 0.0))
+    for out, z in profile if full else (profile[1], profile[3]):
+        rings.append(part.verts([(x, y, z) for x, y in outline + away * out]))
+    part.loft(rings, cut.under)
+    part.face(rings[-1], cut.under)
+
+
+def build_boots(ctx, cut=None):
+    """Mid-calf cowboy boots: a scalloped shaft with pull straps and stitched flames, a pointed toe, an underslung stacked heel.
+
+    The shaft has a dark floor inside, a little below the rim, and the legs
+    are drawn down to under it (`_legs_into_boots`), so looking into a boot
+    shows a leg standing in it and not the end of one.
+
+    `cut` (boot_cut) makes another pair on the same last: its heights, the
+    shape of its toe, a slab sole in place of the heel, its colours and its
+    own details.
+    """
+    cut = cut or boot_cut()
     armature, skin, detail = ctx["armature"], ctx["skin"], ctx["detail"]
     full = detail >= 1.0
     rings = 24 if full else 11
     around = 20 if full else 10
     tree = common.bvh_of(skin)
     feet = common.coords(skin.data)
-    toe = feet[feet[:, 2] < 0.08][:, 1].min() - BOOT_TOE
-    points, tangents, ankle, ball = _boot_path(armature, toe, rings)
+    toe = feet[feet[:, 2] < 0.08][:, 1].min() - cut.toe
+    points, tangents, ankle, ball = _boot_path(armature, toe, rings, cut.top)
     centre_x = ankle[0]
     heel_front = ankle[1] - 0.024
 
     def floor(y):
         """The underside: on the ground under the ball, lifting a little to the tip, and rising over the arch to the heel."""
-        spring = TOE_SPRING * np.clip((ball[1] - y) / (ball[1] - toe), 0.0, 1.0) ** 2
-        return spring + HEEL_HEIGHT * smoothstep(ball[1] + 0.030, heel_front, y)
+        spring = cut.spring * np.clip((ball[1] - y) / (ball[1] - toe), 0.0, 1.0) ** 2
+        return cut.sole + spring + cut.heel * smoothstep(ball[1] + 0.030, heel_front, y)
 
     def last(y, angle):
         """A point of the boot's own cross-section along the foot: a flat sole with a welt, a domed vamp."""
         u = float(np.clip((ball[1] - y) / (ball[1] - toe), 0.0, 1.0))
         # Drawn in from the ball to a blunt point.
-        half = FOOT[0] * math.sqrt(max(1.0 - (u * 0.985) ** 2.6, 0.0))
+        half = cut.foot[0] * math.sqrt(max(1.0 - (u * cut.point[0]) ** cut.point[1], 0.0))
         low = float(floor(y))
-        top = FOOT[1] + (TOE_HEIGHT - FOOT[1]) * float(smoothstep(0.0, 0.9, u))
+        top = cut.foot[1] + (cut.toe_height - cut.foot[1]) * float(smoothstep(0.0, 0.9, u))
         # The toe box comes down as it narrows, so the tip is not a blunt end.
-        top = low + WELT + (top - WELT) * (0.60 + 0.40 * half / FOOT[0])
+        top = low + cut.welt + (top - cut.welt) * (0.60 + 0.40 * half / cut.foot[0])
         middle = low + (top - low) * 0.42
         c, s = math.cos(angle), math.sin(angle)
         side = half * math.copysign(abs(c) ** 0.8, c)
@@ -938,7 +1181,7 @@ def build_boots(ctx):
             return half * 1.03 * float(np.clip(c / 0.835, -1.0, 1.0)), low
         # Between the side of the upper and the sole: the welt, standing out a little.
         down = min(1.0, -s / 0.30)
-        return side + (math.copysign(half * 1.03, c) - side) * down, middle + (low + WELT - middle) * down
+        return side + (math.copysign(half * 1.03, c) - side) * down, middle + (low + cut.welt - middle) * down
 
     side = np.array((1.0, 0.0, 0.0))
     angles = np.arange(around) * (2.0 * math.pi / around)
@@ -951,7 +1194,7 @@ def build_boots(ctx):
             found = tree.ray_cast(Vector(centre), Vector(direction), 0.14)
             row[k] = found[3] if found[0] is not None else np.nan
         fallback = np.nanmedian(row) if np.isfinite(row).any() else 0.04
-        radii[index] = np.clip(np.where(np.isfinite(row), row, fallback), 0.015, 0.075) + BOOT_OFFSET
+        radii[index] = np.clip(np.where(np.isfinite(row), row, fallback), 0.015, 0.075) + cut.offset
     # Even the shape out along the boot and round it, so no ring stands out as a crease or a band.
     def even(radii):
         radii[1:-1] = (radii[:-2] + 2.0 * radii[1:-1] + radii[2:]) / 4.0
@@ -961,7 +1204,7 @@ def build_boots(ctx):
     # The heel is a cup of the boot's own, not the shape of the skin's heel (which the rays, cast
     # from in front of it, mostly miss): behind the ankle the rings reach out to a box, flat at the
     # back and underneath, and the evening-out afterwards rounds its corners.
-    back = feet[feet[:, 2] < 0.10][:, 1].max() + HEEL_CUP[1]
+    back = feet[feet[:, 2] < 0.10][:, 1].max() + cut.heel_cup[1]
     for index, (centre, tangent) in enumerate(zip(points, tangents)):
         near = 1.0 - float(smoothstep(ankle[2] + 0.015, ankle[2] + 0.085, centre[2]))
         if near <= 0.0:
@@ -974,9 +1217,9 @@ def build_boots(ctx):
             reach = (back - centre[1]) / direction[1]
             if direction[2] < -1e-6:
                 # Aimed a little under the heel's height: what is left below it after the rounding is cut off flat.
-                reach = min(reach, (HEEL_HEIGHT - 0.008 - centre[2]) / direction[2])
+                reach = min(reach, (cut.sole + cut.heel - 0.008 - centre[2]) / direction[2])
             if abs(direction[0]) > 1e-6:
-                reach = min(reach, HEEL_CUP[0] / abs(direction[0]))
+                reach = min(reach, cut.heel_cup[0] / abs(direction[0]))
             share = near * float(smoothstep(0.05, 0.35, direction[1]))
             radii[index, k] += max(reach - radii[index, k], 0.0) * share
     radii = even(radii)
@@ -985,16 +1228,16 @@ def build_boots(ctx):
     for index, (centre, tangent) in enumerate(zip(points, tangents)):
         front = np.cross(tangent, side)
         # A coarse shaft is a prism, whose flat sides pass inside the round calf; it stands off further.
-        flare = (0.008 if full else 0.017) * (1.0 - smoothstep(0.0, 0.14, BOOT_TOP - centre[2])) + (0.0 if full else 0.004)
+        flare = (0.008 if full else 0.017) * (1.0 - smoothstep(0.0, 0.14, cut.top - centre[2])) + (0.0 if full else 0.004)
         # Down the leg the boot is the leg's shape; from the instep on it turns into its own.
         own = float(smoothstep(ankle[1] - 0.040, ball[1] + 0.030, centre[1])) if centre[2] < ankle[2] + 0.02 else 0.0
         # The rim is scalloped, and the rings under it are drawn down with it, less and less, so
         # the leather does not fold. Where it dips it also stands off the leg a little more: the
         # radii were measured higher up, and the calf is fuller below.
-        scallop = 1.0 - float(smoothstep(0.0, 0.10, BOOT_TOP - centre[2]))
+        scallop = 1.0 - float(smoothstep(0.0, 0.10, cut.top - centre[2]))
         for k, angle in enumerate(angles):
             direction = math.cos(angle) * side + math.sin(angle) * front
-            dip = (BOOT_TOP - _rim(math.degrees(math.atan2(math.cos(angle), math.sin(angle))))) * scallop
+            dip = (cut.top - _rim(math.degrees(math.atan2(math.cos(angle), math.sin(angle))), cut.top, cut.dip)) * scallop
             measured = centre + direction * (radii[index, k] + flare + 0.35 * dip) - (0.0, 0.0, dip)
             if own > 0.0:
                 x, z = last(centre[1], angle)
@@ -1002,7 +1245,10 @@ def build_boots(ctx):
             shape[index, k] = measured
     shape[..., 2] = np.maximum(shape[..., 2], floor(shape[..., 1]))
 
-    tip = np.array((centre_x, toe, float(floor(toe)) + TOE_HEIGHT * 0.42))
+    tip = np.array((centre_x, toe, float(floor(toe)) + cut.toe_height * 0.42))
+    floor_height = cut.top - cut.dip - cut.floor
+    # The legs end under the floor by more than a face of the skin is tall, so no tooth of their edge shows above it.
+    _legs_into_boots(skin, ctx["tiles"], floor_height - (0.03 if full else 0.05))
     part = common.Part("Outfit_Boots", "outfit.default.shoes")
     for sign in (1.0, -1.0):
         mirror = np.array((sign, 1.0, 1.0))
@@ -1015,23 +1261,33 @@ def build_boots(ctx):
             ring_ids = [part.verts(inner * mirror)] + ring_ids
         first = len(ring_ids) - rings
 
+        def upper(corners):
+            """The swatch of a face of the upper, or of the sole where the face is its edge or its underside."""
+            if all(c[2] <= floor(c[1]) + 0.0015 for c in corners):
+                return cut.under
+            if all(c[2] <= floor(c[1]) + cut.welt + 0.0015 for c in corners):
+                return cut.edge
+            return (cut.paint(corners) if cut.paint else None) or cut.body
+
         def swatch(r, i):
             if r < first:
-                return "boot-shade"
+                return cut.shade
             r -= first
-            corners = (shape[r][i], shape[r][(i + 1) % around], shape[r + 1][i], shape[r + 1][(i + 1) % around])
-            if all(c[2] <= floor(c[1]) + WELT + 0.0015 for c in corners):
-                return "boot-sole"
-            return "boot"
+            return upper((shape[r][i], shape[r][(i + 1) % around], shape[r + 1][i], shape[r + 1][(i + 1) % around]))
 
         part.loft(ring_ids, swatch, flip=sign < 0)
-        cap = part.fan(ring_ids[-1], tip * mirror, "boot", flip=sign < 0)
+        # The floor inside the shaft: across the first ring that is wholly below where it should be.
+        closed = next(r for r in range(rings) if shape[r][:, 2].max() < floor_height)
+        part.fan(ring_ids[first + closed], shape[closed].mean(axis=0) * mirror, "void", flip=sign > 0)
+        cap = part.fan(ring_ids[-1], tip * mirror, cut.body, flip=sign < 0)
         # The fan's lower faces are the tip of the sole.
         for index in range(len(part.faces) - around, len(part.faces)):
             k = index - (len(part.faces) - around)
-            if all(c[2] <= floor(c[1]) + WELT + 0.0015 for c in (shape[-1][k], shape[-1][(k + 1) % around])):
-                part.swatches[index] = "boot-sole"
+            part.swatches[index] = upper((shape[-1][k], shape[-1][(k + 1) % around]))
 
+        if cut.sole:
+            _sole_slab(part, shape, sign, floor, cut, full)
+            continue
         # The stacked heel. Its top is the outline of the boot's own heel, so the two meet edge to
         # edge; it tapers to the ground, its back sloping forward under the boot, in layers of
         # leather that show as bands. It is cut square at the front.
@@ -1048,45 +1304,30 @@ def build_boots(ctx):
         bands = (1.0, 0.70, 0.66, 0.36, 0.32, 0.0) if full else (1.0, 0.0)
         for fraction in bands:
             taper = 1.0 - fraction
-            ring = middle + (outline - middle) * (1.03 - 0.20 * taper) + (0.0, -HEEL_UNDERCUT * taper)
-            ring[:, 1] = np.maximum(ring[:, 1], heel_front + 0.004 - HEEL_UNDERCUT * 0.35 * taper)
-            layers.append(part.verts([(x, y, HEEL_HEIGHT * fraction + (0.003 if fraction == 1.0 else 0.0)) for x, y in ring]))
+            ring = middle + (outline - middle) * (1.03 - 0.20 * taper) + (0.0, -cut.undercut * taper)
+            ring[:, 1] = np.maximum(ring[:, 1], heel_front + 0.004 - cut.undercut * 0.35 * taper)
+            layers.append(part.verts([(x, y, cut.heel * fraction + (0.003 if fraction == 1.0 else 0.0)) for x, y in ring]))
         part.loft(layers, lambda r, i: "boot-shade" if r in (1, 3) else "boot-sole")
         part.face(layers[-1], "boot-sole")
     obj = part.to_object(ctx["collection"], armature, ctx["material"], ctx["palette"], ctx["tiles"], sharp_angle=50.0)
     common.set_weights(obj, common.SkinSource(skin).sample(common.coords(obj.data)))
 
-    if full:
+    if callable(cut.details):
+        cut.details(ctx, obj, cut)
+    elif full and cut.details == "western":
         surface = Surface(obj)
         applique = Applique(surface)
         for sign in (1.0, -1.0):
-            def shaft(z):
-                at = _shin(armature, z)
-                return (at[0] * sign, at[1])
-
-            def wall(azimuth, z):
-                """The shaft's surface at a bearing and height, found from inside: a ray from outside could start beyond the other boot."""
-                a = math.radians(azimuth)
-                outward = np.array((math.sin(a), -math.cos(a), 0.0))
-                axis = shaft(z)
-                origin = Vector((axis[0], axis[1], z)) + Vector(outward) * 0.012
-                for _ in range(3):
-                    location, normal, _index, _distance = surface.tree.ray_cast(origin, Vector(outward), 0.14)
-                    if location is None:
-                        return None
-                    # The turned-over edge of the rim faces the axis; the wall behind it is the one wanted.
-                    if normal.dot(Vector(outward)) > 0.0:
-                        return np.array(location), np.array(normal)
-                    origin = location + Vector(outward) * 0.0005
-                return None
+            def wall(azimuth, z, sign=sign):
+                return boot_wall(surface, armature, sign, azimuth, z)
 
             def line(points, width=0.0034, closed=False):
                 applique.ribbon([wall(a, z) for a, z in points], width, "boot-stitch", closed=closed)
 
             # Piping under the scalloped rim, and a second row of stitching under that.
             turn = np.linspace(0.0, 360.0, 37)[:-1]
-            line([(a, _rim(a) - 0.014) for a in turn], width=0.0055, closed=True)
-            line([(a, _rim(a) - 0.029) for a in turn], width=0.0026, closed=True)
+            line([(a, _rim(a, cut.top, cut.dip) - 0.014) for a in turn], width=0.0055, closed=True)
+            line([(a, _rim(a, cut.top, cut.dip) - 0.029) for a in turn], width=0.0026, closed=True)
             # The shaft's stitched flames, one on each side.
             for at in (90.0, -90.0):
                 for motif, width in ((BOOT_FLAME, 0.0034), (BOOT_LEAF, 0.0028)):
@@ -1097,17 +1338,17 @@ def build_boots(ctx):
                         dense += [(at + a0 + (a1 - a0) * t, z0 + (z1 - z0) * t) for t in np.linspace(0, 1, 3, endpoint=False)]
                     line(dense, width=width, closed=True)
             # A seam down the front, and one down the back that runs on to the heel.
-            line([(0.0, z) for z in np.linspace(_rim(0.0) - 0.033, ankle[2] + 0.085, 7)], width=0.0028)
-            line([(180.0, z) for z in np.linspace(_rim(180.0) - 0.033, HEEL_HEIGHT + 0.020, 12)], width=0.0028)
+            line([(0.0, z) for z in np.linspace(_rim(0.0, cut.top, cut.dip) - 0.033, ankle[2] + 0.085, 7)], width=0.0028)
+            line([(180.0, z) for z in np.linspace(_rim(180.0, cut.top, cut.dip) - 0.033, cut.heel + 0.020, 12)], width=0.0028)
             # The heel counter: a stitched cup round the back of the heel, from one side of the ankle to the other.
-            line([(180.0 + a, HEEL_HEIGHT + 0.026 + 0.066 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-100.0, 100.0, 15)])
-            line([(180.0 + a, HEEL_HEIGHT + 0.038 + 0.066 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-92.0, 92.0, 15)], width=0.0026)
+            line([(180.0 + a, cut.heel + 0.026 + 0.066 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-100.0, 100.0, 15)])
+            line([(180.0 + a, cut.heel + 0.038 + 0.066 * (abs(a) / 100.0) ** 1.6) for a in np.linspace(-92.0, 92.0, 15)], width=0.0026)
             # Pull straps: a loop of leather standing over the rim at each side.
             for at in (90.0, -90.0):
                 a = math.radians(at)
                 out = np.array((math.sin(a), -math.cos(a), 0.0))
                 along = np.array((-out[1], out[0], 0.0))
-                found = wall(at, BOOT_TOP - 0.02)
+                found = wall(at, cut.top - 0.02)
                 if found is None:
                     continue
                 base = found[0]
@@ -1123,7 +1364,7 @@ def build_boots(ctx):
             # The vamp: a stitched wing across the top of the foot, and a smaller one on the toe.
             cx = centre_x * sign
             for start, depth, reach, width in ((ball[1] + 0.012, 0.058, 0.90, 0.0034), (ball[1] - 0.030, 0.040, 0.62, 0.0028)):
-                wing = [surface.below(cx + t * FOOT[0] * reach, start - depth * (1.0 - abs(t) ** 1.6), top=0.3)
+                wing = [surface.below(cx + t * cut.foot[0] * reach, start - depth * (1.0 - abs(t) ** 1.6), top=0.3)
                         for t in np.linspace(-1.0, 1.0, 13)]
                 applique.ribbon(wing, width, "boot-stitch")
         applique.apply(ctx["palette"], ctx["tiles"], "outfit.default.shoes")

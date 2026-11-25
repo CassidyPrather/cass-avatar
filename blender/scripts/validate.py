@@ -316,7 +316,10 @@ def check_budget(report, meshes, tiles, tile_ids):
     counts = {obj.name: triangle_count(obj.data) for obj in meshes}
     total = sum(counts.values())
     # Triangles on tiles that are hidden at rest: the alternatives to what is worn by default.
-    hidden_tiles = {tile["id"] for tile in tiles["tiles"] if not tile["shown"]}
+    # Where those are budgeted apart it is for the mobile build, which also leaves out the
+    # tiles marked as too much for it.
+    hidden_tiles = {tile["id"] for tile in tiles["tiles"]
+                    if not tile["shown"] or (hidden_limit is not None and not tile.get("mobile", True))}
     hidden = {}
     for obj in meshes:
         ids = tile_ids.get(obj.name)

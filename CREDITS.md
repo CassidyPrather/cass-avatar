@@ -11,3 +11,11 @@ VRChat/Unity linking exception: [LICENSE_ADDENDUM](LICENSE_ADDENDUM).
 | `tools/thumbnail/` backdrop and card styling | Colours, gradients, stripes and sparkle field re-drawn in code from `assets/themes/wirenook/*.css` in <https://github.com/CassidyPrather/cassidyprather.github.io> | Cassidy Prather | AGPLv3 |
 | `blender/sources/siroino-body.blend`, `siroino-normal-full.png`, `siroino-normal-lite.png`, and the body (and its part of `Textures/cass-atlas-normal.png`) in everything built from it (`blender/cass.blend`, `cass-lite.blend`, `BlenderExports/cass.fbx`, `cass-lite.fbx`) | SiroinoSotai (しろいの素体) 1.0: the PC and Mobile FBX files and their 1k normal maps, trimmed by `blender/scripts/intake.py`; <https://siroinoworks.booth.pm/items/8268676> | しろいの (Siroino Works); weight painting by せらすずな, with ちゃかぽ | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `blender/sources/henge-face.blend`, `henge-face.png`, `henge-face-normal.png`, and the head and the painted parts of `Textures/cass-atlas.png` and `cass-atlas-normal.png` in everything built from them | 水無ひより (Mizunashi Hiyori), 2024-09-22: the face mesh from `CC0_FBX/mizunashi2024.fbx` and the face texture and normal map from `CC0_Textures/`, trimmed by `blender/scripts/intake.py`; <https://booth.pm/en/items/6120660> | ひみこ / HENGE | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+
+## Used by a variant, not in this repository
+
+These are never committed, copied in part, or redistributed. A variant refers to each by GUID alone (`Spec/variants.json`, `local`); whoever holds a licence imports the author's own package into a git-ignored folder.
+
+| Asset | Source | Author | License |
+| --- | --- | --- | --- |
+| Quick Hack 2.0.2, carried by the `cass-quickhack` variant; imports to `Assets/_DiNe_Shop_/` | <https://dineshop.booth.pm/items/9153292> | DiNe Shop | Proprietary; the terms ship with the package (`Terms_of_Use.txt`). Licensed to the purchaser alone for use on their own avatars; no redistribution, no public or cloneable upload, no use as machine-learning training data. |
