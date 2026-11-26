@@ -57,7 +57,7 @@ Spec/*.json ──────────────────────�
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
-| [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
+| [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course: laid out in any world from an avatar (the pilot for world-sync's bus), or built into a world from skill checks. |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat's standard contact tags put to use: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. |
 
 | [`skill-checks`](https://github.com/CassidyPrather/skill-checks) | `net.wirenook.skill-checks` | Contact- and time-based checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Its avatar demo is a campfire, a match and a marshmallow. |
@@ -69,6 +69,17 @@ from the command line. Avatar pedestals, a stall for each package here, a
 contact lab, light rooms, a render-queue gallery, Cassidy's grill, and a
 puzzle dungeon built on `skill-checks`. Its README says what is in it and
 how to build it; nothing here opens it.
+
+**Packages for both targets.** `skill-checks` and `shape-collector` serve
+worlds as well as avatars. Each side of such a package is an assembly that
+only compiles where what it needs is installed (a version define and a
+define constraint on the SDK and on the packages it builds with), so the
+one package imports cleanly into an avatar project and into a world
+project. The price is that it can name neither SDK as a dependency: its
+README says what each side needs, and whoever installs it adds those.
+`scripts/compile-check.py` reads the same fences. `shape-collector` was
+the proof: its world side is the course in the wirenook.net world, which
+calls the package to build it.
 
 `contacts`, `skill-checks` and `wirenook-world` were made in the session
 described under [Status](#status), and their repositories exist only on
@@ -1005,9 +1016,13 @@ Known gaps:
   avatar out of the room and share nothing: one corrupts the mesh in the
   shader, the other shrinks it and leaves a log. Whether they should be
   one thing with two moods is undecided.
-- The robot has no locomotion fitted to its own proportions (it walks on
-  the package's generic gaits), no eye tracking (its eyes are pictures),
-  and no outfit. Its hologram is solid on mobile.
+- The robot walks on the locomotion package's generic gaits. A bake fitted
+  to its own skeleton (`LocomotionBuild.BakeFor`) was made and thrown
+  away: it fails one of that package's own checks, with feet that slip
+  6.1 % at 9 m/s where 5 % is allowed, and the package says not to ship
+  such a bake. Why its legs do that has not been looked into. It has no
+  eye tracking (its eyes are pictures) and no outfit, and its hologram is
+  solid on mobile.
 - The world's light rooms are baked light and realtime lights; VRC Light
   Volumes were tried and left out, since setting them up without a person
   in the editor was not solved.

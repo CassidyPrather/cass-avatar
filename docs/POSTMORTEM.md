@@ -515,6 +515,10 @@ README's Status section says what was uploaded and what has been seen.
 - **`modules/wirenook-world`**, the wirenook.net world, as a Unity project
   that is generated, played in ClientSim and exported without a person in
   the editor. Its own `docs/PIPELINE.md` is its post-mortem.
+- **Packages for both targets.** `skill-checks` was written that way and
+  `shape-collector` was made so afterwards: each side in an assembly
+  fenced by version defines, the world side of the shape collector being
+  the course the world used to build inline.
 - **One-piece props** (`OnePieceProp`, and `_WirenookParts` in the
   shader): a prop left in the world as one mesh whose parts the material
   grows from a point, for an avatar with no slots to spare.
