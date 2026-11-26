@@ -218,6 +218,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: wirenook-bot
       objectReference: {fileID: 0}
+    - target: {fileID: 4222211218160232582, guid: 352cd0ba858dd944a8728143eb14764b,
+        type: 3}
+      propertyPath: blueprintId
+      value: avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0
+      objectReference: {fileID: 0}
     - target: {fileID: 4510778825213230932, guid: 352cd0ba858dd944a8728143eb14764b,
         type: 3}
       propertyPath: m_LocalPosition.x
