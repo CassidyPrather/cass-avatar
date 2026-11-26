@@ -77,6 +77,7 @@ namespace Wirenook.Cass.Editor
                     Row = (int)token["row"],
                     Shown = (bool)token["shown"],
                     Mobile = (bool?)token["mobile"] ?? true,
+                    Cover = (bool?)token["cover"] ?? false,
                     Hides = token["hides"]?.Select(zone => (string)zone).ToList() ?? new List<string>(),
                     Toggle = toggle == null
                         ? null

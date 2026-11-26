@@ -217,8 +217,9 @@ namespace Wirenook.Validation.Editor
         private static void Outfits(GameObject avatar, Camera camera, string folder)
         {
             var tiles = CassSpec.Tiles();
-            var switches = tiles.Tiles.Where(tile => tile.Toggle != null && !string.IsNullOrEmpty(tile.Toggle.Label)).ToList();
-            var defaults = tiles.Defaults();
+            var switches = tiles.Offered();
+            var offered = new HashSet<string>(switches.Select(tile => tile.Toggle.Parameter));
+            var defaults = tiles.Defaults().Where(known => offered.Contains(known.Parameter)).ToList();
             var renderers = avatar.GetComponentsInChildren<Renderer>(true);
             var block = new MaterialPropertyBlock();
 

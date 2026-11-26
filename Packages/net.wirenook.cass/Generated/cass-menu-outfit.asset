@@ -14,28 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Parameters: {fileID: 0}
   controls:
-  - name: Sweater
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
-    type: 102
-    parameter:
-      name: Outfit/Top
-    value: 1
-    style: 0
-    subMenu: {fileID: 0}
-    subParameters: []
-    labels: []
-  - name: Shorts
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
-    type: 102
-    parameter:
-      name: Outfit/Bottom
-    value: 1
-    style: 0
-    subMenu: {fileID: 0}
-    subParameters: []
-    labels: []
   - name: Boots
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    icon: {fileID: 2800000, guid: 035690f9ff06f40448ccb7e099a77ca6, type: 3}
     type: 102
     parameter:
       name: Outfit/Shoes
@@ -45,7 +25,7 @@ MonoBehaviour:
     subParameters: []
     labels: []
   - name: Hat
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    icon: {fileID: 2800000, guid: 7c3e34af021f38a4bacefa70b0c3dc81, type: 3}
     type: 102
     parameter:
       name: Outfit/Hat
@@ -55,7 +35,7 @@ MonoBehaviour:
     subParameters: []
     labels: []
   - name: Skirt
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    icon: {fileID: 2800000, guid: 9fce78f203916fb498211f715134dc0e, type: 3}
     type: 102
     parameter:
       name: Outfit/Skirt
@@ -65,7 +45,7 @@ MonoBehaviour:
     subParameters: []
     labels: []
   - name: Vest
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    icon: {fileID: 2800000, guid: 0909635b100b98e48bbddc3bd354bb72, type: 3}
     type: 102
     parameter:
       name: Outfit/Vest
@@ -75,7 +55,7 @@ MonoBehaviour:
     subParameters: []
     labels: []
   - name: Long Hair
-    icon: {fileID: 2800000, guid: b9c234941f7d3f141b043ca8887ce923, type: 3}
+    icon: {fileID: 2800000, guid: c6096b4c6539b3b448c7aafb488a04f3, type: 3}
     type: 102
     parameter:
       name: Hair/Long

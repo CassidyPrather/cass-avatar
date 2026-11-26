@@ -273,13 +273,24 @@ children.
 | `cass-cyber` | The everyday build in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 
-**The Outfit menu** has a switch for each garment (sweater, shorts, boots,
-hat) and three for what came from the original design: a tiered gingham
-skirt, which replaces the shorts while it is on; an open vest with a
-neckerchief, worn over the sweater; and long hair in place of the short.
-The skirt and the vest rest on, so the avatar as it loads is the design in
-the reference art but for the hair; the shorts' switch rests on as well,
-and they show when the skirt is taken off.
+**The Outfit menu** has five switches, each with an icon of its own: the
+boots, the hat, a tiered gingham skirt, an open vest with a neckerchief
+worn over the sweater, and long hair in place of the short. The skirt and
+the vest rest on and the hat rests off, so the avatar as it loads is the
+design in the reference art but for the hair.
+
+A garment with nothing under it has no switch. The body base is a doll
+body with no underwear layer, so `uv-tiles.json` marks the torso and the
+hips as zones that have to stay covered (`cover`), and the menu offers a
+switch only where no combination of the offered switches could bare one
+(`TileLayout.Offered`). The sweater is all there is over the torso, so it
+stays on. Two garments cover the hips; the shorts give way to the skirt,
+so they are the layer that stays, and the skirt's switch chooses between
+the two. Boots come off, because bare feet are just bare feet. The rule is
+worked out from the tiles, so a wardrobe that gains something to wear
+underneath (a swimsuit over the same zones) gets its sweater and shorts
+switches back without anything else changing. A switch that is not offered
+is not synced either.
 
 **The skirt** is cloth on physics, carried by the legs. It hangs on ten
 chains of three bones, jointed at the seams between its tiers. The four

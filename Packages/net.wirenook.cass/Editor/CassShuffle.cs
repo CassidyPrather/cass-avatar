@@ -63,15 +63,15 @@ namespace Wirenook.Cass.Editor
         private static readonly (string name, (string parameter, bool value)[] wearing)[] Outfits =
         {
             ("everyday", new (string, bool)[0]),
-            ("original design", new[] { ("Outfit/Skirt", true), ("Outfit/Vest", true), ("Hair/Long", true) }),
-            ("skirt", new[] { ("Outfit/Skirt", true) }),
-            ("vest", new[] { ("Outfit/Vest", true) }),
+            ("hat", new[] { ("Outfit/Hat", true) }),
+            ("shorts", new[] { ("Outfit/Skirt", false) }),
+            ("no vest", new[] { ("Outfit/Vest", false) }),
             ("long hair", new[] { ("Hair/Long", true) }),
-            ("skirt, long hair, no hat", new[] { ("Outfit/Skirt", true), ("Hair/Long", true), ("Outfit/Hat", false) }),
-            ("vest and skirt, no hat", new[] { ("Outfit/Skirt", true), ("Outfit/Vest", true), ("Outfit/Hat", false) }),
-            ("no hat", new[] { ("Outfit/Hat", false) }),
-            ("barefoot in a skirt", new[] { ("Outfit/Skirt", true), ("Outfit/Shoes", false), ("Hair/Long", true) }),
-            ("vest, long hair", new[] { ("Outfit/Vest", true), ("Hair/Long", true) }),
+            ("long hair and hat", new[] { ("Hair/Long", true), ("Outfit/Hat", true) }),
+            ("shorts and hat, no vest", new[] { ("Outfit/Skirt", false), ("Outfit/Vest", false), ("Outfit/Hat", true) }),
+            ("shorts, long hair", new[] { ("Outfit/Skirt", false), ("Hair/Long", true) }),
+            ("barefoot, long hair", new[] { ("Outfit/Shoes", false), ("Hair/Long", true) }),
+            ("shorts, no vest", new[] { ("Outfit/Skirt", false), ("Outfit/Vest", false) }),
         };
 
         public static void Rebuild()

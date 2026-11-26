@@ -23,24 +23,6 @@ MonoBehaviour:
     useCustomLerpDuration: 0
     customLerpDuration: 0
     flippedRepresentation: 0
-  - name: Outfit/Top
-    valueType: 2
-    saved: 1
-    defaultValue: 1
-    networkSynced: 1
-    bitWidth: 8
-    useCustomLerpDuration: 0
-    customLerpDuration: 0
-    flippedRepresentation: 0
-  - name: Outfit/Bottom
-    valueType: 2
-    saved: 1
-    defaultValue: 1
-    networkSynced: 1
-    bitWidth: 8
-    useCustomLerpDuration: 0
-    customLerpDuration: 0
-    flippedRepresentation: 0
   - name: Outfit/Shoes
     valueType: 2
     saved: 1
@@ -53,7 +35,7 @@ MonoBehaviour:
   - name: Outfit/Hat
     valueType: 2
     saved: 1
-    defaultValue: 1
+    defaultValue: 0
     networkSynced: 1
     bitWidth: 8
     useCustomLerpDuration: 0

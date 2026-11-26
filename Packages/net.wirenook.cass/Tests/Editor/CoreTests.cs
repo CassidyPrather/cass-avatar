@@ -268,6 +268,55 @@ namespace Wirenook.Cass.Tests
         }
 
         [Test]
+        public void EverySwitchIsOfferedWhileNoZoneNeedsCover()
+        {
+            CollectionAssert.AreEqual(new[] { "Sweater", "Shorts", "Skirt", "Vest", "Long Hair" },
+                Wardrobe().Offered().Select(tile => tile.Toggle.Label).ToList());
+        }
+
+        [Test]
+        public void AGarmentWithNothingUnderItHasNoSwitch()
+        {
+            var layout = Wardrobe();
+            layout.Get("body.torso").Cover = true;
+            layout.Get("body.hips").Cover = true;
+            Assert.AreEqual(0, layout.Validate().Count, string.Join(" ", layout.Validate()));
+
+            // The sweater is all there is over the torso. Of the two garments over the hips the
+            // shorts give way to the skirt, so they are the layer that stays and the skirt is the switch.
+            CollectionAssert.AreEqual(new[] { "Skirt", "Vest", "Long Hair" },
+                layout.Offered().Select(tile => tile.Toggle.Label).ToList());
+
+            // The same with the skirt worn at rest.
+            layout = SkirtAtRest();
+            layout.Get("body.torso").Cover = true;
+            layout.Get("body.hips").Cover = true;
+            CollectionAssert.AreEqual(new[] { "Skirt", "Vest", "Long Hair" },
+                layout.Offered().Select(tile => tile.Toggle.Label).ToList());
+        }
+
+        [Test]
+        public void SomethingToWearUnderneathBringsTheSwitchBack()
+        {
+            var layout = Wardrobe();
+            layout.Get("body.torso").Cover = true;
+            layout.Get("body.hips").Cover = true;
+            layout.Tiles.Add(new Tile { Id = "swimsuit", Column = 2, Row = 2, Hides = new List<string> { "body.torso", "body.hips" } });
+            CollectionAssert.AreEqual(new[] { "Sweater", "Shorts", "Skirt", "Vest", "Long Hair" },
+                layout.Offered().Select(tile => tile.Toggle.Label).ToList());
+        }
+
+        [Test]
+        public void AZoneThatNeedsCoverAndRestsBareIsAProblem()
+        {
+            var layout = Wardrobe();
+            layout.Get("body.hips").Cover = true;
+            layout.Get("shorts").Shown = false;
+            layout.Get("shorts").Toggle.Rests = false;
+            Assert.IsTrue(layout.Validate().Any(problem => problem.Contains("body.hips")));
+        }
+
+        [Test]
         public void ATileWhoseParametersRestAgainstItsMarkIsAProblem()
         {
             // Short and long hair share a switch, so they cannot both rest shown.

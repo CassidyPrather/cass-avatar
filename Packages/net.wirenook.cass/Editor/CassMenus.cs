@@ -28,13 +28,19 @@ namespace Wirenook.Cass.Editor
         public static void Rebuild()
         {
             var tiles = CassSpec.Tiles();
-            // One menu entry per switch that has a label; tiles that share a
-            // parameter (alternatives) are one switch.
-            var toggles = tiles.Tiles.Where(tile => tile.Toggle != null && !string.IsNullOrEmpty(tile.Toggle.Label)).ToList();
+            // One menu entry per switch that is offered: it has a label, and
+            // taking its garment off cannot leave the body bare where it has
+            // nothing else to wear. Tiles that share a parameter
+            // (alternatives) are one switch.
+            var toggles = tiles.Offered();
+            var offered = new HashSet<string>(toggles.Select(tile => tile.Toggle.Parameter));
 
             var parameters = AssetFolders.LoadOrCreate(ParametersPath, ScriptableObject.CreateInstance<VRCExpressionParameters>);
             var list = new List<VRCExpressionParameters.Parameter> { Bool(CassFx.TrackingEnabled, true) };
-            list.AddRange(tiles.Defaults().Select(parameter => Bool(parameter.Parameter, parameter.Value)));
+            // A switch that is not offered is not synced either: its
+            // parameter exists in the animator alone and stays at rest.
+            list.AddRange(tiles.Defaults().Where(parameter => offered.Contains(parameter.Parameter))
+                .Select(parameter => Bool(parameter.Parameter, parameter.Value)));
             parameters.parameters = list.ToArray();
             EditorUtility.SetDirty(parameters);
 

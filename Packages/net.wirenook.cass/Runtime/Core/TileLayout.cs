@@ -25,6 +25,14 @@ namespace Wirenook.Cass.Core
         /// <summary>Body zones this tile fully covers while it is shown.</summary>
         public List<string> Hides = new List<string>();
 
+        /// <summary>
+        /// A body zone that has to stay covered: the body has nothing of
+        /// its own to wear there. The menu then offers no switch, or
+        /// combination of switches, that would leave it bare (see
+        /// <see cref="TileLayout.Offered"/>).
+        /// </summary>
+        public bool Cover;
+
         /// <summary>The menu toggle that controls this tile, if it has one.</summary>
         public TileToggle Toggle;
     }
@@ -174,6 +182,52 @@ namespace Wirenook.Cass.Core
         }
 
         /// <summary>
+        /// The switches the menu offers: every labelled one, less those
+        /// that could leave a zone marked <see cref="Tile.Cover"/> bare. A
+        /// garment with nothing under it gets no switch to take it off.
+        ///
+        /// Where several garments cover one such zone, one of them has to
+        /// stay: switches are taken up one at a time for as long as no
+        /// combination of the ones taken so far bares a zone, and a garment
+        /// that gives way to another (<see cref="TileToggle.Unless"/>, the
+        /// shorts under the skirt) is asked last, so the under-layer is the
+        /// one that stays and the layer over it is the one with a switch.
+        /// A switch that is not offered keeps its parameter at rest; add a
+        /// layer to wear underneath (a swimsuit that covers the same zones)
+        /// and its switch comes back by itself.
+        /// </summary>
+        public List<Tile> Offered()
+        {
+            var labelled = Tiles.Where(tile => tile.Toggle != null && !string.IsNullOrEmpty(tile.Toggle.Label)).ToList();
+            var taken = new List<string>();
+            // OrderBy is stable: within each group the tiles keep the order of the file.
+            foreach (var tile in labelled.OrderBy(tile => tile.Toggle.Unless.Count > 0 ? 1 : 0))
+            {
+                if (taken.Contains(tile.Toggle.Parameter)) continue;
+                taken.Add(tile.Toggle.Parameter);
+                if (!KeepsCovered(taken)) taken.Remove(tile.Toggle.Parameter);
+            }
+
+            return labelled.Where(tile => taken.Contains(tile.Toggle.Parameter)).ToList();
+        }
+
+        /// <summary>Whether every zone that needs cover has it under each combination of these parameters, the rest at rest.</summary>
+        private bool KeepsCovered(List<string> free)
+        {
+            var zones = Tiles.Where(tile => tile.Cover).Select(tile => tile.Id).ToList();
+            if (zones.Count == 0) return true;
+            for (var combination = 0; combination < 1 << free.Count; combination++)
+            {
+                var values = new Dictionary<string, bool>();
+                for (var i = 0; i < free.Count; i++) values[free[i]] = (combination & (1 << i)) != 0;
+                var shown = ResolveFor(values);
+                if (zones.Any(zone => shown[zone])) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Turns "none of these hold" into "one of these holds". Each entry
         /// of <paramref name="anyOf"/> is a set of conditions that must all
         /// hold; so is each entry of the result. Sets that contradict
@@ -230,6 +284,13 @@ namespace Wirenook.Cass.Core
                 problems.Add("Cell (0,0) must be the tile \"always\": geometry with no second UV set lands there.");
             if (Tiles.GroupBy(tile => tile.Id).Any(group => group.Count() > 1))
                 problems.Add("Tile ids must be unique.");
+
+            var resting = ResolveFor();
+            foreach (var zone in Tiles.Where(tile => tile.Cover))
+            {
+                if (resting[zone.Id])
+                    problems.Add("Tile " + zone.Id + " has to stay covered, and nothing covers it at rest.");
+            }
 
             var defaults = Defaults();
             foreach (var tile in Tiles.Where(candidate => candidate.Toggle != null))
