@@ -6,7 +6,7 @@ description: Cassidy's VRChat avatar as a generated, non-destructive pipeline �
 # cass-avatar
 
 Unity 2022.3 project at the repository root. The avatar is the VPM package
-`Packages/net.wirenook.cass`; seven standalone packages it builds on are git
+`Packages/net.wirenook.cass`; eight standalone packages it builds on are git
 submodules under `modules/` and are referenced in place from
 `Packages/manifest.json`. Code is AGPL-3.0-or-later with the VRChat/Unity
 linking exception in `LICENSE_ADDENDUM`.
@@ -22,7 +22,9 @@ spec or the generator and rebuild; do not hand-edit generated assets.
 - `Packages/net.wirenook.cass/Runtime/Core/` — engine-free logic (upload policy, tile rules, gesture rules), unit-tested headless.
 - `Packages/net.wirenook.cass/{Generated,Materials,Prefabs}/` — generator output, committed. `Prefabs/cass-root.prefab` is the single root avatar prefab (a variant of the model); `Prefabs/Variants/*.prefab` are the upload variants.
 - `blender/` — `sources/` (the trimmed CC0 body base and face), `scripts/build_cass.py` and `scripts/kitbash/` (the generator that assembles them with the modelled hair, ears, tail and outfit), the two outputs `cass.blend` and `cass-lite.blend`, and the headless scripts that validate and export. See `blender/README.md`.
-- `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`, `party-tricks`, `shape-collector`. Each is its own repository with its own README, SKILL.md, CI and version.- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer, plus tools for looking at one feature: `FxProbe` (what a build left in a variant's animators, `Menu` for its menu and parameters, and `Try` to build a variant with one more feature prefab on it), `ShownPreview` (a feature prefab with its hidden props brought out), `GaitPreview` (clips of a locomotion controller on the built avatar), and `BeaconPreview`, `CensorPreview`, `NapPreview`, `AwayPreview`, plus `ShaderProbe` (did a shader compile) and `TileProbe` (what the model has in one UV tile). Harness only; not shipped.
+- `modules/<repo>/` — submodules: `wirenook-assets`, `locomotion`, `world-sync`, `avatar-stations`, `adventure-tools`, `party-tricks`, `shape-collector`, `contacts`. Each is its own repository with its own README, SKILL.md, CI and version.
+- `modules/wirenook-world/` — the world: a Unity project of its own (the Worlds SDK cannot share a project with the Avatars SDK), built and tested headless by its own scripts. This editor never compiles it; `scripts/unity-refresh.sh` type-checks only what `Packages/manifest.json` names.
+- `Assets/Validation/` and `Assets/Scenes/Validation.unity` — cameras, lighting conditions, poses and the contact-sheet renderer, plus tools for looking at one feature: `FxProbe` (what a build left in a variant's animators, `Menu` for its menu and parameters, and `Try` to build a variant with one more feature prefab on it), `ShownPreview` (a feature prefab with its hidden props brought out), `GaitPreview` (clips of a locomotion controller on the built avatar), and `BeaconPreview`, `CensorPreview`, `NapPreview`, `AwayPreview`, plus `ShaderProbe` (did a shader compile) and `TileProbe` (what the model has in one UV tile). Harness only; not shipped.
 - `Assets/DevTools/UnityBridge/` — the file bridge that lets scripts drive the open editor.
 - `tools/thumbnail/`, `tools/contact_sheet.py`, `art/banner/` — Python and SVG tooling outside Unity.
 - `ref/` — private reference art. Never publish, embed or trace it.
@@ -91,6 +93,10 @@ python tools/thumbnail/test_thumbnail.py
 - **A feature that changes how the whole avatar is drawn animates a stand-in** (`FeaturePrefab.AvatarMaterials`), never renderer paths; the build spreads the curves to every renderer with the property.
 - **A held prop says when it is held.** Its `WirenookHandGrip` lists the parameters that mean "in the hand" (`held`) and how far the fingers close; the build makes the Gesture layers from every grip on the avatar. A new held prop without `held` is fitted to the hand and gets no finger pose. `GripPreview.Render <slug>` shows the result.
 - **One sign shows at a time.** `SignMesh` numbers them from 1 and the material shows one number; a second feature with a sign takes the next number and the two take turns.
+- **What a variant carries goes by its rank and its use** (README, "How much a variant carries"). Do not add a variant for one feature: put the feature on every variant whose rank has room, mark it `pcOnly` for a variant whose mobile rank does not, and leave `cass-lite` alone.
+- **A variant that is no longer made moves to `deprecated` in `variants.json`** with its avatar id and what replaced it, and its prefab is deleted. `scripts/cass.sh retire` deletes from VRChat and cannot be undone; it only takes slugs on that list.
+- **A variant can be moved onto another parent** by changing `extends`: the rebuild makes its prefab again and keeps its avatar id, and refuses if another variant is built on it.
+- **Short cues share one audio source.** `WirenookSounds.Source(root)` marks a source as shareable and the build keeps one for the avatar; pass `shared: false` for a source that stands in the world or plays a loop.
 - **Away is two parameters**: VRChat's `AFK` and the menu's `WN/Away` (`WirenookSignals`). Anything that reacts to one reacts to both.
 - Performance is checked on the **built** avatar (`scripts/cass.sh verify`), not the prefab. Every component counts for rank even when disabled.
 

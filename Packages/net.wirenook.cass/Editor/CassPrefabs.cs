@@ -109,9 +109,29 @@ namespace Wirenook.Cass.Editor
 
         private static void EnsureVariantOf(string parentPath, string path)
         {
-            if (File.Exists(path)) return;
             var parent = AssetDatabase.LoadAssetAtPath<GameObject>(parentPath);
             if (parent == null) throw new FileNotFoundException("Cannot create " + path + ": its parent prefab is missing.", parentPath);
+
+            var keptBlueprint = "";
+            if (File.Exists(path))
+            {
+                var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (existing == null || PrefabUtility.GetCorrespondingObjectFromSource(existing) == parent) return;
+
+                // The spec has moved this variant onto another parent. A prefab
+                // cannot change what it is a variant of, so it is made again;
+                // which is only safe for one nothing else is built on, and has
+                // to keep the avatar id it uploads to.
+                var slug = Path.GetFileNameWithoutExtension(path);
+                var dependant = CassSpec.Variants().Variants.FirstOrDefault(variant => variant.Extends == slug);
+                if (dependant != null)
+                    throw new InvalidOperationException(slug + " cannot be moved onto " + parentPath + ": " + dependant.Slug +
+                                                        " is built on it, and would lose everything it overrides.");
+                var pipeline = existing.GetComponent<PipelineManager>();
+                keptBlueprint = pipeline != null ? pipeline.blueprintId ?? "" : "";
+                Debug.Log("[cass] " + slug + " is made again as a variant of " + parentPath + ", keeping its avatar id " + keptBlueprint + ".");
+                AssetDatabase.DeleteAsset(path);
+            }
 
             AssetFolders.Ensure(Path.GetDirectoryName(path));
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(parent);
@@ -124,6 +144,8 @@ namespace Wirenook.Cass.Editor
             {
                 UnityEngine.Object.DestroyImmediate(instance);
             }
+
+            if (keptBlueprint.Length > 0) Edit(path, root => Ensure<PipelineManager>(root).blueprintId = keptBlueprint);
         }
 
         private static void Edit(string path, Action<GameObject> configure)
@@ -728,10 +750,19 @@ namespace Wirenook.Cass.Editor
                     continue;
                 }
 
-                var present = root.transform.Cast<Transform>()
-                    .Any(child => PrefabUtility.GetCorrespondingObjectFromOriginalSource(child.gameObject) == feature ||
-                                  PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject) == feature);
-                if (!present) PrefabUtility.InstantiatePrefab(feature, root.transform);
+                var placed = root.transform.Cast<Transform>().Select(child => child.gameObject)
+                    .FirstOrDefault(child => PrefabUtility.GetCorrespondingObjectFromOriginalSource(child) == feature ||
+                                             PrefabUtility.GetCorrespondingObjectFromSource(child) == feature);
+                if (placed == null) placed = (GameObject)PrefabUtility.InstantiatePrefab(feature, root.transform);
+
+                // Left out of this variant's Android and iOS builds, where the
+                // spec says so. The mark goes on the instance here, not on the
+                // feature's own prefab, which other avatars may build whole;
+                // and only a mark put here is ever taken off again.
+                var mark = placed.GetComponent<Wirenook.Assets.WirenookPcOnly>();
+                var wanted = variant.PcOnlyFeatures.Contains(path);
+                if (wanted && mark == null) placed.AddComponent<Wirenook.Assets.WirenookPcOnly>();
+                if (!wanted && mark != null && PrefabUtility.IsAddedComponentOverride(mark)) UnityEngine.Object.DestroyImmediate(mark, true);
             }
 
             // Hand-held props ship without a pose, since rigs disagree on how

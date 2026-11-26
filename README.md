@@ -27,11 +27,12 @@ Spec/*.json ──────────────────────�
                                         ▼
         Prefabs/cass-root.prefab        the one root avatar prefab (a variant of the model)
                     ▼
+        Prefabs/Variants/cass-lite.prefab   the one for tight performance (on the root, not on cass)
         Prefabs/Variants/cass.prefab        everyday upload
                     ▼
-        Prefabs/Variants/cass-adv.prefab    adds flight, stations and hand tools
+        Prefabs/Variants/cass-adv.prefab    adds flight, stations, hand tools and what a group needs
         Prefabs/Variants/cass-flashlight.prefab, cass-lantern.prefab   one real light each (extend cass)
-        Prefabs/Variants/cass-event, cass-party, cass-shuffle, cass-shapes.prefab   one more set of features each (extend cass)
+        Prefabs/Variants/cass-contacts.prefab   the contact toys and the shape collector (extends cass)
                     ▼  at build time, on a copy
         lite model where asked ▶ Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
 ```
@@ -40,7 +41,7 @@ Spec/*.json ──────────────────────�
 | --- | --- |
 | `blender/` | The source assets, the generator that builds `cass.blend` and `cass-lite.blend` from them, and the headless scripts that validate and export those. |
 | `Packages/net.wirenook.cass/` | The avatar, as a VPM package. `Spec/` holds the contracts, `BlenderExports/` the one place exports land, `Editor/` the generators, `Generated/`, `Materials/` and `Prefabs/` their output. |
-| `modules/` | Seven standalone packages the avatar builds on, as git submodules. Each has its own repository, version and README. |
+| `modules/` | Eight standalone packages the avatar builds on, as git submodules, each with its own repository, version and README; and beside them the world, a Unity project of its own. |
 | `Assets/` | The validation scene and development tools. Not shipped. |
 | `tools/`, `art/` | The thumbnail composer, contact-sheet composer and banner. |
 
@@ -55,8 +56,11 @@ Spec/*.json ──────────────────────�
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
 | [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
+| [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat's standard contact tags put to use: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. |
 
-The last two were made in the session described under [Status](#status).
+`contacts` was made in the session described under [Status](#status), and
+its repository exists only on the machine it was made on until it is
+pushed; the address above is where it is meant to go.
 
 They are mounted as submodules and referenced in place
 (`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
@@ -276,19 +280,53 @@ is still in its package; no variant carries it now.
 the root prefab, or of another variant, with feature prefabs added as
 children.
 
-| Variant | Adds |
-| --- | --- |
-| `cass` | Default outfit with the Outfit menu, procedural locomotion baked for this avatar's own skeleton, the Face Tracking switch, a crash while away. |
-| `cass-lite` | The same, built from the low-polygon model on PC too. |
-| `cass-adv` | Flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
-| `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, a beacon shows where the wearer is through walls with an arrow in everyone else's view when they are out of it, and there are four seats to put down, in a ring or facing a screen. The ping's marker, the beacon and the seats are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
-| `cass-party` | The everyday build with the party tricks: a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, and a busy sign. |
-| `cass-shuffle` | The everyday build that changes its outfit whenever a viewer looks away from it and back. Each viewer's client rolls for itself; nothing is synced. PC only. |
-| `cass-shapes` | The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. Its course is a third skinned mesh, which is Medium. |
-| `cass-flashlight`, `cass-lantern` | The adventure build with one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
-| `cass-gaits` | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
-| `cass-cyber` | The everyday build in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
-| `cass-quickhack` | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
+| Variant | Rank on PC | What it is |
+| --- | --- | --- |
+| `cass-lite` | Good | The one for where performance is tight: the low-polygon model on PC too, locomotion, the Face Tracking switch, the Outfit menu, and the crash while away in its lite form (no window, no sound). Nothing else, and nothing is to be added. |
+| `cass` | Good | Everyday, and what the rest start from: the full model, locomotion baked for this avatar's own skeleton, the crash while away with its AFK window and sounds, the party tricks (a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, a busy sign) and the outfit shuffle. |
+| `cass-adv` | Medium | For going out and for leading a group: everything `cass` has, and flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, four seats to put down in a ring or facing a screen, a laser pointer that can ping the spot it points at, a megaphone, a flashlight and a lantern, screen notices, and a beacon that shows where the wearer is through walls. |
+| `cass-flashlight`, `cass-lantern` | Poor | `cass` with the adventure kit and one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
+| `cass-contacts` | Medium | For playing with contacts: everything `cass` has, everything in `net.wirenook.contacts` (it reacts to VRChat's standard contact traits, and carries the tester, the shield that burns and the targets), and the shape collector. One avatar to clone for both halves of a test. PC only. |
+| `cass-gaits` | Good | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
+| `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
+| `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
+
+### How much a variant carries
+
+There were twelve variants, most of them `cass` with one more thing, and
+which one to wear was a question with too many answers. The rule now:
+
+- **What a variant carries goes by the rank it is held to and what it is
+  for.** `cass-lite` carries nothing it can do without. A variant held to
+  Good carries every reusable feature that fits at Good. A variant that is
+  Medium anyway (the placed props of `cass-adv` are meshes of their own,
+  which nothing can help) carries everything that is of use to it, and
+  does not try to stay at Good.
+- **A feature that costs a platform its rank is left out there, not
+  everywhere.** A feature in `variants.json` can be marked `pcOnly` for
+  one variant: `cass` leaves the tricks and the shuffle out of its Android
+  and iOS builds, where they would take it from Medium to Very Poor, and
+  keeps their parameters so that the list is the same on every platform.
+  On mobile, `cass` is therefore `cass-lite`.
+- **Features share what they can.** The build keeps one audio source for
+  every feature whose sounds are short cues from the avatar itself
+  (`WirenookSharedSound`), where each used to bring its own; signs (the
+  AFK window, the contact reactions) are geometry in the avatar's own
+  mesh and material and take turns in it; hand-held props join the
+  avatar's mesh as before. What cannot be shared is a thing left standing
+  in the world, which has to be a mesh of its own with its own slots.
+
+| Was | Is now | Why |
+| --- | --- | --- |
+| `cass-party` | `cass` | The tricks fit beside the everyday build at Good. |
+| `cass-event` | `cass-adv` | It was `cass-adv` with more; `cass-adv` now has all of it and is Medium, as this was. |
+| `cass-shuffle` | `cass` | The shuffle is a switch in the Outfit menu now. |
+| `cass-shapes` | `cass-contacts` | The shape collector is a contact game, and lives with the others. |
+
+Those four are listed under `deprecated` in `Spec/variants.json`, with
+the avatar ids they were uploaded under. Their prefabs are gone from the
+repository. `scripts/cass.sh retire <slug>` takes a deprecated variant's
+avatar down from VRChat; it refuses anything that is not on that list.
 
 **The Outfit menu** has five switches, each with an icon of its own: the
 boots, the hat, a tiered gingham skirt, an open vest with a neckerchief
@@ -308,6 +346,14 @@ worked out from the tiles, so a wardrobe that gains something to wear
 underneath (a swimsuit over the same zones) gets its sweater and shorts
 switches back without anything else changing. A switch that is not offered
 is not synced either.
+
+**Shuffle**, the menu's last entry on `cass` and what builds on it, makes
+the avatar change its outfit whenever a viewer looks away from it and
+back. Each viewer's client rolls for itself; nothing but the switch is
+synced, and no two people need see the same outfit. It lays its outfit
+over the wearer's own choices through a layer whose weight the switch
+sets, so switched off it changes nothing. PC only: the outfits are UV
+tiles.
 
 **The skirt** is cloth on physics, carried by the legs. It hangs on ten
 chains of three bones, jointed at the seams between its tiers. The four
@@ -501,7 +547,10 @@ What that costs on Android and iOS:
 | Garment toggles (the Outfit menu), and with them the shorts and the long hair; expressions that swap UV tiles | They work by discarding UV tiles |
 | The vest | It rests on, but with it the avatar is about 16,300 triangles and Medium ends at 15,000 (`"mobile": false` in `uv-tiles.json`) |
 | The skirt's physics | Thirty bones against four colliders are several times the PhysBone limits. The skirt is worn, and its lifts still carry the front of it with the thighs (by four fifths there, with no collider to do the rest), but the cloth does not swing or drape |
-| The outfit shuffle (`cass-shuffle` is not built for mobile at all) | The same |
+| The outfit shuffle | The same |
+| The party tricks, on `cass` and what builds on it | They would take `cass` from Medium to Very Poor there; `cass-adv` is Very Poor anyway and does without them too, being built on `cass` |
+| The AFK window, and the glitch and eye screens of the crash while away | Drawn by the avatar's PC shader; the body still locks |
+| Everything in `net.wirenook.contacts`; `cass-contacts` is not built for mobile at all | More contacts than mobile allows, and its reactions are the PC shader's |
 | The beacon, the censor, the picture on the seats' screen | Drawn by custom shaders |
 | The nap's Zs | A third material slot is past Medium there; the nap itself is kept |
 | Flight | It is a collider to stand on, and avatar colliders are disabled |
@@ -511,16 +560,13 @@ What that costs on Android and iOS:
 
 | Variant | Mobile rank | Triangles | Skinned + static meshes | Material slots |
 | --- | --- | --- | --- | --- |
-| `cass`, `cass-lite` | Medium | 14,700 | 2 + 0 | 2 |
-| `cass-cyber` | Medium | 14,636 | 2 + 0 | 2 |
-| `cass-adv` | Very Poor | 18,144 | 2 + 3 | 7 |
-| `cass-event` | Very Poor | 19,128 | 2 + 6 | 10 |
-| `cass-party` | Very Poor | 15,609 | 2 + 1 | 5 |
-| `cass-shapes` | Very Poor | 16,154 | 3 + 0 | 3 |
-| `cass-flashlight` | Very Poor | 17,556 | 2 + 4 | 8 |
-| `cass-lantern` | Very Poor | 17,702 | 2 + 5 | 9 |
+| `cass`, `cass-lite` | Medium | 14,428 | 2 + 0 | 2 |
+| `cass-cyber` | Medium | 14,390 | 2 + 0 | 2 |
+| `cass-adv` | Very Poor | 18,856 | 2 + 6 | 10 |
+| `cass-flashlight` | Very Poor | 17,284 | 2 + 4 | 8 |
+| `cass-lantern` | Very Poor | 17,430 | 2 + 5 | 9 |
 
-`cass` is 300 triangles under Medium's limit of 15,000, so anything added to
+`cass` is under 600 triangles short of Medium's limit of 15,000 (the hat rests off now, and is cut there with the rest of what rests hidden), so anything added to
 what the lite level shows at rest has to be paid for there; that is what
 keeps the vest off mobile. What rests hidden (the shorts, the long hair) or
 is marked as too much for mobile (the vest) is cut out of the mobile build
@@ -600,21 +646,30 @@ copy:
   with it, and vanish whenever the avatar itself was out of view.
 - Every toggle is something a merged mesh can still do: UV tile discard
   for the outfit, scaling a bone to nothing for props.
+- **`net.wirenook.assets`** also closes each hand round what it holds
+  (finger poses in the Gesture layer, made from the grips on the avatar),
+  spreads a feature's whole-avatar material animation to every renderer,
+  and keeps one audio source for all the features that can share one.
 
 | Variant | Rank | Triangles | Skinned + static meshes | Material slots | Bones | Synced bits |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cass` | Good | 60,716 | 2 + 0 | 3 | 112 | 8 of 256 |
-| `cass-lite` | Good | 19,613 | 2 + 0 | 3 | 112 | 8 of 256 |
-| `cass-adv` | Good | 64,494 | 2 + 4 | 8 | 132 | 97 of 256 |
-| `cass-event` | Medium | 65,484 | 2 + 9 | 13 | 132 | 166 of 256 |
-| `cass-party` | Good | 61,769 | 2 + 2 | 6 | 116 | 85 of 256 |
-| `cass-shuffle` | Good | 60,717 | 2 + 1 | 4 | 112 | 8 of 256 |
-| `cass-shapes` | Medium | 62,170 | 3 + 0 | 4 | 134 | 74 of 256 |
-| `cass-flashlight` | Poor (one light) | 63,906 | 2 + 5 | 9 | 127 | 163 of 256 |
-| `cass-lantern` | Poor (one light) | 64,052 | 2 + 6 | 10 | 127 | 163 of 256 |
-| `cass-gaits` | Good | 60,716 | 2 + 0 | 3 | 112 | 16 of 256 |
-| `cass-cyber` | Good | 55,744 | 2 + 0 | 3 | 102 | 8 of 256 |
-| `cass-quickhack` | Very Poor (the prop's 38 meshes and 56 material slots) | 58,544 | 3 + 38 | 59 | 102 | 20 of 256 |
+| `cass-lite` | Good | 19,505 | 2 + 0 | 2 | 109 | 7 of 256 |
+| `cass` | Good | 61,944 | 2 + 3 | 7 | 113 | 85 of 256 |
+| `cass-adv` | Medium | 66,712 | 2 + 12 | 16 | 133 | 243 of 256 |
+| `cass-flashlight` | Poor (one light) | 65,134 | 2 + 8 | 12 | 128 | 240 of 256 |
+| `cass-lantern` | Poor (one light) | 65,280 | 2 + 9 | 13 | 128 | 240 of 256 |
+| `cass-contacts` | Medium | 69,403 | 3 + 11 | 16 | 162 | 244 of 256 |
+| `cass-gaits` | Good | 60,608 | 2 + 0 | 2 | 109 | 15 of 256 |
+| `cass-cyber` | Good | 56,972 | 2 + 3 | 7 | 103 | 85 of 256 |
+| `cass-quickhack` | Very Poor (the prop's 38 meshes and 56 material slots) | 59,820 | 3 + 41 | 63 | 105 | 97 of 256 |
+
+Three of these are close to an edge. `cass-adv` and `cass-contacts` are at
+Medium's sixteen material slots exactly: one more thing left standing in
+the world takes either to Poor. `cass-contacts` is 600 triangles under
+the 70,000 past which an avatar is Very Poor. And the three fullest are
+within sixteen bits of the 256 an avatar may sync, most of it the 66 bits
+each synced position costs; things that are never out at once could share
+one such position, which nothing does yet.
 
 Thirty of each variant's bones are the skirt's chains. Good allows 150.
 

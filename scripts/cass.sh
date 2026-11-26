@@ -15,6 +15,7 @@
 #   scripts/cass.sh upload [slugs] [platforms]   build and upload (signed in through the SDK panel)
 #   scripts/cass.sh live [slug]       what VRChat holds for an uploaded variant
 #   scripts/cass.sh publish [slug]    send name, description, tags and visibility only
+#   scripts/cass.sh retire <slug>     delete a deprecated variant's avatar from VRChat, for good
 #   scripts/cass.sh bundle            inspect the bundle the SDK built last (what VRChat got)
 #   scripts/cass.sh all               export, rebuild, then verify every variant on every platform
 #
@@ -175,6 +176,11 @@ case "$command" in
         ;;
     publish)
         unity invoke Wirenook.Cass.Editor.CassUpload.Publish "$slug"
+        ;;
+    retire)
+        # Only what Spec/variants.json lists under `deprecated`; the editor refuses anything else.
+        [ -n "${2:-}" ] || { echo "cass.sh: retire needs the slug of a deprecated variant" >&2; exit 2; }
+        unity invoke Wirenook.Cass.Editor.CassUpload.Retire "$2"
         ;;
     bundle)
         unity invoke Wirenook.Validation.Editor.BundleProbe.InspectLatest

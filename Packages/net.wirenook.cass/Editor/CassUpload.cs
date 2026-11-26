@@ -92,6 +92,40 @@ namespace Wirenook.Cass.Editor
         }
 
         /// <summary>
+        /// Takes a deprecated variant's avatar down from VRChat. It is gone
+        /// for good: the id cannot be had again, and anyone who had the
+        /// avatar as a favourite or was wearing a clone's source loses it.
+        /// Only a variant that Spec/variants.json lists under `deprecated`
+        /// can be retired, so that what replaced it is written down first.
+        /// </summary>
+        public static async Task<string> Retire(string slug)
+        {
+            var spec = CassSpec.Variants();
+            if (spec.Variants.Any(variant => variant.Slug == slug))
+                throw new InvalidOperationException(slug + " is still a variant. Move it to `deprecated` in Spec/variants.json first.");
+            var gone = spec.Deprecated.FirstOrDefault(variant => variant.Slug == slug)
+                       ?? throw new InvalidOperationException("Spec/variants.json lists no deprecated variant named " + slug + ".");
+            if (string.IsNullOrEmpty(gone.AvatarId)) return slug + " was never uploaded; there is nothing to take down.";
+            if (spec.Variants.Any(variant => CassPrefabs.BlueprintOf(variant.Slug) == gone.AvatarId))
+                throw new InvalidOperationException(slug + "'s avatar id is in use by a variant that is still made. Nothing was deleted.");
+
+            await SignedIn();
+            VRCAvatar live;
+            try
+            {
+                live = await VRCApi.GetAvatar(gone.AvatarId, true);
+            }
+            catch (Exception error)
+            {
+                return slug + " (" + gone.AvatarId + ") is not on VRChat any more, or cannot be read: " + error.Message;
+            }
+
+            await VRCApi.DeleteAvatar(gone.AvatarId);
+            return "Deleted " + slug + " (" + live.Name + ", " + gone.AvatarId + ") from VRChat." +
+                   (string.IsNullOrEmpty(gone.ReplacedBy) ? "" : " What it carried is in " + gone.ReplacedBy + ".");
+        }
+
+        /// <summary>
         /// Sends a variant's name, description, tags and visibility to
         /// VRChat without building or uploading the avatar again.
         /// </summary>

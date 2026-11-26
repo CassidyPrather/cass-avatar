@@ -229,7 +229,10 @@ namespace Wirenook.Cass.Editor
                     WorstRankMobile = (string)token["worstRankMobile"] ?? (string)token["worstRank"] ?? "Good",
                     Platforms = token["platforms"]?.Select(name => WirenookPlatform.Parse((string)name)).ToList()
                                 ?? new List<Platform> { Platform.Pc, Platform.Android, Platform.Ios },
-                    Features = token["features"]?.Select(path => (string)path).ToList() ?? new List<string>(),
+                    // A feature is a prefab's path, or that and where it is built for.
+                    Features = token["features"]?.Select(FeaturePath).ToList() ?? new List<string>(),
+                    PcOnlyFeatures = token["features"]?.Where(feature => feature is JObject && ((bool?)feature["pcOnly"] ?? false))
+                        .Select(FeaturePath).ToList() ?? new List<string>(),
                     Local = token["local"]?.Select(asset => new LocalAsset
                     {
                         Guid = (string)asset["guid"],
@@ -241,8 +244,21 @@ namespace Wirenook.Cass.Editor
                 });
             }
 
+            foreach (var token in json["deprecated"] ?? new JArray())
+            {
+                spec.Deprecated.Add(new DeprecatedVariant
+                {
+                    Slug = (string)token["slug"],
+                    AvatarId = (string)token["avatarId"],
+                    ReplacedBy = (string)token["replacedBy"],
+                    Why = (string)token["why"],
+                });
+            }
+
             return spec;
         }
+
+        private static string FeaturePath(JToken feature) => feature is JObject ? (string)feature["path"] : (string)feature;
 
         private static void Require(List<string> problems, string file)
         {
@@ -369,6 +385,22 @@ namespace Wirenook.Cass.Editor
         public string Description;
 
         public List<Variant> Variants = new List<Variant>();
+
+        /// <summary>Variants that are no longer made, and where what they carried went.</summary>
+        public List<DeprecatedVariant> Deprecated = new List<DeprecatedVariant>();
+    }
+
+    /// <summary>
+    /// What is left of a variant that is no longer made: its slug, the
+    /// avatar id it was uploaded under (so that it can be taken down from
+    /// VRChat), and which variant has what it had.
+    /// </summary>
+    public sealed class DeprecatedVariant
+    {
+        public string Slug;
+        public string AvatarId;
+        public string ReplacedBy;
+        public string Why;
     }
 
     public sealed class Variant
@@ -397,6 +429,13 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Asset paths of the feature prefabs this variant adds.</summary>
         public List<string> Features;
+
+        /// <summary>
+        /// Those of <see cref="Features"/> that this variant leaves out of
+        /// its Android and iOS builds though the feature itself could work
+        /// there: what the variant cannot afford under the mobile ranks.
+        /// </summary>
+        public List<string> PcOnlyFeatures = new List<string>();
 
         /// <summary>
         /// Prefabs this variant adds that are not in the repository: things

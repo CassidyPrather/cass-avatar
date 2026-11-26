@@ -15,9 +15,9 @@ using Wirenook.Cass.Core;
 namespace Wirenook.Cass.Editor
 {
     /// <summary>
-    /// Generates the outfit shuffle: a feature for a variant of its own that
-    /// changes what the avatar is wearing every time someone looks away from
-    /// it and back.
+    /// Generates the outfit shuffle: a switch in the Outfit menu that makes
+    /// the avatar change what it is wearing every time someone looks away
+    /// from it and back.
     ///
     /// "Someone" is each viewer separately. Nothing here is synced: every
     /// client notices for itself when it stops drawing the avatar, and rolls
@@ -38,6 +38,10 @@ namespace Wirenook.Cass.Editor
     /// The outfit is laid over the wearer's own choices by a layer that
     /// comes after the outfit layers and writes every outfit tile, so it
     /// needs no parameters of theirs and cannot disturb what they sync.
+    /// That layer has no state in which it writes nothing (with Write
+    /// Defaults on there is no such state), so the switch works on its
+    /// weight instead: at none, the layer changes nothing and the wearer's
+    /// own choices show.
     /// </summary>
     public static class CassShuffle
     {
@@ -52,6 +56,9 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Which outfit this client has rolled. Never synced.</summary>
         private const string Pick = "Shuffle/Pick";
+
+        /// <summary>The menu's switch. Synced and kept, off to begin with.</summary>
+        public const string Switch = "Outfit/Shuffle";
 
         /// <summary>Seconds the avatar has to be out of view before coming back counts, so the edge of the screen does not flicker outfits.</summary>
         private const float AwaySeconds = 0.6f;
@@ -188,7 +195,8 @@ namespace Wirenook.Cass.Editor
                 // switch or a garment can change, on every renderer that
                 // wears the body material (the ones the build merges).
                 var changing = tiles.Tiles.Where(tile => tile.Toggle != null).Concat(tiles.Zones()).Distinct().ToList();
-                var wear = fx.Layer("Shuffle Wear");
+                // No weight until the switch gives it some (below).
+                var wear = fx.Layer("Shuffle Wear", weight: 0f);
                 for (var outfit = 0; outfit < Outfits.Length; outfit++)
                 {
                     var shown = tiles.ResolveFor(Outfits[outfit].wearing.ToDictionary(entry => entry.parameter, entry => entry.value));
@@ -203,6 +211,25 @@ namespace Wirenook.Cass.Editor
                     wear.Any(state).Equal(Pick, outfit);
                 }
 
+                // The switch. The layers are named by their place in this
+                // controller: rolling 0, wearing 1, this one 2. Modular Avatar
+                // moves the numbers along when it merges.
+                fx.Bool(Switch);
+                var switching = fx.Layer("Shuffle Switch");
+                var plain = switching.State("Plain");
+                var shuffled = switching.State("Shuffled");
+                void Weigh(StateBuilder state, float weight) => state.Behaviour<VRCAnimatorLayerControl>(control =>
+                {
+                    control.playable = VRC_AnimatorLayerControl.BlendableLayer.FX;
+                    control.layer = 1;
+                    control.goalWeight = weight;
+                    control.blendDuration = 0f;
+                });
+                Weigh(plain, 0f);
+                Weigh(shuffled, 1f);
+                plain.To(shuffled).IfTrue(Switch);
+                shuffled.To(plain).IfFalse(Switch);
+
                 fx.Save();
 
                 // Renderers are named by their path from the avatar's root,
@@ -215,7 +242,15 @@ namespace Wirenook.Cass.Editor
                 merge.matchAvatarWriteDefaults = true;
                 merge.deleteAttachedAnimator = true;
 
+                // Into the Outfit menu, beside the garments it shuffles.
+                var entry = FeaturePrefab.Child(root, "Menu");
+                FeaturePrefab.InstallMenu(entry);
+                entry.GetComponent<ModularAvatarMenuInstaller>().installTargetMenu =
+                    AssetDatabase.LoadAssetAtPath<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu>(CassMenus.OutfitMenuPath);
+                FeaturePrefab.MenuToggle(entry, "Shuffle", "reset", Switch);
+
                 FeaturePrefab.Parameters(root,
+                    FeaturePrefab.SyncedBool(Switch, saved: true),
                     new ParameterConfig { nameOrPrefix = Seen, syncType = ParameterSyncType.NotSynced, localOnly = true },
                     new ParameterConfig { nameOrPrefix = Pick, syncType = ParameterSyncType.NotSynced, localOnly = true });
                 // The outfits are UV tiles, which no mobile shader can hide.

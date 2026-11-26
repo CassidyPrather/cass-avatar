@@ -1,82 +1,46 @@
 {
-  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. `wardrobe` names another set of clothes the variant is built wearing: Blender exports each wardrobe as a model of its own on the same skeleton (BlenderExports/cass-<wardrobe>.fbx and its -lite), and the build exchanges the meshes by name. Features that cannot work on mobile say so themselves and are left out of those builds. `local` lists prefabs a variant adds that are not in the repository, each by the GUID its author shipped it with, with the name, author and address it is credited by; `atView` stands it at the avatar's view position. They are bought assets whose terms forbid passing them on. A variant with any is only made, built or uploaded in a project where all of them have been imported (every command skips it elsewhere and says why), its description credits them, and it uploads private and without the licence tag.",
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. `wardrobe` names another set of clothes the variant is built wearing: Blender exports each wardrobe as a model of its own on the same skeleton (BlenderExports/cass-<wardrobe>.fbx and its -lite), and the build exchanges the meshes by name. Features that cannot work on mobile say so themselves and are left out of those builds. `local` lists prefabs a variant adds that are not in the repository, each by the GUID its author shipped it with, with the name, author and address it is credited by; `atView` stands it at the avatar's view position. They are bought assets whose terms forbid passing them on. A variant with any is only made, built or uploaded in a project where all of them have been imported (every command skips it elsewhere and says why), its description credits them, and it uploads private and without the licence tag. A feature may be given as an object, {\"path\": ..., \"pcOnly\": true}: the variant then leaves it out of its Android and iOS builds (its parameters stay, so the list is the same on every platform), for something that works there but that the variant cannot afford under the mobile ranks. How much a variant carries goes by the rank it is held to and what it is for: cass-lite carries nothing it can do without, a variant at Good everything that fits at Good, and a variant that is Medium anyway everything that is of use to it. `deprecated` lists variants that are no longer made: the slug, the avatar id it was uploaded under, which variant has what it had, and why. Their prefabs are gone from the repository; scripts/cass.sh retire <slug> takes the avatar down from VRChat.",
   "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.",
   "variants": [
     {
-      "slug": "cass",
-      "about": "Everyday build: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, and a crash while away: the body locks, the mesh glitches, the eyes go to an error screen and a window reading AFK stands beside it.",
+      "slug": "cass-lite",
+      "model": "lite",
+      "about": "The one for where performance is tight: the low-polygon model on PC as well, with locomotion and nothing else that costs. Being away still locks the body and glitches it, from the lite prefab, which adds no mesh, material or sound. Nothing is to be crammed into this one.",
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab",
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab"
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Lite).prefab"
       ],
       "worstRankMobile": "Medium"
     },
     {
-      "slug": "cass-lite",
-      "extends": "cass",
-      "model": "lite",
-      "about": "The everyday build from the low-polygon model, for PC as well: the same avatar and features at well under half the triangles.",
+      "slug": "cass",
+      "about": "Everyday build, and what every other build starts from: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, the crash while away, and everything that fits beside those at Good: the party tricks (bonk hammer, vanishing act, mosaic censor, busy sign) and the outfit shuffle. The tricks and the shuffle are left out of the Android and iOS builds, which have no room for them at Medium; there this is cass-lite.",
       "worstRank": "Good",
-      "features": [],
+      "features": [
+        "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab",
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab",
+        {
+          "path": "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab",
+          "pcOnly": true
+        },
+        {
+          "path": "Packages/net.wirenook.cass/Prefabs/Features/Cass Outfit Shuffle.prefab",
+          "pcOnly": true
+        }
+      ],
       "worstRankMobile": "Medium"
     },
     {
       "slug": "cass-adv",
       "extends": "cass",
-      "about": "Adventure build: adds flight, a stepladder for a lifted play space, a carry seat, a catch-up portal and the hand tools.",
-      "worstRank": "Good",
-      "features": [
-        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
-        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Stepladder.prefab",
-        "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations.prefab",
-        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools.prefab"
-      ],
-      "worstRankMobile": "VeryPoor"
-    },
-    {
-      "slug": "cass-event",
-      "extends": "cass",
-      "about": "The adventure build for leading a group: its laser pointer can ping the spot it points at, a beacon marks the wearer through walls and points other people's view towards them, and there are seats to put down, in a ring or facing a screen. The ping's marker, the beacon and the seats are meshes of their own, which takes it past Good, hence a variant of its own.",
+      "about": "Adventure build, for going out and for leading a group: flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, seats to put down in a ring or facing a screen, a laser pointer that pings, a megaphone, a flashlight and a lantern, screen notices and a beacon, on top of everything cass has. The placed things are meshes of their own, which is Medium; it does not try to stay at Good, and what used to be cass-event is this.",
       "worstRank": "Medium",
       "features": [
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
         "Packages/net.wirenook.locomotion/Prefabs/Wirenook Stepladder.prefab",
         "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Stations (Event).prefab",
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Adventure Tools (Event).prefab"
-      ],
-      "worstRankMobile": "VeryPoor"
-    },
-    {
-      "slug": "cass-party",
-      "extends": "cass",
-      "about": "The everyday build with the party tricks: a bonk hammer, the vanishing act, the mosaic censor and the busy sign.",
-      "worstRank": "Good",
-      "features": [
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab"
-      ],
-      "worstRankMobile": "VeryPoor"
-    },
-    {
-      "slug": "cass-shuffle",
-      "extends": "cass",
-      "about": "The everyday build that changes its outfit whenever a viewer looks away from it and back. Each viewer's client rolls for itself, so nothing is synced and no two people need see the same outfit. The outfits are UV tiles, which mobile shaders cannot hide, so it is built for PC only.",
-      "worstRank": "Good",
-      "features": [
-        "Packages/net.wirenook.cass/Prefabs/Features/Cass Outfit Shuffle.prefab"
-      ],
-      "platforms": [
-        "pc"
-      ],
-      "worstRankMobile": "Medium"
-    },
-    {
-      "slug": "cass-shapes",
-      "extends": "cass",
-      "about": "The everyday build with the shape collector: a collect-the-shapes course to lay out in any world. The course is a skinned mesh of its own, a third, which is Medium on PC.",
-      "worstRank": "Medium",
-      "features": [
-        "Packages/net.wirenook.shape-collector/Prefabs/Wirenook Shape Collector.prefab"
       ],
       "worstRankMobile": "VeryPoor"
     },
@@ -107,12 +71,26 @@
       "worstRankMobile": "VeryPoor"
     },
     {
+      "slug": "cass-contacts",
+      "extends": "cass",
+      "about": "The build for playing with contacts, with someone or alone: everything from net.wirenook.contacts (it reacts to VRChat's standard contact traits, and carries the tester that emits each one and launches things, the shield that burns and the targets to set down) and the shape collector, a collect-the-shapes course to lay out in any world. One avatar to clone for both halves of a test. PC only.",
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.contacts/Prefabs/Wirenook Contacts.prefab",
+        "Packages/net.wirenook.shape-collector/Prefabs/Wirenook Shape Collector.prefab"
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "cass-gaits",
       "about": "A sampler for choosing how the avatar walks: the root avatar with every walk style of the locomotion package baked for it, and a Walk style menu to switch between them in game. It does not extend cass, whose own locomotion would be a second claim on the same playable layers. Its controllers are large and are not committed; scripts/cass.sh gaits styles writes them. PC only: it is for trying on, and the choice is made once.",
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.cass/Generated/Gaits/Wirenook Locomotion Styles.prefab",
-        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Nap.prefab"
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Lite).prefab"
       ],
       "platforms": [
         "pc"
@@ -123,7 +101,7 @@
       "slug": "cass-cyber",
       "extends": "cass",
       "wardrobe": "cyber",
-      "about": "The everyday build in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model.",
+      "about": "cass in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model.",
       "worstRank": "Good",
       "features": [],
       "worstRankMobile": "Medium"
@@ -148,19 +126,32 @@
         "pc"
       ],
       "worstRankMobile": "VeryPoor"
+    }
+  ],
+  "deprecated": [
+    {
+      "slug": "cass-party",
+      "avatarId": "avtr_703d3044-1d5c-419f-8136-72743d3290dc",
+      "replacedBy": "cass",
+      "why": "The party tricks fit beside the everyday build at Good, so cass carries them."
     },
     {
-      "slug": "cass-contacts",
-      "extends": "cass",
-      "about": "The everyday build with everything from net.wirenook.contacts, for trying VRChat's standard contact tags with someone: it reacts to being touched by them, and carries the tester that emits each one and launches things, the shield that burns and the targets to set down. One avatar to clone for both halves of a test.",
-      "worstRank": "Medium",
-      "features": [
-        "Packages/net.wirenook.contacts/Prefabs/Wirenook Contact Reactions.prefab"
-      ],
-      "platforms": [
-        "pc"
-      ],
-      "worstRankMobile": "VeryPoor"
+      "slug": "cass-event",
+      "avatarId": "avtr_eb395cf9-c1b5-45f1-af1c-ea60c6710fba",
+      "replacedBy": "cass-adv",
+      "why": "It was cass-adv with more. cass-adv now has all of it and is Medium, as this was."
+    },
+    {
+      "slug": "cass-shuffle",
+      "avatarId": "avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0",
+      "replacedBy": "cass",
+      "why": "The shuffle is a switch in the Outfit menu now, so it needs no avatar of its own."
+    },
+    {
+      "slug": "cass-shapes",
+      "avatarId": "avtr_01467232-af45-4db8-b1ef-288077548fbe",
+      "replacedBy": "cass-contacts",
+      "why": "The shape collector is a contact game; it lives with the other contact toys."
     }
   ]
 }

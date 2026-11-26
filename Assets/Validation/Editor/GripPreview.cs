@@ -63,7 +63,7 @@ namespace Wirenook.Validation.Editor
                     // Arms out: standing, the hands hang inside the skirt.
                     CassPreview.Sample(built, arms, 0f, held);
 
-                    // Four looks at the hand: from in front, from below (the palm), from above and from past the fingertips.
+                    // Five looks at the hand: from in front, from below (the palm), from above, from past the fingertips, and from a step back.
                     var hand = animator.GetBoneTransform(left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
                     var middle = animator.GetBoneTransform(left ? HumanBodyBones.LeftMiddleProximal : HumanBodyBones.RightMiddleProximal);
                     var target = Vector3.Lerp(hand.position, middle.position, 0.8f);
@@ -74,6 +74,8 @@ namespace Wirenook.Validation.Editor
                         ("palm", Vector3.down * 0.42f + Vector3.forward * 0.12f),
                         ("above", Vector3.up * 0.42f + Vector3.back * 0.12f),
                         ("end", outward * 0.45f + Vector3.up * 0.12f + Vector3.forward * 0.12f),
+                        // From further off, for a prop larger than the hand.
+                        ("whole", Vector3.forward * 1.1f + outward * 0.35f + Vector3.up * 0.25f),
                     };
                     foreach (var (name, from) in views)
                     {
