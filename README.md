@@ -1055,7 +1055,7 @@ drive the open editor from scripts.
 The avatar is versioned in `Packages/net.wirenook.cass/package.json`.
 
 1. Bump `version`, commit and push.
-2. Create a GitHub release tagged with that version. CI attaches the `.zip`
+2. Push a tag named for that version (`v` and the number). CI makes the GitHub release and attaches the `.zip`
    and `.unitypackage`.
 3. Each submodule releases the same way from its own repository.
 4. Add the repositories to the listing's `githubRepos`
