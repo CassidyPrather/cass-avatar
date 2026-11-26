@@ -26,6 +26,8 @@ namespace Wirenook.Validation.Editor
     ///                     Campfire, from 1.6 m (1.2 m when left out)
     ///     read Name       put the parameter's value in the report
     ///     read @Object    put that object's scale, and whether it is on, in the report
+    ///     layer Name=1    give a layer of the controller that weight, as a
+    ///                     layer-control behaviour would in VRChat
     ///     pose Assets/x.controller#clip@0.5
     ///                     stand the body in a humanoid clip of that asset,
     ///                     that far through it, for every picture after
@@ -109,6 +111,13 @@ namespace Wirenook.Validation.Editor
                             : parameter.type == AnimatorControllerParameterType.Int
                                 ? animator.GetInteger(name).ToString()
                                 : animator.GetFloat(name).ToString("0.000", CultureInfo.InvariantCulture)));
+                    }
+                    else if (step.StartsWith("layer "))
+                    {
+                        var name = step.Substring(6).Split('=')[0].Trim();
+                        var index = animator.GetLayerIndex(name);
+                        if (index < 0) return "The FX controller has no layer named " + name;
+                        animator.SetLayerWeight(index, float.Parse(step.Split('=')[1], CultureInfo.InvariantCulture));
                     }
                     else if (step.StartsWith("pose "))
                     {

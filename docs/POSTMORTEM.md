@@ -613,3 +613,63 @@ there was something to render. None of it has run in the client.
   expression survives the right hand's idle layer. The robot was built
   with one layer for both hands before that was known, and a change that
   gives cass the same (`GestureLayers`) was written and not applied.
+
+## Fifth session: three ways of being away, and the shuffle with guests
+
+What was asked: keep the nap, the crash and the vanishing as three ways of
+being away, one per kind of avatar, with an AFK switch on every one; and
+put the robot and the cyber clothes into the outfit shuffle, saying what
+that costs.
+
+### What was added
+
+- **`afk` in `variants.json`** (`nap`, `crash`, `vanish`), and the two
+  markers in `net.wirenook.assets` that let a variant differ from the one
+  it extends (`WirenookAfk` on a feature, `WirenookAfkChoice` on an
+  avatar). `Wirenook Away (Vanish)` in party-tricks; the nap learned the
+  menu's switch and says it is asleep; `Wirenook Away (Lite)` is gone.
+- **`cass-shuffle`**, back from `deprecated` on its old avatar id, with
+  `Cass Outfit Shuffle (Guests)`; `WirenookReplaces`; `CassShuffle` taken
+  apart into public pieces.
+- Harness: `FeaturePlay` learned `pose`, `layer` and `read @Object`;
+  `BundleSize`, `ShuffleProbe`.
+
+### What went wrong
+
+| What happened | Why | What it cost |
+| --- | --- | --- |
+| The vanishing act did not hide the body in `FeaturePlay`. | It hides by scaling the hips, and the editor's animator does not apply a scale curve to a humanoid's own bone. | A detour to read the layer back from the build; the hiding itself is still unseen. |
+| The robot was planned to ride cass's bones from where its own stood, scaled up by 1.4 to bring the hips together. | Modular Avatar's Merge Armature merges bones by name wherever they stand, so the robot's bones became hers and the scale did nothing but enlarge the ears and push the bounds to Medium. | One rebuild. The result is better than the plan: the pieces turn at her joints. |
+| The robot's locomotion was re-baked (13 MB of controller) by a change to the nap. | Its record of what it was baked from covers the whole locomotion package. | The bake was the same but for object ids; the committed one was kept and only the record updated. |
+| The first idea for the cyber garments was a build step binding bones by name. | A nested model with Merge Armature does the same with no code, because the two skeletons are the same. | Nothing; noted because the build step would have been one more thing to keep. |
+
+### Gotchas, added
+
+- **A layer that must sometimes write nothing cannot be a state of a
+  Write Defaults layer.** The robot roll has to hide the tiles no outfit
+  touches (head, hands, eyes). Writing them from the outfit layer would
+  have that layer own the eyes' tiles in every outfit, over the gesture
+  that changes them. They are written by a layer of their own with one
+  state, and the switch layer gives it weight only for that roll.
+- **Parameter drivers and layer controls do not run in the editor.**
+  `FeaturePlay` stands in for them (`Name=value`, `layer Name=weight`),
+  which shows what the animator does once they have run and says nothing
+  about whether they do. `ShuffleProbe.LayerControls` at least says which
+  layer an index landed on after Modular Avatar moved it.
+- **Material property animation is per renderer, not per material.**
+  Hiding cass's "always" tile hides whatever else the build put in her
+  mesh on that tile. There is no hiding her head without her hammer.
+- **Triangles are the limit that does not bend.** Skinned meshes and
+  slots take an avatar from Good to Medium; 70,000 triangles takes it to
+  Very Poor in one step. The cyber garments went in as the low-polygon
+  ones for that reason alone.
+
+### Open, from this session
+
+- Nothing here has run in the client, as before. In particular: the
+  parameter driver that vanishes an avatar while away; the nap taking the
+  body from tracking on the menu's switch; the layer controls that give
+  the shuffle its weight; the roll itself, which rests on a contact.
+- How the robot roll looks in motion, and whether three rolls in twenty
+  is the right share.
+- The low-polygon cyber garments over the full body, up close.

@@ -71,6 +71,8 @@ namespace Wirenook.Bot.Editor
             Fx();
             Menus();
             Root();
+            // The robot as a guest in cass's outfit shuffle (cass-shuffle).
+            BotShuffle.Rebuild();
             AssetDatabase.SaveAssets();
             Debug.Log("[bot] Rebuilt generated assets.");
         }
@@ -124,13 +126,39 @@ namespace Wirenook.Bot.Editor
         /// </summary>
         private static void Fx()
         {
-            var gestures = CassSpec.Gestures();
-            var map = JObject.Parse(File.ReadAllText(Package + "/Spec/expressions.json"))["expressions"];
-            var keys = new HashSet<string>(Face()["shapeKeys"].Select(key => (string)key["name"]));
-
             var fx = ControllerBuilder.Rebuild(FxPath);
             fx.Int("GestureLeft").Int("GestureRight").Bool(WirenookSignals.Afk).Bool(WirenookSignals.Away);
             fx.Layer("Base").State("Idle");
+            Hands(fx, "Left Hand, Right Hand", Mesh);
+
+            // The second of the two layers MMD worlds silence. It is kept,
+            // empty, so that nothing else lands in that place.
+            fx.Layer("Right Hand (spare)").State("Idle");
+
+            Blink(fx, "Blink", Mesh, staresWhileAway: true);
+
+            // Away, the whole screen is the error screen. The away feature
+            // (net.wirenook.party-tricks) does the rest: this is the one
+            // part of being away that is the avatar's own to draw.
+            var away = fx.Layer("Away Face");
+            var here = away.State("Here", fx.Clip("face here", clip => clip.Blendshape(Mesh, "face.bluescreen", 0f)));
+            var gone = away.State("Away", fx.Clip("face away", clip => clip.Blendshape(Mesh, "face.bluescreen", 100f)));
+            here.To(gone).IfTrue(WirenookSignals.Afk).Or().IfTrue(WirenookSignals.Away);
+            gone.To(here).IfFalse(WirenookSignals.Afk).IfFalse(WirenookSignals.Away);
+            fx.Save();
+        }
+
+        /// <summary>
+        /// The layer that puts the hands' expressions on the face: sprites
+        /// switched by <c>GestureLeft</c> and <c>GestureRight</c>, which the
+        /// controller has to declare. <paramref name="mesh"/> is the path of
+        /// the face's mesh, from wherever the controller's paths start.
+        /// </summary>
+        internal static void Hands(ControllerBuilder fx, string layerName, string mesh)
+        {
+            var gestures = CassSpec.Gestures();
+            var map = JObject.Parse(File.ReadAllText(Package + "/Spec/expressions.json"))["expressions"];
+            var keys = new HashSet<string>(Face()["shapeKeys"].Select(key => (string)key["name"]));
 
             AnimationClip Expression(string id) => fx.Clip("expression " + id, clip =>
             {
@@ -141,16 +169,16 @@ namespace Wirenook.Bot.Editor
                     if (sprite == null) continue;
                     var key = layer + "." + sprite;
                     if (!keys.Contains(key)) throw new InvalidDataException("Spec/expressions.json names " + key + ", which the model's face has no key for.");
-                    clip.Blendshape(Mesh, key, 100f);
+                    clip.Blendshape(mesh, key, 100f);
                 }
 
-                if ((bool?)sprites["blush"] ?? false) clip.Blendshape(Mesh, "face.blush", 100f);
+                if ((bool?)sprites["blush"] ?? false) clip.Blendshape(mesh, "face.blush", 100f);
                 if (clip.Clip.empty) clip.Hold(0.1f);
             });
 
             var right = gestures.For(Hand.Right).OrderBy(pair => pair.Key).ToList();
             var left = gestures.For(Hand.Left).OrderBy(pair => pair.Key).ToList();
-            var hands = fx.Layer("Left Hand, Right Hand");
+            var hands = fx.Layer(layerName);
             var neutral = hands.State("Neutral");
             // A sprite is there or it is not; nothing here fades.
             var rest = hands.Any(neutral);
@@ -168,14 +196,15 @@ namespace Wirenook.Bot.Editor
                 var when = hands.Any(state).Equal("GestureLeft", pair.Key);
                 foreach (var other in right) when.NotEqual("GestureRight", other.Key);
             }
+        }
 
-            // The second of the two layers MMD worlds silence. It is kept,
-            // empty, so that nothing else lands in that place.
-            fx.Layer("Right Hand (spare)").State("Idle");
-
-            // A machine's blink: on the clock. It uses the eyelid keys, not
-            // the MMD blink, so it lives outside the two silenced layers.
-            var blink = fx.Layer("Blink");
+        /// <summary>
+        /// A machine's blink: on the clock. It uses the eyelid keys, not the
+        /// MMD blink, so it lives outside the two layers MMD worlds silence.
+        /// </summary>
+        internal static void Blink(ControllerBuilder fx, string layerName, string mesh, bool staresWhileAway)
+        {
+            var blink = fx.Layer(layerName);
             var shut = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(BlinkEvery - BlinkFor, 100f), new Keyframe(BlinkEvery, 0f));
             for (var key = 0; key < shut.length; key++)
             {
@@ -184,21 +213,21 @@ namespace Wirenook.Bot.Editor
             }
 
             var blinking = blink.State("Blinking", fx.Clip("blink", clip =>
-                clip.Blendshape(Mesh, "EyeClosedLeft", shut).Blendshape(Mesh, "EyeClosedRight", shut).Loop()));
+                clip.Blendshape(mesh, "EyeClosedLeft", shut).Blendshape(mesh, "EyeClosedRight", shut).Loop()));
+            if (!staresWhileAway) return;
             var staring = blink.State("Away", fx.Clip("blink away", clip =>
-                clip.Blendshape(Mesh, "EyeClosedLeft", 0f).Blendshape(Mesh, "EyeClosedRight", 0f)));
+                clip.Blendshape(mesh, "EyeClosedLeft", 0f).Blendshape(mesh, "EyeClosedRight", 0f)));
             blinking.To(staring).IfTrue(WirenookSignals.Afk).Or().IfTrue(WirenookSignals.Away);
             staring.To(blinking).IfFalse(WirenookSignals.Afk).IfFalse(WirenookSignals.Away);
+        }
 
-            // Away, the whole screen is the error screen. The away feature
-            // (net.wirenook.party-tricks) does the rest: this is the one
-            // part of being away that is the avatar's own to draw.
-            var away = fx.Layer("Away Face");
-            var here = away.State("Here", fx.Clip("face here", clip => clip.Blendshape(Mesh, "face.bluescreen", 0f)));
-            var gone = away.State("Away", fx.Clip("face away", clip => clip.Blendshape(Mesh, "face.bluescreen", 100f)));
-            here.To(gone).IfTrue(WirenookSignals.Afk).Or().IfTrue(WirenookSignals.Away);
-            gone.To(here).IfFalse(WirenookSignals.Afk).IfFalse(WirenookSignals.Away);
-            fx.Save();
+        /// <summary>The face's fifteen viseme keys, in the order of VRChat's <c>Viseme</c> parameter.</summary>
+        internal static string[] Visemes()
+        {
+            var visemes = Face()["shapeKeys"].Where(key => (string)key["group"] == "viseme").Select(key => (string)key["name"]).ToArray();
+            if (visemes.Length != 15)
+                throw new InvalidDataException("face.json should list VRChat's fifteen visemes, in its order; it lists " + visemes.Length + ".");
+            return visemes;
         }
 
         /// <summary>An empty menu and parameter list: everything in them comes from features, through Modular Avatar.</summary>
@@ -252,9 +281,7 @@ namespace Wirenook.Bot.Editor
 
                 descriptor.lipSync = VRC_AvatarDescriptor.LipSyncStyle.VisemeBlendShape;
                 descriptor.VisemeSkinnedMesh = body;
-                descriptor.VisemeBlendShapes = face["shapeKeys"].Where(key => (string)key["group"] == "viseme").Select(key => (string)key["name"]).ToArray();
-                if (descriptor.VisemeBlendShapes.Length != 15)
-                    throw new InvalidDataException("face.json should list VRChat's fifteen visemes, in its order; it lists " + descriptor.VisemeBlendShapes.Length + ".");
+                descriptor.VisemeBlendShapes = Visemes();
                 // Its eyes are pictures on a screen; there is nothing to turn.
                 descriptor.enableEyeLook = false;
 

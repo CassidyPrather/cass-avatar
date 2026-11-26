@@ -5,7 +5,7 @@
     {
       "slug": "cass-lite",
       "model": "lite",
-      "about": "The one for where performance is tight: the low-polygon model on PC as well, with locomotion and nothing else that costs. Being away still locks the body and glitches it, from the lite prefab, which adds no mesh, material or sound. Nothing is to be crammed into this one.",
+      "about": "The one for where performance is tight: the low-polygon model on PC as well, with locomotion and nothing else that costs. While its wearer is away it naps, which on Android and iOS is an animation and nothing else. Nothing is to be crammed into this one.",
       "worstRank": "Good",
       "afk": "nap",
       "features": [
@@ -15,7 +15,7 @@
     },
     {
       "slug": "cass",
-      "about": "Everyday build, and what every other build starts from: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, the crash while away, and everything that fits beside those at Good: the party tricks (bonk hammer, vanishing act, mosaic censor, busy sign) and the outfit shuffle. The tricks and the shuffle are left out of the Android and iOS builds, which have no room for them at Medium; there this is cass-lite.",
+      "about": "Everyday build, and what every other build starts from: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, vanishing while away, and everything that fits beside those at Good: the party tricks (bonk hammer, vanishing act, mosaic censor, busy sign) and the outfit shuffle. The tricks and the shuffle are left out of the Android and iOS builds, which have no room for them at Medium; there this is cass-lite, and naps while away as that does.",
       "worstRank": "Good",
       "afk": "vanish",
       "features": [
@@ -85,6 +85,19 @@
       "worstRankMobile": "VeryPoor"
     },
     {
+      "slug": "cass-shuffle",
+      "extends": "cass",
+      "about": "The everyday build with the outfit shuffle taken as far as it goes, which is a joke and is priced like one: besides cass's own outfits, each viewer's roll can put her in garments from the cyber wardrobe, or take her away altogether and stand the wirenook bot in her place, on her skeleton, with its face still working. The cyber garments and the robot are meshes, materials and bones of their own, so this is Medium where cass is Good, and it is a variant of its own for that reason. With the switch off it is cass. PC only: the outfits are UV tiles, which mobile shaders cannot hide.",
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.bot/Prefabs/Cass Outfit Shuffle (Guests).prefab"
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "cass-gaits",
       "about": "A sampler for choosing how the avatar walks: the root avatar with every walk style of the locomotion package baked for it, and a Walk style menu to switch between them in game. It does not extend cass, whose own locomotion would be a second claim on the same playable layers. Its controllers are large and are not committed; scripts/cass.sh gaits styles writes them. PC only: it is for trying on, and the choice is made once.",
       "worstRank": "Good",
@@ -101,7 +114,7 @@
       "slug": "cass-cyber",
       "extends": "cass",
       "wardrobe": "cyber",
-      "about": "cass in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model.",
+      "about": "cass in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model. Being away is the crash here, where cass vanishes.",
       "worstRank": "Good",
       "afk": "crash",
       "features": [],
@@ -160,12 +173,6 @@
       "avatarId": "avtr_eb395cf9-c1b5-45f1-af1c-ea60c6710fba",
       "replacedBy": "cass-adv",
       "why": "It was cass-adv with more. cass-adv now has all of it and is Medium, as this was."
-    },
-    {
-      "slug": "cass-shuffle",
-      "avatarId": "avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0",
-      "replacedBy": "cass",
-      "why": "The shuffle is a switch in the Outfit menu now, so it needs no avatar of its own."
     },
     {
       "slug": "cass-shapes",
