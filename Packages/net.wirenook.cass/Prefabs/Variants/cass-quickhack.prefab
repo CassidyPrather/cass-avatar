@@ -28,6 +28,16 @@ PrefabInstance:
       propertyPath: blueprintId
       value: avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823
       objectReference: {fileID: 0}
+    - target: {fileID: 8229947281932306423, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: flavour
+      value: crash
+      objectReference: {fileID: 0}
+    - target: {fileID: 8229947281932306423, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      propertyPath: mobileFlavour
+      value: crash
+      objectReference: {fileID: 0}
     - target: {fileID: 8317110327304041845, guid: 2249dc0c412158a419be7e38dbde81a0,
         type: 3}
       propertyPath: m_Name
@@ -90,6 +100,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 4820154201803477740}
+    - targetCorrespondingSourceObject: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4381957736850936778}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8317110327304041845, guid: 2249dc0c412158a419be7e38dbde81a0,
         type: 3}
@@ -120,6 +134,80 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8658064087365775311, guid: 2249dc0c412158a419be7e38dbde81a0,
     type: 3}
   m_PrefabInstance: {fileID: 5980885445825167862}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7134146518870678993
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3109666229354655289}
+    m_Modifications:
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8832829729335756670, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Away
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: adcc0e4bb655fcd4d843ac56a2d86ea7, type: 3}
+--- !u!4 &4381957736850936778 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6903529142531526171, guid: adcc0e4bb655fcd4d843ac56a2d86ea7,
+    type: 3}
+  m_PrefabInstance: {fileID: 7134146518870678993}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8880719276028214726
 PrefabInstance:

@@ -99,6 +99,7 @@ python tools/thumbnail/test_thumbnail.py
 - **A variant can be moved onto another parent** by changing `extends`: the rebuild makes its prefab again and keeps its avatar id, and refuses if another variant is built on it.
 - **Short cues share one audio source.** `WirenookSounds.Source(root)` marks a source as shareable and the build keeps one for the avatar; pass `shared: false` for a source that stands in the world or plays a loop.
 - **Away is two parameters**: VRChat's `AFK` and the menu's `WN/Away` (`WirenookSignals`). Anything that reacts to one reacts to both.
+- **Away is one of three features per variant**, named by `afk` in `variants.json` (`nap`, `crash`, `vanish`) and placed by the generator, not listed under `features`. Each feature's root is marked `WirenookAfk`; the variant's root carries `WirenookAfkChoice`, and the build (`net.wirenook.assets`) leaves the other flavours out, parameters kept. That is the only way a variant drops something the variant it extends carries. `CassChecks.Away` tells the flavours apart by layer name (`Nap` in Action, `Away` in FX and Action, `Away Vanish` in FX): rename one and the check goes blind.
 - Performance is checked on the **built** avatar (`scripts/cass.sh verify`), not the prefab. Every component counts for rank even when disabled.
 
 ## House Rules

@@ -727,6 +727,21 @@ namespace Wirenook.Cass.Editor
             if (!string.IsNullOrEmpty(variant.Wardrobe)) Ensure<CassWardrobe>(root).wardrobe = variant.Wardrobe;
             else if (wardrobe != null) UnityEngine.Object.DestroyImmediate(wardrobe, true);
 
+            // Which away feature a build keeps, of the ones this variant and
+            // the variants it extends have placed (net.wirenook.assets
+            // leaves the others out).
+            var away = root.GetComponent<Wirenook.Assets.WirenookAfkChoice>();
+            if (variant.Afk != null)
+            {
+                away = Ensure<Wirenook.Assets.WirenookAfkChoice>(root);
+                away.flavour = variant.Afk;
+                away.mobileFlavour = variant.AfkMobile;
+            }
+            else if (away != null)
+            {
+                UnityEngine.Object.DestroyImmediate(away, true);
+            }
+
             // A feature this variant used to list was placed here by an
             // earlier rebuild, and is taken out again. Only what was added
             // at this variant can be: what a parent variant placed is the

@@ -228,6 +228,7 @@ namespace Wirenook.Cass.Editor
                     Unreleased = (bool?)token["unreleased"] ?? false,
                     Lite = (string)token["model"] == "lite",
                     Wardrobe = (string)token["wardrobe"],
+                    Afk = (string)token["afk"],
                     WorstRank = (string)token["worstRank"] ?? "Good",
                     WorstRankMobile = (string)token["worstRankMobile"] ?? (string)token["worstRank"] ?? "Good",
                     Platforms = token["platforms"]?.Select(name => WirenookPlatform.Parse((string)name)).ToList()
@@ -245,6 +246,20 @@ namespace Wirenook.Cass.Editor
                         AtView = (bool?)asset["atView"] ?? false,
                     }).ToList() ?? new List<LocalAsset>(),
                 });
+            }
+
+            // How a variant shows its wearer is away is its own word or, left
+            // out, the word of the variant it extends (which the spec lists
+            // first). The features that takes are the variant's like any other.
+            foreach (var variant in spec.Variants)
+            {
+                if (variant.Afk == null && variant.Extends != null)
+                    variant.Afk = spec.Variants.First(candidate => candidate.Slug == variant.Extends).Afk;
+                if (variant.Afk == null) continue;
+                if (!Variant.AfkFeatures.TryGetValue(variant.Afk, out var features))
+                    throw new InvalidDataException("Variant " + variant.Slug + " has afk \"" + variant.Afk + "\"; it is one of " +
+                                                   string.Join(", ", Variant.AfkFeatures.Keys) + ".");
+                foreach (var feature in features.Where(feature => !variant.Features.Contains(feature))) variant.Features.Add(feature);
             }
 
             foreach (var token in json["deprecated"] ?? new JArray())
@@ -436,6 +451,34 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>The wardrobe the variant is built wearing; null is the first one, which the prefabs hold.</summary>
         public string Wardrobe;
+
+        /// <summary>
+        /// How the variant shows that its wearer is away: "nap", "crash" or
+        /// "vanish" (<see cref="WirenookAway"/>). Left out in the spec, it
+        /// is what the variant it extends does. A variant cannot take off a
+        /// feature it inherits, so the features of every flavour its line
+        /// has named stay on its prefab, and the build keeps this one.
+        /// </summary>
+        public string Afk;
+
+        /// <summary>
+        /// What Android and iOS builds do instead. Vanishing is the
+        /// vanishing act, which those builds of an avatar do not carry, so
+        /// there it naps.
+        /// </summary>
+        public string AfkMobile => Afk == WirenookAway.Vanish ? WirenookAway.Nap : Afk;
+
+        public string AfkFor(Platform platform) => platform == Platform.Pc ? Afk : AfkMobile;
+
+        private const string NapPrefab = "Packages/net.wirenook.locomotion/Prefabs/Wirenook Nap.prefab";
+
+        /// <summary>The feature prefabs each flavour needs on the avatar, its mobile stand-in included.</summary>
+        public static readonly Dictionary<string, string[]> AfkFeatures = new Dictionary<string, string[]>
+        {
+            { WirenookAway.Nap, new[] { NapPrefab } },
+            { WirenookAway.Crash, new[] { "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab" } },
+            { WirenookAway.Vanish, new[] { "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Vanish).prefab", NapPrefab } },
+        };
 
         /// <summary>The worst VRChat performance rank this variant may build to on PC.</summary>
         public string WorstRank;

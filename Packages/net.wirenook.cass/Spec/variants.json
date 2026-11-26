@@ -1,5 +1,5 @@
 {
-  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. `wardrobe` names another set of clothes the variant is built wearing: Blender exports each wardrobe as a model of its own on the same skeleton (BlenderExports/cass-<wardrobe>.fbx and its -lite), and the build exchanges the meshes by name. Features that cannot work on mobile say so themselves and are left out of those builds. `local` lists prefabs a variant adds that are not in the repository, each by the GUID its author shipped it with, with the name, author and address it is credited by; `atView` stands it at the avatar's view position. They are bought assets whose terms forbid passing them on. A variant with any is only made, built or uploaded in a project where all of them have been imported (every command skips it elsewhere and says why), its description credits them, and it uploads private and without the licence tag. A feature may be given as an object, {\"path\": ..., \"pcOnly\": true}: the variant then leaves it out of its Android and iOS builds (its parameters stay, so the list is the same on every platform), for something that works there but that the variant cannot afford under the mobile ranks. How much a variant carries goes by the rank it is held to and what it is for: cass-lite carries nothing it can do without, a variant at Good everything that fits at Good, and a variant that is Medium anyway everything that is of use to it. `deprecated` lists variants that are no longer made: the slug, the avatar id it was uploaded under, which variant has what it had, and why. Their prefabs are gone from the repository; scripts/cass.sh retire <slug> takes the avatar down from VRChat. `root` names the root prefab a variant stands on where that is not cass's own: another avatar built by this pipeline (the wirenook bot, net.wirenook.bot), whose variants are given features and are built, checked and uploaded like any other. `description` replaces the shared description for such a variant, whose credits are not cass's. `unreleased` makes a variant upload private although nothing it carries asks for that; take it away, rebuild and run `scripts/cass.sh publish <slug>` to make the avatar public.",
+  "$comment": "Upload variants. Each is a prefab variant of the root avatar prefab (or of the variant it `extends`) with feature prefabs added as children; `features` lists the ones the generator makes sure are present. Slugs are the names the avatar is uploaded under. `about` is for whoever reads this file and is not sent anywhere. Features whose package is not installed are skipped with a warning. `worstRank` is the worst VRChat performance rank the variant may build to on PC and `worstRankMobile` on Android and iOS; the checks fail if it ranks lower. `model` is the fidelity level a variant is built from: left out, the full model on PC and the lite one on Android and iOS; \"lite\", the lite one everywhere. `platforms` (pc, android, ios; all three when left out) says what the variant is built for. `wardrobe` names another set of clothes the variant is built wearing: Blender exports each wardrobe as a model of its own on the same skeleton (BlenderExports/cass-<wardrobe>.fbx and its -lite), and the build exchanges the meshes by name. `afk` says how the avatar shows that its wearer is away (VRChat's own AFK, or the \"AFK\" switch every avatar has in its menu): \"nap\" (it stands asleep; net.wirenook.locomotion), \"crash\" (it locks, glitches and puts up an error window; net.wirenook.party-tricks) or \"vanish\" (the vanishing act of the party tricks, worked by being away). Left out, it is what the variant it extends does. The generator places the features the flavour takes, so they are not listed under `features`; a variant cannot take off what it inherits, so the build keeps the one flavour the variant names and leaves the others out. Android and iOS builds of a variant that vanishes nap instead, having no vanishing act. Features that cannot work on mobile say so themselves and are left out of those builds. `local` lists prefabs a variant adds that are not in the repository, each by the GUID its author shipped it with, with the name, author and address it is credited by; `atView` stands it at the avatar's view position. They are bought assets whose terms forbid passing them on. A variant with any is only made, built or uploaded in a project where all of them have been imported (every command skips it elsewhere and says why), its description credits them, and it uploads private and without the licence tag. A feature may be given as an object, {\"path\": ..., \"pcOnly\": true}: the variant then leaves it out of its Android and iOS builds (its parameters stay, so the list is the same on every platform), for something that works there but that the variant cannot afford under the mobile ranks. How much a variant carries goes by the rank it is held to and what it is for: cass-lite carries nothing it can do without, a variant at Good everything that fits at Good, and a variant that is Medium anyway everything that is of use to it. `deprecated` lists variants that are no longer made: the slug, the avatar id it was uploaded under, which variant has what it had, and why. Their prefabs are gone from the repository; scripts/cass.sh retire <slug> takes the avatar down from VRChat. `root` names the root prefab a variant stands on where that is not cass's own: another avatar built by this pipeline (the wirenook bot, net.wirenook.bot), whose variants are given features and are built, checked and uploaded like any other. `description` replaces the shared description for such a variant, whose credits are not cass's. `unreleased` makes a variant upload private although nothing it carries asks for that; take it away, rebuild and run `scripts/cass.sh publish <slug>` to make the avatar public.",
   "description": "Cassidy's avatar. AGPLv3. github.com/CassidyPrather/cass-avatar Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.",
   "variants": [
     {
@@ -7,9 +7,9 @@
       "model": "lite",
       "about": "The one for where performance is tight: the low-polygon model on PC as well, with locomotion and nothing else that costs. Being away still locks the body and glitches it, from the lite prefab, which adds no mesh, material or sound. Nothing is to be crammed into this one.",
       "worstRank": "Good",
+      "afk": "nap",
       "features": [
-        "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab",
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Lite).prefab"
+        "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab"
       ],
       "worstRankMobile": "Medium"
     },
@@ -17,9 +17,9 @@
       "slug": "cass",
       "about": "Everyday build, and what every other build starts from: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, the crash while away, and everything that fits beside those at Good: the party tricks (bonk hammer, vanishing act, mosaic censor, busy sign) and the outfit shuffle. The tricks and the shuffle are left out of the Android and iOS builds, which have no room for them at Medium; there this is cass-lite.",
       "worstRank": "Good",
+      "afk": "vanish",
       "features": [
         "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab",
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab",
         {
           "path": "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab",
           "pcOnly": true
@@ -88,9 +88,9 @@
       "slug": "cass-gaits",
       "about": "A sampler for choosing how the avatar walks: the root avatar with every walk style of the locomotion package baked for it, and a Walk style menu to switch between them in game. It does not extend cass, whose own locomotion would be a second claim on the same playable layers. Its controllers are large and are not committed; scripts/cass.sh gaits styles writes them. PC only: it is for trying on, and the choice is made once.",
       "worstRank": "Good",
+      "afk": "nap",
       "features": [
-        "Packages/net.wirenook.cass/Generated/Gaits/Wirenook Locomotion Styles.prefab",
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Lite).prefab"
+        "Packages/net.wirenook.cass/Generated/Gaits/Wirenook Locomotion Styles.prefab"
       ],
       "platforms": [
         "pc"
@@ -103,6 +103,7 @@
       "wardrobe": "cyber",
       "about": "cass in the cyber wardrobe: a techwear jacket, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. The same avatar, skeleton and switches; only the clothes differ, and they are exchanged by mesh name at build time like the low-polygon model.",
       "worstRank": "Good",
+      "afk": "crash",
       "features": [],
       "worstRankMobile": "Medium"
     },
@@ -112,6 +113,7 @@
       "wardrobe": "cyber",
       "about": "The everyday build carrying Quick Hack by DiNe Shop, a bought prop. The prop is not in the repository: its terms do not allow passing it on, or uploading it where others could clone it. So this variant can only be made where its package has been imported (see `local`), and it uploads private. PC only, as the prop is.",
       "worstRank": "VeryPoor",
+      "afk": "crash",
       "features": [],
       "local": [
         {
@@ -133,9 +135,9 @@
       "description": "A low-poly robot from wirenook.net, with a sprite face. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "Another avatar altogether, on the same pipeline: a low-poly robot with pixel textures, a face made of sprites, and rabbit ears and a tail projected in light (net.wirenook.bot). It carries the features cass carries, unchanged, which is what it is for: the crash while away, with its window and sounds, and the party tricks on PC.",
       "worstRank": "Good",
+      "afk": "crash",
       "features": [
         "Packages/net.wirenook.bot/Prefabs/Bot Locomotion.prefab",
-        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab",
         {
           "path": "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab",
           "pcOnly": true

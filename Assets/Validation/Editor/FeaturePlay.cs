@@ -25,6 +25,10 @@ namespace Wirenook.Validation.Editor
     ///                     a picture called "lit" of the object named
     ///                     Campfire, from 1.6 m (1.2 m when left out)
     ///     read Name       put the parameter's value in the report
+    ///     read @Object    put that object's scale, and whether it is on, in the report
+    ///     pose Assets/x.controller#clip@0.5
+    ///                     stand the body in a humanoid clip of that asset,
+    ///                     that far through it, for every picture after
     ///
     /// Unity's own animator does the work, so layers, blend trees and
     /// animated parameters behave as they will in VRChat. VRChat's own
@@ -77,6 +81,8 @@ namespace Wirenook.Validation.Editor
                 camera.cullingMask = 1 << layer;
 
                 var shots = 0;
+                AnimationClip pose = null;
+                var poseAt = 0f;
                 foreach (var step in script.Split(';').Select(part => part.Trim()).Where(part => part.Length > 0))
                 {
                     if (step.StartsWith("wait "))
@@ -87,6 +93,16 @@ namespace Wirenook.Validation.Editor
                     else if (step.StartsWith("read "))
                     {
                         var name = step.Substring(5).Trim();
+                        // An object's own scale and whether it is switched on, for what a picture cannot tell apart.
+                        if (name.StartsWith("@"))
+                        {
+                            var found = built.GetComponentsInChildren<Transform>(true)
+                                .FirstOrDefault(transform => transform.name == name.Substring(1) || transform.name.Split('$').Contains(name.Substring(1)));
+                            if (found == null) return "The built avatar has nothing named " + name.Substring(1);
+                            report.AppendLine(name + " scale " + found.localScale.ToString("0.00") + (found.gameObject.activeInHierarchy ? ", on" : ", off"));
+                            continue;
+                        }
+
                         if (!parameters.TryGetValue(name, out var parameter)) return "The FX controller has no parameter named " + name;
                         report.AppendLine(name + " = " + (parameter.type == AnimatorControllerParameterType.Bool
                             ? animator.GetBool(name).ToString()
@@ -94,8 +110,19 @@ namespace Wirenook.Validation.Editor
                                 ? animator.GetInteger(name).ToString()
                                 : animator.GetFloat(name).ToString("0.000", CultureInfo.InvariantCulture)));
                     }
+                    else if (step.StartsWith("pose "))
+                    {
+                        var where = step.Substring(5).Trim();
+                        var asset = where.Split('#')[0];
+                        var clipName = where.Split('#')[1].Split('@')[0];
+                        pose = AssetDatabase.LoadAllAssetsAtPath(asset).OfType<AnimationClip>().FirstOrDefault(clip => clip.name == clipName);
+                        if (pose == null) return asset + " has no clip named " + clipName;
+                        poseAt = where.Contains("@") ? float.Parse(where.Split('@')[1], CultureInfo.InvariantCulture) : 0f;
+                    }
                     else if (step.StartsWith("shot "))
                     {
+                        // After the animator, which leaves the body where a controller with no pose puts it.
+                        if (pose != null) pose.SampleAnimation(built, poseAt * pose.length);
                         var parts = step.Substring(5).Split('>');
                         var aim = parts[1].Split(':');
                         var distance = aim.Length > 1 ? float.Parse(aim[1], CultureInfo.InvariantCulture) : 1.2f;

@@ -275,28 +275,44 @@ on working. The generator finds the claims on every feature a variant
 lists and gives the avatar one small layer per claimed hand, after the two
 gesture layers.
 
-**Away.** While the wearer is away, the avatar crashes. That is VRChat's
-own AFK or the menu's "AFK" switch (`WN/Away`); the feature is
-`Wirenook Away` in `net.wirenook.party-tricks`, whose README has the
-whole of it. The body locks in a standing pose and stops following the
-headset, the mesh tears and throws out spikes, an error window reading
-AFK stands at the edge of the avatar on each viewer's own side, a
-device-unplugged cue plays and a low buzz sets in. The avatar adds two
-things of its own, in layers that already owned those shapes and bones
+**Away.** Every avatar shows that its wearer is away, and has an "AFK"
+switch at the top of its menu to say so by hand (`WN/Away`); VRChat's own
+AFK (a headset taken off, the system menu, the End key) does the same.
+There are three ways of showing it, and a variant has one, named by `afk`
+in `Spec/variants.json`:
+
+| `afk` | What the avatar does | Feature | Which variants |
+| --- | --- | --- | --- |
+| `nap` | Stands asleep, nodding off, eyes shut, ears hanging, Zs rising from the head. | `Wirenook Nap` (`net.wirenook.locomotion`) | The ones with nothing to spare: `cass-lite`, `cass-gaits`. And the Android and iOS builds of every variant that vanishes. |
+| `crash` | Locks where it stands, tears and glitches, its eyes small blue error screens, an error window reading AFK beside it, a device-unplugged cue and a buzz. | `Wirenook Away` (`net.wirenook.party-tricks`) | The machine and the cyber wardrobe: `wirenook-bot`, `cass-cyber`, `cass-quickhack`. |
+| `vanish` | Goes up in a puff of smoke and leaves a log standing where it was; comes back in another puff. | `Wirenook Away (Vanish)`, which works the vanishing act of the party tricks | Everything else: `cass`, `cass-adv`, `cass-flashlight`, `cass-lantern`, `cass-contacts`. |
+
+The packages' READMEs have the whole of each. The avatar adds things of
+its own to all three, in layers that already owned those shapes and bones
 (the blink and the poses) and are outside the two that MMD worlds
-silence: the eyes stop blinking and each becomes a small blue error
-screen with a sad face, and the ears hang. The screen is the toon
-shader's (`net.wirenook.assets`), drawn on the faces of the eyes' UV
-tile; where on an eye its picture goes is written into the model's third
-UV set as it is imported (`CassModelImporter`).
+silence: the ears hang; the eyes stop blinking and, for the crash, each
+becomes a small blue error screen with a sad face, or shut for the nap,
+which says it is napping through an animated parameter
+(`WirenookSignals.Asleep`). The screen is the toon shader's
+(`net.wirenook.assets`), drawn on the faces of the eyes' UV tile; where on
+an eye its picture goes is written into the model's third UV set as it is
+imported (`CassModelImporter`).
+
+A variant cannot take off a feature of the variant it extends, and
+`cass-cyber` extends `cass`. So the features of every flavour a variant's
+line has named stay on its prefab, the variant's root says which one it
+wants (`WirenookAfkChoice`, with a second choice for Android and iOS), and
+the build leaves the others out, keeping their expression parameters in
+place so that the list is the same everywhere (`net.wirenook.assets`). The
+checks fail a variant that builds with no way of being away, with two, with
+another than its `afk` says, or without exactly one "AFK" switch at the top
+of its menu.
 
 The switch cannot mute the microphone, because VRChat gives an avatar no
 way to. `modules/party-tricks/tools/away_mic.py`, run beside VRChat with
-OSC enabled, does it from outside, and unmutes on return only if the mute
-was its own and nothing has touched the microphone since.
-
-The nap that used to stand here (`Wirenook Nap`, `net.wirenook.locomotion`)
-is still in its package; no variant carries it now.
+OSC enabled, does it from outside for all three flavours (it listens for
+`WN/Away`), and unmutes on return only if the mute was its own and nothing
+has touched the microphone since.
 
 ## Variants and uploads
 
@@ -306,13 +322,13 @@ children.
 
 | Variant | Rank on PC | What it is |
 | --- | --- | --- |
-| `cass-lite` | Good | The one for where performance is tight: the low-polygon model on PC too, locomotion, the Face Tracking switch, the Outfit menu, and the crash while away in its lite form (no window, no sound). Nothing else, and nothing is to be added. |
-| `cass` | Good | Everyday, and what the rest start from: the full model, locomotion baked for this avatar's own skeleton, the crash while away with its AFK window and sounds, the party tricks (a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, a busy sign) and the outfit shuffle. |
+| `cass-lite` | Good | The one for where performance is tight: the low-polygon model on PC too, locomotion, the Face Tracking switch, the Outfit menu, and the nap while away. Nothing else, and nothing is to be added. |
+| `cass` | Good | Everyday, and what the rest start from: the full model, locomotion baked for this avatar's own skeleton, vanishing while away (a nap on Android and iOS), the party tricks (a bonk hammer, a vanishing act that leaves a log behind, a mosaic censor for the head or the whole body, a busy sign) and the outfit shuffle. |
 | `cass-adv` | Medium | For going out and for leading a group: everything `cass` has, and flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, four seats to put down in a ring or facing a screen, a laser pointer that can ping the spot it points at, a megaphone, a flashlight and a lantern, screen notices, and a beacon that shows where the wearer is through walls. |
 | `cass-flashlight`, `cass-lantern` | Poor | `cass` with the adventure kit and one real light: a spotlight in the flashlight, or a point light in the lantern, which can be placed in the world. They carry that one tool and not the other. A light ranks an avatar Poor and a second Very Poor, hence one each. On mobile the tool is there without its light. |
 | `cass-contacts` | Medium | For playing with contacts: everything `cass` has, everything in `net.wirenook.contacts` (it reacts to VRChat's standard contact traits, and carries the tester, the shield that burns and the targets), and the shape collector. One avatar to clone for both halves of a test. PC only. |
 | `cass-gaits` | Good | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
-| `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
+| `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. It crashes while away where `cass` vanishes. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 | `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. Uploaded private until its owner has looked at it. See [The robot](#the-robot). |
 
@@ -1050,10 +1066,14 @@ Known gaps:
   to say about it.
 - VRChat's ten tags do not hold every feature of `cass-adv`: eight are
   left out, the least important by each feature's own ranking.
-- Being away and the vanishing act are two features that both take the
-  avatar out of the room and share nothing: one corrupts the mesh in the
-  shader, the other shrinks it and leaves a log. Whether they should be
-  one thing with two moods is undecided.
+- Vanishing while away is the vanishing act's parameter set by a
+  parameter driver on the wearer's client. Nothing in the editor runs a
+  driver, so the two were looked at one at a time: the layer that sets
+  the parameter was read back from a build, and the act was played by
+  setting the parameter by hand. The act hides the body by scaling the
+  hips to nothing, which the editor's own animator does not do to a
+  humanoid's bones; the smoke and the log were seen, the empty space
+  where the body was has not been.
 - The robot's way of moving has been looked at in the editor's pictures
   and nowhere else. What that cannot show: how it reads at speed, with a
   tracked head and hands (it is given a third of each lean), in full-body

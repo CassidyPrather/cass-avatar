@@ -66,6 +66,7 @@ namespace Wirenook.Cass.Editor
                     problems.Add("After the build there is no skinned mesh named " + CassSpec.Blendshapes().Mesh + " directly under the avatar root.");
                 }
 
+                Away(variant, built, problems);
                 Budgets(built, report, problems);
                 Brightness(built, problems);
                 RestPose(built, problems);
@@ -90,6 +91,53 @@ namespace Wirenook.Cass.Editor
             foreach (var note in notes) summary += "  note: " + note + "\n";
             if (problems.Count == 0) return summary + "ok";
             return summary + "FAILED\n  " + string.Join("\n  ", problems);
+        }
+
+        /// <summary>
+        /// Every avatar shows its wearer is away in exactly one way, the one
+        /// its variant names for this platform, and has the "AFK" switch in
+        /// its menu once. The flavours are told apart by a layer each is
+        /// known to bring; vanishing also needs the vanishing act it works.
+        /// </summary>
+        private static void Away(Variant variant, GameObject built, List<string> problems)
+        {
+            var descriptor = built.GetComponent<VRCAvatarDescriptor>();
+            List<string> Layers(VRCAvatarDescriptor.AnimLayerType type) =>
+                (descriptor.baseAnimationLayers.FirstOrDefault(layer => layer.type == type).animatorController as AnimatorController)
+                ?.layers.Select(layer => layer.name).ToList() ?? new List<string>();
+            var fx = Layers(VRCAvatarDescriptor.AnimLayerType.FX);
+            var action = Layers(VRCAvatarDescriptor.AnimLayerType.Action);
+
+            var found = new List<string>();
+            if (action.Contains("Nap")) found.Add(WirenookAway.Nap);
+            if (fx.Contains("Away") && action.Contains("Away")) found.Add(WirenookAway.Crash);
+            if (fx.Contains("Away Vanish")) found.Add(WirenookAway.Vanish);
+
+            var wanted = variant.AfkFor(WirenookPlatform.Current);
+            if (wanted == null)
+                problems.Add("The variant does not say how it shows its wearer is away: give it, or the variant it extends, an \"afk\" in variants.json.");
+            else if (found.Count != 1 || found[0] != wanted)
+                problems.Add("It should show its wearer is away by the " + wanted + " and nothing else; the build has " +
+                             (found.Count == 0 ? "no away feature" : string.Join(" and ", found)) + ".");
+            if (wanted == WirenookAway.Vanish && !fx.Contains("Vanish Body"))
+                problems.Add("It vanishes while away, which is the vanishing act of net.wirenook.party-tricks worked for it, and the build has no vanishing act.");
+
+            var switches = 0;
+            void Count(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu, HashSet<UnityEngine.Object> seen)
+            {
+                if (menu == null || !seen.Add(menu)) return;
+                foreach (var control in menu.controls)
+                {
+                    if (control.parameter != null && control.parameter.name == WirenookSignals.Away) switches++;
+                    Count(control.subMenu, seen);
+                }
+            }
+
+            Count(descriptor.expressionsMenu, new HashSet<UnityEngine.Object>());
+            if (switches != 1)
+                problems.Add("The menu has " + switches + " switches for " + WirenookSignals.Away + "; every avatar has the one \"AFK\" switch.");
+            else if (!descriptor.expressionsMenu.controls.Any(control => control.parameter != null && control.parameter.name == WirenookSignals.Away))
+                problems.Add("The \"AFK\" switch is not in the top level of the menu.");
         }
 
         /// <summary>Whether a variant stands on cass's own root, directly or through the variants it extends.</summary>

@@ -41,6 +41,9 @@ namespace Wirenook.Cass.Editor
         /// </summary>
         private const string Away = WirenookSignals.Away;
 
+        /// <summary>Above a half while a nap has the avatar asleep; nought where the avatar has no nap.</summary>
+        private const string Asleep = WirenookSignals.Asleep;
+
         /// <summary>The blendshape set that only carries speech visemes; it is never switched off.</summary>
         public const string VisemeSet = "visemes";
 
@@ -75,7 +78,7 @@ namespace Wirenook.Cass.Editor
             fx.Int("GestureLeft").Int("GestureRight")
                 .Bool(UserFaceTracking).Bool(UserEyeTracking)
                 .Bool(TrackingEnabled, true)
-                .Bool(Afk).Bool(Away)
+                .Bool(Afk).Bool(Away).Float(Asleep)
                 .Int(BlinkPick);
 
             fx.Layer("Base").State("Idle");
@@ -393,6 +396,15 @@ namespace Wirenook.Cass.Editor
             var staring = layer.State("Away", fx.Clip("away eyes", clip =>
                 clip.Blendshape(mesh, "EyeClosedLeft", 0f).Blendshape(mesh, "EyeClosedRight", 0f)));
             WhileAway(layer, staring, pick, 0.1f);
+
+            // Unless being away is a nap, which shuts them. The nap says so
+            // a moment after it starts, so the eyes are open for that long.
+            var asleep = layer.State("Asleep", fx.Clip("asleep eyes", clip =>
+                clip.Blendshape(mesh, "EyeClosedLeft", 100f).Blendshape(mesh, "EyeClosedRight", 100f)));
+            foreach (var transition in layer.Machine.anyStateTransitions.Where(transition => transition.destinationState == staring.State))
+                transition.AddCondition(AnimatorConditionMode.Less, 0.5f, Asleep);
+            layer.Any(asleep).Fade(0.35f).IfTrue(Afk).Greater(Asleep, 0.5f).Or().IfTrue(Away).Greater(Asleep, 0.5f);
+            asleep.To(pick).Fade(0.1f).IfFalse(Afk).IfFalse(Away);
         }
 
         /// <summary>
