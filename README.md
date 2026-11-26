@@ -732,8 +732,16 @@ Not checked, because only the client can:
   landing poses, which were looked at on the avatar in the editor and
   nowhere else. `cass-gaits` exists so that the styles can be judged in
   the client.
-- **Hand poses**: props sit in the hand pointing where the fingers point,
-  and the fingers do not close around them.
+- **Hand poses.** Props sit in the hand pointing where the fingers point,
+  and the fingers now close round them: each grip says when its prop is
+  held and how far the fingers, the index finger and the thumb close, and
+  the build gives each hand a pose layer for it (`HandPoses` in
+  `net.wirenook.assets`). `GripPreview.Render <slug>` shows every held
+  prop in its hand from four sides, read back from the built avatar. The
+  fingers were fitted from those pictures; the thumb still stands off the
+  megaphone and the laser pointer more than it should. Whether the hand
+  keeps its pose against finger tracking, as the tracking control it sets
+  should make it, only a client shows.
 - **The model in motion.** The ear and tail poses, the arm twist
   constraints, the hair, ear and tail physics and the eye-look limits are
   generated and build cleanly, but nothing has seen them move. The long
@@ -793,7 +801,6 @@ Known gaps:
   shows as a faint line round the head.
 - Nothing fades or dithers out as a viewer comes close; lilToon's Clipping
   Canceller pushes near geometry back instead.
-- Held tools have no hand poses of their own.
 - The nap is baked on a generic rig and retargeted, not fitted to this
   avatar as the gaits now are.
 - Lying prone still plays VRChat's own crawl; the gait model has nothing
