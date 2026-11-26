@@ -58,9 +58,8 @@ Spec/*.json ──────────────────────�
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
 | [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course: laid out in any world from an avatar (the pilot for world-sync's bus), or built into a world from skill checks. |
-| [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat's standard contact tags put to use: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. |
+| [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat contacts put to use. A kit on the standard contact tags: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. And skill checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Their avatar demo is a campfire, a match and a marshmallow. |
 
-| [`skill-checks`](https://github.com/CassidyPrather/skill-checks) | `net.wirenook.skill-checks` | Contact- and time-based checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Its avatar demo is a campfire, a match and a marshmallow. |
 
 [`wirenook-world`](https://github.com/CassidyPrather/wirenook-world) is
 mounted beside them and is not a package: it is the wirenook.net world, a
@@ -427,8 +426,8 @@ MMD contract of its mesh) are skipped for it. Its humanoid bones go by
 cass's `skeleton.json`, whose bone names it shares.
 
 **What it carries**: locomotion, the crash while away with its AFK window
-and sounds, the party tricks, and the campfire of
-[`skill-checks`](https://github.com/CassidyPrather/skill-checks): a fire
+and sounds, the party tricks, and the campfire from the skill checks of
+[`contacts`](https://github.com/CassidyPrather/contacts): a fire
 to set down that a match lights and water puts out, and a marshmallow
 that toasts over it, burns if it is left, and can be eaten. The features
 that were there before it were not changed to fit it.

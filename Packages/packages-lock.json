@@ -280,12 +280,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "net.wirenook.skill-checks": {
-      "version": "file:../modules/skill-checks/Packages/net.wirenook.skill-checks",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "net.wirenook.world-sync": {
       "version": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
       "depth": 0,

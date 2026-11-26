@@ -23,10 +23,6 @@
 	path = modules/contacts
 	url = https://github.com/CassidyPrather/contacts.git
 	branch = claude/setup
-[submodule "modules/skill-checks"]
-	path = modules/skill-checks
-	url = https://github.com/CassidyPrather/skill-checks.git
-	branch = claude/setup
 [submodule "modules/wirenook-world"]
 	path = modules/wirenook-world
 	url = https://github.com/CassidyPrather/wirenook-world.git
