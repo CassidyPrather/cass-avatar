@@ -14,7 +14,7 @@ namespace Wirenook.Cass.Editor
     public sealed class CassModelImporter : AssetPostprocessor
     {
         /// <summary>Bump to make Unity re-import the models after these rules change.</summary>
-        public override uint GetVersion() => 10;
+        public override uint GetVersion() => 11;
 
         private bool Applies => assetPath.Replace('\\', '/').StartsWith(CassSpec.ExportFolder + "/", StringComparison.Ordinal);
 
@@ -128,8 +128,10 @@ namespace Wirenook.Cass.Editor
         /// <summary>
         /// Writes, for every vertex of the tile the away screen is drawn on
         /// (<see cref="CassMaterials.ScreenTile"/>, the eyes), where on its
-        /// screen it is, into the third UV set: (0,0) to (1,1) across the
-        /// picture, measured across each eye as the model stands. The eyes
+        /// screen it is, into the third UV set: (1,1) to (2,2) across the
+        /// picture (the shader takes the one off again; the set must never
+        /// be negative, see SignMesh), measured across each eye as the model
+        /// stands. The eyes
         /// are several discs laid over one another, each on its own patch
         /// of the atlas, so the atlas cannot say this; where the vertex is
         /// can.
@@ -161,7 +163,7 @@ namespace Wirenook.Cass.Editor
                     var centre = (min + max) / 2f - new Vector2(0f, (max.y - min.y) * 0.08f);
                     var size = (max - min) * PictureOfEye;
                     foreach (var i in eye)
-                        places[i] = new Vector2((points[i].x - centre.x) / size.x + 0.5f, (points[i].y - centre.y) / size.y + 0.5f);
+                        places[i] = new Vector2((points[i].x - centre.x) / size.x + 1.5f, (points[i].y - centre.y) / size.y + 1.5f);
                 }
 
                 mesh.SetUVs(Wirenook.Assets.Editor.ToonMaterial.ScreenUvChannel, places);

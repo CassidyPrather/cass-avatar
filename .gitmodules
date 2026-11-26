@@ -19,3 +19,7 @@
 [submodule "modules/shape-collector"]
 	path = modules/shape-collector
 	url = https://github.com/CassidyPrather/shape-collector.git
+[submodule "modules/contacts"]
+	path = modules/contacts
+	url = https://github.com/CassidyPrather/contacts.git
+	branch = claude/setup

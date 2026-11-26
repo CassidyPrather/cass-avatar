@@ -148,6 +148,19 @@
         "pc"
       ],
       "worstRankMobile": "VeryPoor"
+    },
+    {
+      "slug": "cass-contacts",
+      "extends": "cass",
+      "about": "The everyday build with everything from net.wirenook.contacts, for trying VRChat's standard contact tags with someone: it reacts to being touched by them, and carries the tester that emits each one and launches things, the shield that burns and the targets to set down. One avatar to clone for both halves of a test.",
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.contacts/Prefabs/Wirenook Contact Reactions.prefab"
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
     }
   ]
 }

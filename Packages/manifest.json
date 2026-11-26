@@ -3,6 +3,7 @@
     "net.wirenook.adventure-tools": "file:../modules/adventure-tools/Packages/net.wirenook.adventure-tools",
     "net.wirenook.assets": "file:../modules/wirenook-assets/Packages/net.wirenook.assets",
     "net.wirenook.avatar-stations": "file:../modules/avatar-stations/Packages/net.wirenook.avatar-stations",
+    "net.wirenook.contacts": "file:../modules/contacts/Packages/net.wirenook.contacts",
     "net.wirenook.locomotion": "file:../modules/locomotion/Packages/net.wirenook.locomotion",
     "net.wirenook.party-tricks": "file:../modules/party-tricks/Packages/net.wirenook.party-tricks",
     "net.wirenook.shape-collector": "file:../modules/shape-collector/Packages/net.wirenook.shape-collector",

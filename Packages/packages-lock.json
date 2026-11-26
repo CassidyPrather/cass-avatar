@@ -250,6 +250,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "net.wirenook.contacts": {
+      "version": "file:../modules/contacts/Packages/net.wirenook.contacts",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "net.wirenook.locomotion": {
       "version": "file:../modules/locomotion/Packages/net.wirenook.locomotion",
       "depth": 0,
