@@ -1,7 +1,7 @@
 {
   "name": "net.wirenook.bot",
   "displayName": "Wirenook Bot (Avatar)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "unity": "2022.3",
   "description": "A low-poly robot avatar in the wirenook.net style: pixel textures, a sprite face, and rabbit ears and a tail projected in light. Built by the cass pipeline, as the proof that its parts carry over to another avatar.",
   "author": {
@@ -15,8 +15,10 @@
     "com.vrchat.avatars": "^3.10.6",
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
-    "net.wirenook.assets": "^0.1.0",
-    "net.wirenook.cass": "^0.1.0",
-    "net.wirenook.locomotion": "^0.1.0"
-  }
+    "net.wirenook.assets": "^0.2.0",
+    "net.wirenook.cass": "^0.2.0",
+    "net.wirenook.locomotion": "^0.2.0"
+  },
+  "documentationUrl": "https://github.com/CassidyPrather/cass-avatar#readme",
+  "changelogUrl": "https://github.com/CassidyPrather/cass-avatar/releases"
 }

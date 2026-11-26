@@ -394,7 +394,7 @@ MonoBehaviour:
   description: A low-poly robot from wirenook.net, with a sprite face. AGPLv3. github.com/CassidyPrather/cass-avatar
   extraTags: []
   carries: []
-  unreleased: 1
+  unreleased: 0
 --- !u!114 &1906882588086508653
 MonoBehaviour:
   m_ObjectHideFlags: 0

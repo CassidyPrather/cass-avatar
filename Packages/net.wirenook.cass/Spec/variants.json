@@ -77,7 +77,7 @@
       "worstRank": "Medium",
       "features": [
         "Packages/net.wirenook.contacts/Prefabs/Wirenook Contacts.prefab",
-        "Packages/net.wirenook.shape-collector/Prefabs/Wirenook Shape Collector.prefab"
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Shape Collector.prefab"
       ],
       "platforms": [
         "pc"
@@ -157,8 +157,7 @@
         },
         "Packages/net.wirenook.contacts/Prefabs/Wirenook Campfire.prefab"
       ],
-      "worstRankMobile": "Medium",
-      "unreleased": true
+      "worstRankMobile": "Medium"
     }
   ],
   "deprecated": [

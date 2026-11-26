@@ -1,7 +1,7 @@
 {
   "name": "net.wirenook.cass",
   "displayName": "Cass (Avatar)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "unity": "2022.3",
   "description": "Cassidy's VRChat avatar: one root prefab, upload variants layered over it, and the build-time tooling that optimises and publishes them.",
   "author": {
@@ -16,10 +16,14 @@
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
     "com.anatawa12.avatar-optimizer": "^1.9.22",
-    "net.wirenook.assets": "^0.1.0",
-    "net.wirenook.locomotion": "^0.1.0",
-    "net.wirenook.world-sync": "^0.1.0",
-    "net.wirenook.avatar-stations": "^0.1.0",
-    "net.wirenook.adventure-tools": "^0.1.0"
-  }
+    "net.wirenook.assets": "^0.2.0",
+    "net.wirenook.locomotion": "^0.2.0",
+    "net.wirenook.world-sync": "^0.2.0",
+    "net.wirenook.avatar-stations": "^0.2.0",
+    "net.wirenook.adventure-tools": "^0.2.0",
+    "net.wirenook.party-tricks": "^0.2.0",
+    "net.wirenook.contacts": "^0.1.0"
+  },
+  "documentationUrl": "https://github.com/CassidyPrather/cass-avatar#readme",
+  "changelogUrl": "https://github.com/CassidyPrather/cass-avatar/releases"
 }

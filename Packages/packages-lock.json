@@ -274,12 +274,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "net.wirenook.shape-collector": {
-      "version": "file:../modules/shape-collector/Packages/net.wirenook.shape-collector",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "net.wirenook.world-sync": {
       "version": "file:../modules/world-sync/Packages/net.wirenook.world-sync",
       "depth": 0,
