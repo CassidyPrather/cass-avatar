@@ -66,6 +66,8 @@ namespace Wirenook.Bot.Editor
                            ?? throw new FileNotFoundException("Export the model from Blender first (blender/bot/export_bot.py).", ModelPath);
             BotModelImporter.Describe(importer, AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath));
             importer.SaveAndReimport();
+            // Baked on the skeleton that import just described.
+            Debug.Log("[bot] " + BotLocomotion.RebuildIfStale());
             Fx();
             Menus();
             Root();

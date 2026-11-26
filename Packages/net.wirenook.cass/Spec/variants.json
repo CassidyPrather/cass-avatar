@@ -134,7 +134,7 @@
       "about": "Another avatar altogether, on the same pipeline: a low-poly robot with pixel textures, a face made of sprites, and rabbit ears and a tail projected in light (net.wirenook.bot). It carries the features cass carries, unchanged, which is what it is for: the crash while away, with its window and sounds, and the party tricks on PC.",
       "worstRank": "Good",
       "features": [
-        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Locomotion.prefab",
+        "Packages/net.wirenook.bot/Prefabs/Bot Locomotion.prefab",
         "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab",
         {
           "path": "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab",

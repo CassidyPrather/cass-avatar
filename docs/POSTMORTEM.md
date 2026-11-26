@@ -601,7 +601,8 @@ there was something to render. None of it has run in the client.
 - **The mic helper** against a running client.
 - **Shared audio**: two cues cutting each other off, and whether that is
   ever noticed.
-- **The robot**: everything about wearing it.
+- **The robot**: everything about wearing it, its own way of moving
+  included (added on 2026-11-26; see the README).
 - **Checks on an avatar**: that VRChat writes a receiver's per-tag values
   into parameters declared as floats, and still does for a receiver that
   reports proximity. If it does not, the Senses layer needs a bool-to-

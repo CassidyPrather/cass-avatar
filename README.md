@@ -425,8 +425,9 @@ any other; the checks that are about cass's model (its blendshapes, the
 MMD contract of its mesh) are skipped for it. Its humanoid bones go by
 cass's `skeleton.json`, whose bone names it shares.
 
-**What it carries**: locomotion, the crash while away with its AFK window
-and sounds, the party tricks, and the campfire from the skill checks of
+**What it carries**: a way of moving of its own (below), the crash while
+away with its AFK window and sounds, the party tricks, and the campfire
+from the skill checks of
 [`contacts`](https://github.com/CassidyPrather/contacts): a fire
 to set down that a match lights and water puts out, and a marshmallow
 that toasts over it, burns if it is left, and can be eaten. The features
@@ -438,6 +439,44 @@ rest, so props and signs join the shell. On Android and iOS the hologram
 is drawn with the body's material, solid where on PC it glows, which
 keeps the avatar at two material slots; the tricks and the campfire are
 left out there.
+
+**How it moves.** Not like a person: `Prefabs/Bot Locomotion.prefab`
+replaces the Base and Additive layers with the robot's own, and the
+package's walk is not on it. The motions are written in
+`Editor/BotMotion.cs` and laid out over velocity by
+`Editor/BotLocomotion.cs`; `net.wirenook.locomotion` bakes them on the
+robot's skeleton and supplies the state machine, which is VRChat's default
+one (`CustomLocomotion` there).
+
+- **Standing**, it does not move at all. At a desktop a forearm ticks up
+  and back now and then, one after the other, and the knees take up their
+  slack: each at one speed, stopping dead.
+- **Walking**, it has one clock. A cycle of two steps takes half a second
+  at every speed and only the length of the step changes. A foot holds the
+  ground for half the cycle, then goes straight up, straight across and
+  straight down. The body rides level, lower the longer the steps; the
+  arms are bent square and change places at each footfall. It steps ahead
+  and back up to 2.2 m/s, and sideways up to 0.6 m/s, which is as far as
+  one foot clears the other.
+- **Sliding** is what it does where its legs cannot keep up: sideways from
+  1.4 m/s and ahead or back from 3.1 m/s it is off the ground, legs
+  locked and toes down, the whole body tipped as one piece toward where it
+  is going, arms swept back (or out, sideways). VRChat's walk, strafe and
+  run are 2, 2 and 4 m/s, so on a keyboard it walks ahead and back, slides
+  sideways and slides when it runs. A thumbstick passes through the
+  mixtures between.
+- **Crouched**, the same two at a squat. **Lying down**, it holds VRChat's
+  own still pose and slides: it has no crawl.
+- **In the air**: going up it is straight as a rocket, toes pointed; coming
+  down the knees bend and the arms go out; a long drop spreads everything.
+  **Landing**, the knees take it at once and it comes back up in two
+  notches.
+
+It costs nothing in rank and is the same on every platform: there are no
+objects, parameters or sounds in it. `LocomotionPlay` in the harness
+plays it on the built variant and measures the feet. The Base controller
+is 13 MB of keys, so a rebuild bakes it only when the model, the motions
+or the locomotion package have changed (`Generated/Locomotion/baked-from.txt`).
 
 `unreleased` in its variant makes it upload private. To make it public,
 take that line out, run `scripts/cass.sh rebuild` and then
@@ -1015,13 +1054,15 @@ Known gaps:
   avatar out of the room and share nothing: one corrupts the mesh in the
   shader, the other shrinks it and leaves a log. Whether they should be
   one thing with two moods is undecided.
-- The robot walks on the locomotion package's generic gaits. A bake fitted
-  to its own skeleton (`LocomotionBuild.BakeFor`) was made and thrown
-  away: it fails one of that package's own checks, with feet that slip
-  6.1 % at 9 m/s where 5 % is allowed, and the package says not to ship
-  such a bake. Why its legs do that has not been looked into. It has no
-  eye tracking (its eyes are pictures) and no outfit, and its hologram is
-  solid on mobile.
+- The robot's way of moving has been looked at in the editor's pictures
+  and nowhere else. What that cannot show: how it reads at speed, with a
+  tracked head and hands (it is given a third of each lean), in full-body
+  tracking, and between walking and sliding on a thumbstick, where it is
+  both at once for as long as the stick is held there. Lying down it
+  slides in VRChat's still pose. Nothing shows what it slides on: no glow,
+  no sound.
+- The robot has no eye tracking (its eyes are pictures) and no outfit, and
+  its hologram is solid on mobile.
 - The world's light rooms are baked light and realtime lights; VRC Light
   Volumes were tried and left out, since setting them up without a person
   in the editor was not solved.

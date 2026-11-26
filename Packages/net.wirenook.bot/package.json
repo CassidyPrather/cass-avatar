@@ -16,6 +16,7 @@
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
     "net.wirenook.assets": "^0.1.0",
-    "net.wirenook.cass": "^0.1.0"
+    "net.wirenook.cass": "^0.1.0",
+    "net.wirenook.locomotion": "^0.1.0"
   }
 }
