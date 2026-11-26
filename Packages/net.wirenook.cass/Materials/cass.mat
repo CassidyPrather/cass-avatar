@@ -8,7 +8,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: cass
-  m_Shader: {fileID: 4800000, guid: efa77a80ca0344749b4f19fdd5891cbe, type: 3}
+  m_Shader: {fileID: -7482078289662181024, guid: 4ef5b267622312b45b63f94df66e1dd8,
+    type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -600,6 +601,12 @@ Material:
     - _UseRimShade: 1
     - _UseShadow: 1
     - _VertexLightStrength: 0
+    - _WirenookGlitch: 0
+    - _WirenookScreen: 0
+    - _WirenookScreenTile: 6
+    - _WirenookSign: 0
+    - _WirenookSignReach: 0.3
+    - _WirenookSignShow: 0
     - _ZClip: 1
     - _ZTest: 4
     - _ZWrite: 1
@@ -682,6 +689,8 @@ Material:
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowBorderColor: {r: 1, g: 0.09999997, b: 0, a: 1}
     - _ShadowColor: {r: 0.8, g: 0.74, b: 0.88, a: 1}
+    - _WirenookScreenRectA: {r: 0.26725984, g: 0.5904912, b: 0.28481147, a: 0.20569707}
+    - _WirenookScreenRectB: {r: 0.35597515, g: 0.5904541, b: 0.331946, a: 0.2056566}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}
     - _e2ga1: {r: 1, g: 0, b: 0, a: 1}
     - _e2ga2: {r: 1, g: 0, b: 0, a: 0}

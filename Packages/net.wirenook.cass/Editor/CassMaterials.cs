@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Wirenook.Assets.Editor;
+using Wirenook.Cass.Core;
 
 namespace Wirenook.Cass.Editor
 {
@@ -25,8 +28,15 @@ namespace Wirenook.Cass.Editor
         /// <summary>White where the atlas glows: the palette's glowing swatches, which only some wardrobes wear.</summary>
         public const string EmissionPath = CassSpec.Package + "/Textures/cass-atlas-emission.png";
 
-        /// <summary>lilToon's opaque shader with an outline pass; the editor picks it the same way.</summary>
-        private const string OutlineShader = "Hidden/lilToonOutline";
+        /// <summary>The toon shader with an outline pass.</summary>
+        private const string OutlineShader = ToonMaterial.OutlineShaderName;
+
+        /// <summary>
+        /// The tile whose faces become a little error screen while the
+        /// wearer is away (the shader's <see cref="ToonMaterial.Screen"/>):
+        /// the eyes.
+        /// </summary>
+        public const string ScreenTile = "face.eyes";
 
         /// <summary>Where the generated material for a Blender material name lives.</summary>
         public static string PathFor(string blenderMaterialName)
@@ -61,7 +71,7 @@ namespace Wirenook.Cass.Editor
             // Outline, coloured from the surface it surrounds: the texture,
             // darker and a little more saturated, never plain black.
             var outline = Shader.Find(OutlineShader);
-            if (outline == null) throw new System.InvalidOperationException("lilToon's outline shader (" + OutlineShader + ") is missing.");
+            if (outline == null) throw new System.InvalidOperationException("The outline shader (" + OutlineShader + ") is missing.");
             material.shader = outline;
             material.SetFloat("_UseOutline", 1f);
             material.SetTexture("_OutlineTex", atlas);
@@ -115,6 +125,14 @@ namespace Wirenook.Cass.Editor
             foreach (var tile in layout.Tiles)
                 ToonMaterial.SetTileShown(material, tile.Column, tile.Row, shown[tile.Id]);
 
+            // The eyes are the screen the away feature draws on; where on each
+            // eye its picture goes is written into the model as it is imported
+            // (CassModelImporter).
+            var screen = layout.Get(ScreenTile);
+            material.SetFloat(ToonMaterial.ScreenTile, screen.Column + ToonMaterial.TileColumns * screen.Row);
+            material.SetFloat(ToonMaterial.Screen, 0f);
+            material.SetFloat(ToonMaterial.Glitch, 0f);
+            EditorUtility.SetDirty(material);
             AssetDatabase.SaveAssetIfDirty(material);
         }
     }

@@ -4,11 +4,11 @@
   "variants": [
     {
       "slug": "cass",
-      "about": "Everyday build: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, a nap while away.",
+      "about": "Everyday build: default outfit, weighty locomotion baked for this avatar's own skeleton (scripts/cass.sh gaits), face tracking, and a crash while away: the body locks, the mesh glitches, the eyes go to an error screen and a window reading AFK stands beside it.",
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.cass/Generated/Locomotion/Wirenook Locomotion.prefab",
-        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Nap.prefab"
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab"
       ],
       "worstRankMobile": "Medium"
     },

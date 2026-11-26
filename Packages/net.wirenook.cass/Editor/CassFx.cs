@@ -33,7 +33,13 @@ namespace Wirenook.Cass.Editor
         private const string BlinkPick = "Face/BlinkPick";
 
         /// <summary>VRChat's own flag for a wearer who has stepped away; it syncs it itself.</summary>
-        private const string Afk = "AFK";
+        private const string Afk = WirenookSignals.Afk;
+
+        /// <summary>
+        /// The same, said from the menu: the switch of the away feature
+        /// (net.wirenook.party-tricks). Never on in a variant without it.
+        /// </summary>
+        private const string Away = WirenookSignals.Away;
 
         /// <summary>The blendshape set that only carries speech visemes; it is never switched off.</summary>
         public const string VisemeSet = "visemes";
@@ -69,7 +75,7 @@ namespace Wirenook.Cass.Editor
             fx.Int("GestureLeft").Int("GestureRight")
                 .Bool(UserFaceTracking).Bool(UserEyeTracking)
                 .Bool(TrackingEnabled, true)
-                .Bool(Afk)
+                .Bool(Afk).Bool(Away)
                 .Int(BlinkPick);
 
             fx.Layer("Base").State("Idle");
@@ -380,11 +386,13 @@ namespace Wirenook.Cass.Editor
             foreach (var gesture in left) resume.NotEqual(_gesture[Hand.Left], gesture);
             foreach (var gesture in right) resume.NotEqual(_gesture[Hand.Right], gesture);
 
-            // Away, the eyes stay shut. Like the blink, this is the tracking
-            // eyelid shapes and not the MMD ones.
-            var asleep = layer.State("Asleep", fx.Clip("asleep", clip =>
-                clip.Blendshape(mesh, "EyeClosedLeft", 100f).Blendshape(mesh, "EyeClosedRight", 100f)));
-            WhileAway(layer, asleep, pick, 0.4f);
+            // Away, the eyes stay open and do not blink: the away feature
+            // draws its error screen on them, and a screen does not blink.
+            // Like the blink, this is the tracking eyelid shapes and not
+            // the MMD ones.
+            var staring = layer.State("Away", fx.Clip("away eyes", clip =>
+                clip.Blendshape(mesh, "EyeClosedLeft", 0f).Blendshape(mesh, "EyeClosedRight", 0f)));
+            WhileAway(layer, staring, pick, 0.1f);
         }
 
         /// <summary>
@@ -395,10 +403,19 @@ namespace Wirenook.Cass.Editor
         /// </summary>
         private static void WhileAway(LayerBuilder layer, StateBuilder away, StateBuilder back, float fade)
         {
+            StandDownWhileAway(layer);
+            layer.Any(away).Fade(fade).IfTrue(Afk).Or().IfTrue(Away);
+            away.To(back).Fade(fade).IfFalse(Afk).IfFalse(Away);
+        }
+
+        /// <summary>Keeps every any-state transition a layer has so far from firing while the wearer is away, by either sign.</summary>
+        private static void StandDownWhileAway(LayerBuilder layer)
+        {
             foreach (var transition in layer.Machine.anyStateTransitions)
+            {
                 transition.AddCondition(AnimatorConditionMode.IfNot, 0f, Afk);
-            layer.Any(away).Fade(fade).IfTrue(Afk);
-            away.To(back).Fade(fade).IfFalse(Afk);
+                transition.AddCondition(AnimatorConditionMode.IfNot, 0f, Away);
+            }
         }
 
         /// <summary>
@@ -508,11 +525,15 @@ namespace Wirenook.Cass.Editor
             // down while away, or they would pull it straight back out.
             if (gestures.Poses.ContainsKey(AwayPose))
             {
-                foreach (var transition in layer.Machine.anyStateTransitions)
-                    transition.AddCondition(AnimatorConditionMode.IfNot, 0f, Afk);
-                foreach (var transition in Into(AwayPose, 0.5f)) transition.IfTrue(Afk);
-                states[AwayPose].To(rest).Fade(0.5f).IfFalse(Afk);
-                if (statesUnder.TryGetValue(AwayPose, out var hanging)) hanging.To(rest).Fade(0.5f).IfFalse(Afk);
+                StandDownWhileAway(layer);
+                // Each way into the pose once for each sign of being away.
+                foreach (var sign in new[] { Afk, Away })
+                {
+                    foreach (var transition in Into(AwayPose, 0.5f)) transition.IfTrue(sign);
+                }
+
+                states[AwayPose].To(rest).Fade(0.5f).IfFalse(Afk).IfFalse(Away);
+                if (statesUnder.TryGetValue(AwayPose, out var hanging)) hanging.To(rest).Fade(0.5f).IfFalse(Afk).IfFalse(Away);
             }
         }
 

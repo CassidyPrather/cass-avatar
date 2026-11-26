@@ -247,11 +247,28 @@ on working. The generator finds the claims on every feature a variant
 lists and gives the avatar one small layer per claimed hand, after the two
 gesture layers.
 
-**Away.** While VRChat marks the wearer as away (AFK), the eyes close and
-the ears hang, whatever the hands are doing. Both are done in layers that
-already owned those shapes and bones (the blink and the poses), which are
-outside the two that MMD worlds silence. The body stands asleep; that part
-is the nap in `net.wirenook.locomotion`.
+**Away.** While the wearer is away, the avatar crashes. That is VRChat's
+own AFK or the menu's "AFK" switch (`WN/Away`); the feature is
+`Wirenook Away` in `net.wirenook.party-tricks`, whose README has the
+whole of it. The body locks in a standing pose and stops following the
+headset, the mesh tears and throws out spikes, an error window reading
+AFK stands at the edge of the avatar on each viewer's own side, a
+device-unplugged cue plays and a low buzz sets in. The avatar adds two
+things of its own, in layers that already owned those shapes and bones
+(the blink and the poses) and are outside the two that MMD worlds
+silence: the eyes stop blinking and each becomes a small blue error
+screen with a sad face, and the ears hang. The screen is the toon
+shader's (`net.wirenook.assets`), drawn on the faces of the eyes' UV
+tile; where on an eye its picture goes is written into the model's third
+UV set as it is imported (`CassModelImporter`).
+
+The switch cannot mute the microphone, because VRChat gives an avatar no
+way to. `modules/party-tricks/tools/away_mic.py`, run beside VRChat with
+OSC enabled, does it from outside, and unmutes on return only if the mute
+was its own and nothing has touched the microphone since.
+
+The nap that used to stand here (`Wirenook Nap`, `net.wirenook.locomotion`)
+is still in its package; no variant carries it now.
 
 ## Variants and uploads
 
@@ -261,7 +278,7 @@ children.
 
 | Variant | Adds |
 | --- | --- |
-| `cass` | Default outfit with the Outfit menu, procedural locomotion baked for this avatar's own skeleton, the Face Tracking switch, a standing nap while away. |
+| `cass` | Default outfit with the Outfit menu, procedural locomotion baked for this avatar's own skeleton, the Face Tracking switch, a crash while away. |
 | `cass-lite` | The same, built from the low-polygon model on PC too. |
 | `cass-adv` | Flight, a stepladder for a lifted play space, a carry seat, a catch-up portal, laser pointer, megaphone, a flashlight and lantern, screen notices. |
 | `cass-event` | The adventure build for leading a group: its laser pointer can ping the spot it points at, a beacon shows where the wearer is through walls with an arrow in everyone else's view when they are out of it, and there are four seats to put down, in a ring or facing a screen. The ping's marker, the beacon and the seats are meshes of their own, which takes it to Medium; that is why it is not `cass-adv`. |
