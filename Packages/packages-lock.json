@@ -244,6 +244,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "net.wirenook.bot": {
+      "version": "file:net.wirenook.bot",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "net.wirenook.cass": {
       "version": "file:net.wirenook.cass",
       "depth": 0,

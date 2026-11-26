@@ -1,0 +1,1671 @@
+{
+  "$comment": "The sprite face of the wirenook bot, written by blender/bot/build_bot.py; do not edit. The mesh `Body` is the face alone (the sprites and every shape key, on the material `bot`); the rest of the bot, the backing plate included, is the mesh `Shell`, which has no shape keys. The head has a screen: a backing plate behind an opening in the front of the head. Textured quads (sprites) rest either just in front of the plate (shown) or just behind it (hidden), and shape keys on the mesh only ever slide them along the screen's depth. Two layers are independent, `eyes` (the upper rows of the screen) and `mouth` (the lower rows); each has one neutral sprite that rests shown. A key of a layer brings its own copy of a sprite forward to `shownDepth` and sends that layer's neutral sprite back; both cross the plate at weight `depth.crossover`. Where two keys of a layer are on, the sprite with the larger `shownDepth` covers the other (sprites are listed from back to front), so a blink covers an expression and speech covers a smile. `overlay` sprites lie over the layers and hide nothing: the two eyelids (half the eyes layer each), the blush marks and the full-screen bluescreen. A key whose `layer` is null shows nothing; it moves a hidden triangle by `depth.emptyNudge` so that no tool drops it. Left and right are the avatar's own. Lengths are metres. `unity` positions are in the avatar's frame as Unity imports it (x to its right, y up, z forward); `blender` ones are x to its left, y back, z up. `rect` is [x, y, width, height] in texels from the atlas's top left; `uv` is [u0, v0, u1, v1] from its bottom left; `screenRect` is [column, row, width, height] in screen pixels from the screen's top left, as someone facing the avatar sees it.",
+  "mesh": "Body",
+  "material": "bot",
+  "atlas": {
+    "texture": "Textures/bot-atlas.png",
+    "emission": "Textures/bot-atlas-emission.png",
+    "size": 256,
+    "filter": "point",
+    "metresPerTexel": 0.0078125
+  },
+  "screen": {
+    "pixels": [
+      40,
+      28
+    ],
+    "eyesRows": 16,
+    "size": [
+      0.3125,
+      0.21875
+    ],
+    "pixelSize": 0.0078125,
+    "centreUnity": [
+      0.0,
+      1.34375,
+      0.138672
+    ],
+    "centreBlender": [
+      0.0,
+      -0.138672,
+      1.34375
+    ],
+    "plateBlender": [
+      0.0,
+      -0.138672,
+      1.34375
+    ],
+    "openingDepth": 0.017578,
+    "eyesCentreUnity": [
+      0.0,
+      1.390625,
+      0.138672
+    ],
+    "mouthCentreUnity": [
+      0.0,
+      1.28125,
+      0.138672
+    ],
+    "leftEyeUnity": [
+      -0.0625,
+      1.394531,
+      0.138672
+    ],
+    "rightEyeUnity": [
+      0.0625,
+      1.394531,
+      0.138672
+    ]
+  },
+  "viewPosition": {
+    "unity": [
+      0.0,
+      1.394531,
+      0.138672
+    ],
+    "note": "Between the eyes of the neutral face, on the backing plate of the screen."
+  },
+  "depth": {
+    "neutralShown": 0.002,
+    "neutralTravel": 0.005714,
+    "crossover": 0.35,
+    "copyStep": 0.0001,
+    "emptyNudge": 0.0001
+  },
+  "neutral": {
+    "eyes": "open",
+    "mouth": "flat"
+  },
+  "sprites": {
+    "eyes": [
+      {
+        "name": "open",
+        "neutral": true,
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          1,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.00390625,
+          0.5703125,
+          0.16015625,
+          0.6328125
+        ],
+        "shownDepth": 0.002
+      },
+      {
+        "name": "dot",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          127,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.49609375,
+          0.640625,
+          0.65234375,
+          0.703125
+        ],
+        "shownDepth": 0.0035
+      },
+      {
+        "name": "sleepy",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          85,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.33203125,
+          0.5703125,
+          0.48828125,
+          0.6328125
+        ],
+        "shownDepth": 0.0041
+      },
+      {
+        "name": "smug",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          127,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.49609375,
+          0.5703125,
+          0.65234375,
+          0.6328125
+        ],
+        "shownDepth": 0.0047
+      },
+      {
+        "name": "sad",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          43,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.16796875,
+          0.5703125,
+          0.32421875,
+          0.6328125
+        ],
+        "shownDepth": 0.0053
+      },
+      {
+        "name": "angry",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          166,
+          45,
+          40,
+          16
+        ],
+        "uv": [
+          0.6484375,
+          0.76171875,
+          0.8046875,
+          0.82421875
+        ],
+        "shownDepth": 0.0059
+      },
+      {
+        "name": "wide",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          1,
+          112,
+          40,
+          16
+        ],
+        "uv": [
+          0.00390625,
+          0.5,
+          0.16015625,
+          0.5625
+        ],
+        "shownDepth": 0.0065
+      },
+      {
+        "name": "happy",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          169,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.66015625,
+          0.640625,
+          0.81640625,
+          0.703125
+        ],
+        "shownDepth": 0.0071
+      },
+      {
+        "name": "hearts",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          211,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.82421875,
+          0.640625,
+          0.98046875,
+          0.703125
+        ],
+        "shownDepth": 0.0077
+      },
+      {
+        "name": "stars",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          211,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.82421875,
+          0.5703125,
+          0.98046875,
+          0.6328125
+        ],
+        "shownDepth": 0.0083
+      },
+      {
+        "name": "dizzy",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          85,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.33203125,
+          0.640625,
+          0.48828125,
+          0.703125
+        ],
+        "shownDepth": 0.0089
+      },
+      {
+        "name": "crossed",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          1,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.00390625,
+          0.640625,
+          0.16015625,
+          0.703125
+        ],
+        "shownDepth": 0.0095
+      },
+      {
+        "name": "cry",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          43,
+          76,
+          40,
+          16
+        ],
+        "uv": [
+          0.16796875,
+          0.640625,
+          0.32421875,
+          0.703125
+        ],
+        "shownDepth": 0.0101
+      },
+      {
+        "name": "squeeze",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          169,
+          94,
+          40,
+          16
+        ],
+        "uv": [
+          0.66015625,
+          0.5703125,
+          0.81640625,
+          0.6328125
+        ],
+        "shownDepth": 0.0107
+      },
+      {
+        "name": "wink-left",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          43,
+          112,
+          40,
+          16
+        ],
+        "uv": [
+          0.16796875,
+          0.5,
+          0.32421875,
+          0.5625
+        ],
+        "shownDepth": 0.0113
+      },
+      {
+        "name": "wink-right",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          85,
+          112,
+          40,
+          16
+        ],
+        "uv": [
+          0.33203125,
+          0.5,
+          0.48828125,
+          0.5625
+        ],
+        "shownDepth": 0.0119
+      },
+      {
+        "name": "closed",
+        "screenRect": [
+          0,
+          0,
+          40,
+          16
+        ],
+        "rect": [
+          208,
+          45,
+          40,
+          16
+        ],
+        "uv": [
+          0.8125,
+          0.76171875,
+          0.96875,
+          0.82421875
+        ],
+        "shownDepth": 0.0125
+      }
+    ],
+    "mouth": [
+      {
+        "name": "flat",
+        "neutral": true,
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          85,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.33203125,
+          0.4453125,
+          0.48828125,
+          0.4921875
+        ],
+        "shownDepth": 0.002
+      },
+      {
+        "name": "smile",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          169,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.66015625,
+          0.390625,
+          0.81640625,
+          0.4375
+        ],
+        "shownDepth": 0.0035
+      },
+      {
+        "name": "smirk",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          211,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.82421875,
+          0.390625,
+          0.98046875,
+          0.4375
+        ],
+        "shownDepth": 0.0041
+      },
+      {
+        "name": "frown",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          127,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.49609375,
+          0.4453125,
+          0.65234375,
+          0.4921875
+        ],
+        "shownDepth": 0.0047
+      },
+      {
+        "name": "wavy",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          85,
+          158,
+          40,
+          12
+        ],
+        "uv": [
+          0.33203125,
+          0.3359375,
+          0.48828125,
+          0.3828125
+        ],
+        "shownDepth": 0.0053
+      },
+      {
+        "name": "cat",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          43,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.16796875,
+          0.4453125,
+          0.32421875,
+          0.4921875
+        ],
+        "shownDepth": 0.0059
+      },
+      {
+        "name": "triangle",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          43,
+          158,
+          40,
+          12
+        ],
+        "uv": [
+          0.16796875,
+          0.3359375,
+          0.32421875,
+          0.3828125
+        ],
+        "shownDepth": 0.0065
+      },
+      {
+        "name": "tongue",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          1,
+          158,
+          40,
+          12
+        ],
+        "uv": [
+          0.00390625,
+          0.3359375,
+          0.16015625,
+          0.3828125
+        ],
+        "shownDepth": 0.0071
+      },
+      {
+        "name": "big-smile",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          1,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.00390625,
+          0.4453125,
+          0.16015625,
+          0.4921875
+        ],
+        "shownDepth": 0.0077
+      },
+      {
+        "name": "pressed",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          85,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.33203125,
+          0.390625,
+          0.48828125,
+          0.4375
+        ],
+        "shownDepth": 0.0083
+      },
+      {
+        "name": "narrow",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          211,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.82421875,
+          0.4453125,
+          0.98046875,
+          0.4921875
+        ],
+        "shownDepth": 0.0089
+      },
+      {
+        "name": "wide",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          127,
+          158,
+          40,
+          12
+        ],
+        "uv": [
+          0.49609375,
+          0.3359375,
+          0.65234375,
+          0.3828125
+        ],
+        "shownDepth": 0.0095
+      },
+      {
+        "name": "open-mid",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          43,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.16796875,
+          0.390625,
+          0.32421875,
+          0.4375
+        ],
+        "shownDepth": 0.0101
+      },
+      {
+        "name": "small-o",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          127,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.49609375,
+          0.390625,
+          0.65234375,
+          0.4375
+        ],
+        "shownDepth": 0.0107
+      },
+      {
+        "name": "medium-o",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          169,
+          130,
+          40,
+          12
+        ],
+        "uv": [
+          0.66015625,
+          0.4453125,
+          0.81640625,
+          0.4921875
+        ],
+        "shownDepth": 0.0113
+      },
+      {
+        "name": "open-big",
+        "screenRect": [
+          0,
+          16,
+          40,
+          12
+        ],
+        "rect": [
+          1,
+          144,
+          40,
+          12
+        ],
+        "uv": [
+          0.00390625,
+          0.390625,
+          0.16015625,
+          0.4375
+        ],
+        "shownDepth": 0.0119
+      }
+    ],
+    "overlay": [
+      {
+        "name": "lid-left",
+        "screenRect": [
+          20,
+          0,
+          20,
+          16
+        ],
+        "rect": [
+          127,
+          112,
+          20,
+          16
+        ],
+        "uv": [
+          0.49609375,
+          0.5,
+          0.57421875,
+          0.5625
+        ],
+        "shownDepth": 0.0131
+      },
+      {
+        "name": "lid-right",
+        "screenRect": [
+          0,
+          0,
+          20,
+          16
+        ],
+        "rect": [
+          149,
+          112,
+          20,
+          16
+        ],
+        "uv": [
+          0.58203125,
+          0.5,
+          0.66015625,
+          0.5625
+        ],
+        "shownDepth": 0.0137
+      },
+      {
+        "name": "blush",
+        "screenRect": [
+          3,
+          14,
+          6,
+          5
+        ],
+        "rect": [
+          210,
+          172,
+          6,
+          5
+        ],
+        "uv": [
+          0.8203125,
+          0.30859375,
+          0.84375,
+          0.328125
+        ],
+        "shownDepth": 0.0143,
+        "mirroredAt": [
+          31,
+          14,
+          6,
+          5
+        ]
+      },
+      {
+        "name": "bluescreen",
+        "screenRect": [
+          0,
+          0,
+          40,
+          28
+        ],
+        "rect": [
+          79,
+          45,
+          40,
+          28
+        ],
+        "uv": [
+          0.30859375,
+          0.71484375,
+          0.46484375,
+          0.82421875
+        ],
+        "shownDepth": 0.0153
+      }
+    ]
+  },
+  "shapeKeys": [
+    {
+      "name": "vrc.v_sil",
+      "group": "viseme",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "vrc.v_pp",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "pressed",
+      "hides": "flat",
+      "restDepth": -0.004469
+    },
+    {
+      "name": "vrc.v_ff",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "narrow",
+      "hides": "flat",
+      "restDepth": -0.004792
+    },
+    {
+      "name": "vrc.v_th",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "narrow",
+      "hides": "flat",
+      "restDepth": -0.004892
+    },
+    {
+      "name": "vrc.v_dd",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "narrow",
+      "hides": "flat",
+      "restDepth": -0.004992
+    },
+    {
+      "name": "vrc.v_kk",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "open-mid",
+      "hides": "flat",
+      "restDepth": -0.005438
+    },
+    {
+      "name": "vrc.v_ch",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005115
+    },
+    {
+      "name": "vrc.v_ss",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005215
+    },
+    {
+      "name": "vrc.v_nn",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "narrow",
+      "hides": "flat",
+      "restDepth": -0.005092
+    },
+    {
+      "name": "vrc.v_rr",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "small-o",
+      "hides": "flat",
+      "restDepth": -0.005762
+    },
+    {
+      "name": "vrc.v_aa",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "open-big",
+      "hides": "flat",
+      "restDepth": -0.006408
+    },
+    {
+      "name": "vrc.v_e",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "open-mid",
+      "hides": "flat",
+      "restDepth": -0.005538
+    },
+    {
+      "name": "vrc.v_ih",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005315
+    },
+    {
+      "name": "vrc.v_oh",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "medium-o",
+      "hides": "flat",
+      "restDepth": -0.006085
+    },
+    {
+      "name": "vrc.v_ou",
+      "group": "viseme",
+      "layer": "mouth",
+      "shows": "small-o",
+      "hides": "flat",
+      "restDepth": -0.005862
+    },
+    {
+      "name": "EyeClosedLeft",
+      "group": "tracking",
+      "layer": "overlay",
+      "shows": "lid-left",
+      "hides": null,
+      "restDepth": -0.007054
+    },
+    {
+      "name": "EyeClosedRight",
+      "group": "tracking",
+      "layer": "overlay",
+      "shows": "lid-right",
+      "hides": null,
+      "restDepth": -0.007377
+    },
+    {
+      "name": "まばたき",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "closed",
+      "hides": "open",
+      "restDepth": -0.006731
+    },
+    {
+      "name": "笑い",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "happy",
+      "hides": "open",
+      "restDepth": -0.003823
+    },
+    {
+      "name": "ウィンク",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wink-left",
+      "hides": "open",
+      "restDepth": -0.006085
+    },
+    {
+      "name": "ウィンク右",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wink-right",
+      "hides": "open",
+      "restDepth": -0.006408
+    },
+    {
+      "name": "ウィンク２",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wink-left",
+      "hides": "open",
+      "restDepth": -0.006185
+    },
+    {
+      "name": "ｳｨﾝｸ２右",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wink-right",
+      "hides": "open",
+      "restDepth": -0.006508
+    },
+    {
+      "name": "なごみ",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "closed",
+      "hides": "open",
+      "restDepth": -0.006831
+    },
+    {
+      "name": "はぅ",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "squeeze",
+      "hides": "open",
+      "restDepth": -0.005762
+    },
+    {
+      "name": "びっくり",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wide",
+      "hides": "open",
+      "restDepth": -0.0035
+    },
+    {
+      "name": "じと目",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "sleepy",
+      "hides": "open",
+      "restDepth": -0.002208
+    },
+    {
+      "name": "ｷﾘｯ",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "angry",
+      "hides": "open",
+      "restDepth": -0.003177
+    },
+    {
+      "name": "はちゅ目",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "wide",
+      "hides": "open",
+      "restDepth": -0.0036
+    },
+    {
+      "name": "はぁと",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "hearts",
+      "hides": "open",
+      "restDepth": -0.004146
+    },
+    {
+      "name": "星目",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "stars",
+      "hides": "open",
+      "restDepth": -0.004469
+    },
+    {
+      "name": "瞳小",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "dot",
+      "hides": "open",
+      "restDepth": -0.001885
+    },
+    {
+      "name": "ハイライト消",
+      "group": "mmd",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "あ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "open-big",
+      "hides": "flat",
+      "restDepth": -0.006508
+    },
+    {
+      "name": "い",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005415
+    },
+    {
+      "name": "う",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "small-o",
+      "hides": "flat",
+      "restDepth": -0.005962
+    },
+    {
+      "name": "え",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "open-mid",
+      "hides": "flat",
+      "restDepth": -0.005638
+    },
+    {
+      "name": "お",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "medium-o",
+      "hides": "flat",
+      "restDepth": -0.006185
+    },
+    {
+      "name": "あ２",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "open-big",
+      "hides": "flat",
+      "restDepth": -0.006608
+    },
+    {
+      "name": "ん",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "pressed",
+      "hides": "flat",
+      "restDepth": -0.004569
+    },
+    {
+      "name": "▲",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "triangle",
+      "hides": "flat",
+      "restDepth": -0.0035
+    },
+    {
+      "name": "∧",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "frown",
+      "hides": "flat",
+      "restDepth": -0.002531
+    },
+    {
+      "name": "□",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "open-big",
+      "hides": "flat",
+      "restDepth": -0.006708
+    },
+    {
+      "name": "ワ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "big-smile",
+      "hides": "flat",
+      "restDepth": -0.004146
+    },
+    {
+      "name": "ω",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "cat",
+      "hides": "flat",
+      "restDepth": -0.003177
+    },
+    {
+      "name": "ω□",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "cat",
+      "hides": "flat",
+      "restDepth": -0.003277
+    },
+    {
+      "name": "にやり",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "smirk",
+      "hides": "flat",
+      "restDepth": -0.002208
+    },
+    {
+      "name": "にっこり",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "smile",
+      "hides": "flat",
+      "restDepth": -0.001885
+    },
+    {
+      "name": "ぺろっ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "tongue",
+      "hides": "flat",
+      "restDepth": -0.003823
+    },
+    {
+      "name": "てへぺろ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "tongue",
+      "hides": "flat",
+      "restDepth": -0.003923
+    },
+    {
+      "name": "口角上げ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "smile",
+      "hides": "flat",
+      "restDepth": -0.001985
+    },
+    {
+      "name": "口角下げ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "frown",
+      "hides": "flat",
+      "restDepth": -0.002631
+    },
+    {
+      "name": "口横広げ",
+      "group": "mmd",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005515
+    },
+    {
+      "name": "真面目",
+      "group": "mmd",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "困る",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "sad",
+      "hides": "open",
+      "restDepth": -0.002854
+    },
+    {
+      "name": "にこり",
+      "group": "mmd",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "怒り",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "angry",
+      "hides": "open",
+      "restDepth": -0.003277
+    },
+    {
+      "name": "上",
+      "group": "mmd",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "下",
+      "group": "mmd",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "照れ",
+      "group": "mmd",
+      "layer": "overlay",
+      "shows": "blush",
+      "hides": null,
+      "restDepth": -0.0077
+    },
+    {
+      "name": "涙",
+      "group": "mmd",
+      "layer": "eyes",
+      "shows": "cry",
+      "hides": "open",
+      "restDepth": -0.005438
+    },
+    {
+      "name": "eyes.open",
+      "group": "sprite",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "eyes.dot",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "dot",
+      "hides": "open",
+      "restDepth": -0.001985
+    },
+    {
+      "name": "eyes.sleepy",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "sleepy",
+      "hides": "open",
+      "restDepth": -0.002308
+    },
+    {
+      "name": "eyes.smug",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "smug",
+      "hides": "open",
+      "restDepth": -0.002531
+    },
+    {
+      "name": "eyes.sad",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "sad",
+      "hides": "open",
+      "restDepth": -0.002954
+    },
+    {
+      "name": "eyes.angry",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "angry",
+      "hides": "open",
+      "restDepth": -0.003377
+    },
+    {
+      "name": "eyes.wide",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "wide",
+      "hides": "open",
+      "restDepth": -0.0037
+    },
+    {
+      "name": "eyes.happy",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "happy",
+      "hides": "open",
+      "restDepth": -0.003923
+    },
+    {
+      "name": "eyes.hearts",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "hearts",
+      "hides": "open",
+      "restDepth": -0.004246
+    },
+    {
+      "name": "eyes.stars",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "stars",
+      "hides": "open",
+      "restDepth": -0.004569
+    },
+    {
+      "name": "eyes.dizzy",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "dizzy",
+      "hides": "open",
+      "restDepth": -0.004792
+    },
+    {
+      "name": "eyes.crossed",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "crossed",
+      "hides": "open",
+      "restDepth": -0.005115
+    },
+    {
+      "name": "eyes.cry",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "cry",
+      "hides": "open",
+      "restDepth": -0.005538
+    },
+    {
+      "name": "eyes.squeeze",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "squeeze",
+      "hides": "open",
+      "restDepth": -0.005862
+    },
+    {
+      "name": "eyes.wink-left",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "wink-left",
+      "hides": "open",
+      "restDepth": -0.006285
+    },
+    {
+      "name": "eyes.wink-right",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "wink-right",
+      "hides": "open",
+      "restDepth": -0.006608
+    },
+    {
+      "name": "eyes.closed",
+      "group": "sprite",
+      "layer": "eyes",
+      "shows": "closed",
+      "hides": "open",
+      "restDepth": -0.006931
+    },
+    {
+      "name": "mouth.flat",
+      "group": "sprite",
+      "layer": null,
+      "shows": null,
+      "hides": null
+    },
+    {
+      "name": "mouth.smile",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "smile",
+      "hides": "flat",
+      "restDepth": -0.002085
+    },
+    {
+      "name": "mouth.smirk",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "smirk",
+      "hides": "flat",
+      "restDepth": -0.002308
+    },
+    {
+      "name": "mouth.frown",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "frown",
+      "hides": "flat",
+      "restDepth": -0.002731
+    },
+    {
+      "name": "mouth.wavy",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "wavy",
+      "hides": "flat",
+      "restDepth": -0.002854
+    },
+    {
+      "name": "mouth.cat",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "cat",
+      "hides": "flat",
+      "restDepth": -0.003377
+    },
+    {
+      "name": "mouth.triangle",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "triangle",
+      "hides": "flat",
+      "restDepth": -0.0036
+    },
+    {
+      "name": "mouth.tongue",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "tongue",
+      "hides": "flat",
+      "restDepth": -0.004023
+    },
+    {
+      "name": "mouth.big-smile",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "big-smile",
+      "hides": "flat",
+      "restDepth": -0.004246
+    },
+    {
+      "name": "mouth.pressed",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "pressed",
+      "hides": "flat",
+      "restDepth": -0.004669
+    },
+    {
+      "name": "mouth.narrow",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "narrow",
+      "hides": "flat",
+      "restDepth": -0.005192
+    },
+    {
+      "name": "mouth.wide",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "wide",
+      "hides": "flat",
+      "restDepth": -0.005615
+    },
+    {
+      "name": "mouth.open-mid",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "open-mid",
+      "hides": "flat",
+      "restDepth": -0.005738
+    },
+    {
+      "name": "mouth.small-o",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "small-o",
+      "hides": "flat",
+      "restDepth": -0.006062
+    },
+    {
+      "name": "mouth.medium-o",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "medium-o",
+      "hides": "flat",
+      "restDepth": -0.006285
+    },
+    {
+      "name": "mouth.open-big",
+      "group": "sprite",
+      "layer": "mouth",
+      "shows": "open-big",
+      "hides": "flat",
+      "restDepth": -0.006808
+    },
+    {
+      "name": "face.blush",
+      "group": "sprite",
+      "layer": "overlay",
+      "shows": "blush",
+      "hides": null,
+      "restDepth": -0.0078
+    },
+    {
+      "name": "face.bluescreen",
+      "group": "sprite",
+      "layer": "overlay",
+      "shows": "bluescreen",
+      "hides": null,
+      "restDepth": -0.008238
+    }
+  ]
+}

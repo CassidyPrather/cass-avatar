@@ -1,0 +1,19 @@
+{
+  "$comment": "Which sprites of the bot's face (Spec/face.json) make each of the expressions the hands choose. The gestures and the expressions' names are cass's own (net.wirenook.cass, Spec/gestures.json): the same hand makes the same face on either avatar. An expression names an eyes sprite, a mouth sprite, or both; a layer it does not name keeps its neutral sprite, and `blush` adds the blush overlay. Sprites are named as in face.json, without the layer.",
+  "expressions": {
+    "happy": {"eyes": "happy", "mouth": "big-smile"},
+    "sad": {"eyes": "sad", "mouth": "frown"},
+    "angry": {"eyes": "angry", "mouth": "wavy"},
+    "smug": {"eyes": "smug", "mouth": "smirk"},
+    "excited": {"eyes": "stars", "mouth": "big-smile"},
+    "afraid": {"eyes": "wide", "mouth": "wavy"},
+    "flummoxed": {"eyes": "dizzy", "mouth": "small-o"},
+    "hungry": {"eyes": "stars", "mouth": "tongue"},
+    "heart_eyes": {"eyes": "hearts", "mouth": "cat", "blush": true},
+    "wink_1": {"eyes": "wink-left", "mouth": "smile"},
+    "wink_2": {"eyes": "wink-right", "mouth": "tongue"},
+    "sleepy_content": {"eyes": "closed", "mouth": "smile"},
+    "sleepy_sad": {"eyes": "sleepy", "mouth": "frown"},
+    "sleepy_happy": {"eyes": "squeeze", "mouth": "smile", "blush": true}
+  }
+}

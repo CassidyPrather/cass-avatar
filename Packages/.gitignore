@@ -8,3 +8,4 @@
 
 # Keep this in sync with your package directories under Packages/
 !net.wirenook.cass
+!net.wirenook.bot

@@ -43,6 +43,8 @@ namespace Wirenook.Cass.Editor
             InPhase(BuildPhase.Resolving).BeforePlugin(ModularAvatar).Run("Use the low-polygon model", context =>
             {
                 var root = context.AvatarRootObject;
+                // Another avatar built by this pipeline (the wirenook bot) has its own step.
+                if (!IsCass(root)) return;
                 var worn = root.GetComponent<CassWardrobe>();
                 var wardrobe = worn != null ? worn.wardrobe : null;
                 var lite = WirenookPlatform.IsMobile || root.GetComponent<CassLiteModel>() != null;
@@ -53,6 +55,13 @@ namespace Wirenook.Cass.Editor
                     RemoveMobilePhysics(root);
                 }
             });
+        }
+
+        /// <summary>Whether an avatar wears cass's own model.</summary>
+        public static bool IsCass(GameObject avatar)
+        {
+            return avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true).Any(renderer =>
+                renderer.sharedMesh != null && AssetDatabase.GetAssetPath(renderer.sharedMesh).StartsWith(CassSpec.Package + "/", StringComparison.Ordinal));
         }
 
         /// <summary>

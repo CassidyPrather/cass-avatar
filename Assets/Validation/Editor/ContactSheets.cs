@@ -57,6 +57,7 @@ namespace Wirenook.Validation.Editor
                 Held = CassPreview.AllOff(features);
 
                 var cameras = ValidationScene.Cameras(scene).ToDictionary(camera => camera.name);
+                FaceLift = FitFaces(avatar, cameras);
                 var conditions = ValidationScene.Conditions(scene).ToList();
                 var neutral = conditions.First(condition => condition.name == "Neutral");
                 poses = PoseLibrary.All();
@@ -112,6 +113,8 @@ namespace Wirenook.Validation.Editor
             {
                 if (poses != null) PoseLibrary.Release(poses);
                 if (avatar != null) UnityEngine.Object.DestroyImmediate(avatar);
+                foreach (var camera in ValidationScene.Cameras(scene).Where(LooksAtFace)) camera.transform.position -= Vector3.up * FaceLift;
+                FaceLift = 0f;
                 AvatarProcessor.CleanTemporaryAssets();
                 ValidationScene.Conditions(scene).First(condition => condition.name == "Neutral").Activate();
                 if (added)
@@ -157,6 +160,28 @@ namespace Wirenook.Validation.Editor
         }
 
         /// <summary>Every gesture expression as an untracked player would show it, plus the speech visemes.</summary>
+        /// <summary>How far the face cameras were moved for the avatar on the stage, to be undone afterwards.</summary>
+        private static float FaceLift;
+
+        private static bool LooksAtFace(Camera camera) => camera.name.StartsWith("Face", System.StringComparison.Ordinal) || camera.name == "Nose To Nose";
+
+        /// <summary>
+        /// The cameras stand where cass's head is. An avatar of other
+        /// proportions (the wirenook bot, whose head is a box twice the
+        /// size) has its face somewhere else, so when the place it sees
+        /// from is well off the middle of the face shot, the face cameras
+        /// move up or down to it.
+        /// </summary>
+        private static float FitFaces(GameObject avatar, Dictionary<string, Camera> cameras)
+        {
+            var descriptor = avatar.GetComponent<VRC.SDK3.Avatars.Components.VRCAvatarDescriptor>();
+            if (descriptor == null) return 0f;
+            var lift = avatar.transform.TransformPoint(descriptor.ViewPosition).y - cameras["Face"].transform.position.y;
+            if (Mathf.Abs(lift) < 0.1f) return 0f;
+            foreach (var camera in cameras.Values.Where(LooksAtFace)) camera.transform.position += Vector3.up * lift;
+            return lift;
+        }
+
         private static void Expressions(GameObject avatar, Camera camera, string folder)
         {
             var shapes = CassSpec.Blendshapes();

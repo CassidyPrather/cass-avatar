@@ -223,6 +223,9 @@ namespace Wirenook.Cass.Editor
                 {
                     Slug = (string)token["slug"],
                     Extends = (string)token["extends"],
+                    Root = (string)token["root"],
+                    Description = (string)token["description"],
+                    Unreleased = (bool?)token["unreleased"] ?? false,
                     Lite = (string)token["model"] == "lite",
                     Wardrobe = (string)token["wardrobe"],
                     WorstRank = (string)token["worstRank"] ?? "Good",
@@ -409,6 +412,24 @@ namespace Wirenook.Cass.Editor
 
         /// <summary>Slug of the variant this one builds on; null builds on the root prefab.</summary>
         public string Extends;
+
+        /// <summary>
+        /// The root prefab this variant stands on, for one that is another
+        /// avatar altogether (the wirenook bot); null is cass's own. Such a
+        /// variant gets its features, its upload profile and the build's
+        /// checks like any other, less the ones that are about cass's model.
+        /// </summary>
+        public string Root;
+
+        /// <summary>The description this variant uploads with, where the shared one's credits are not its own.</summary>
+        public string Description;
+
+        /// <summary>
+        /// Uploads private until this is taken away: an avatar nobody has
+        /// worn or its owner has not seen. `scripts/cass.sh publish` sends
+        /// the change of mind without another upload.
+        /// </summary>
+        public bool Unreleased;
 
         /// <summary>Builds from the low-polygon model on every platform, not only on mobile.</summary>
         public bool Lite;

@@ -28,6 +28,10 @@ namespace Wirenook.Cass
                  "\"name by author\". Any entry here makes the upload private and adds the credits to the description.")]
         public List<string> carries = new List<string>();
 
+        [Tooltip("Uploads private although nothing it carries asks for that: an avatar its owner has not looked at yet. " +
+                 "Clear it and publish to make the avatar public.")]
+        public bool unreleased;
+
         /// <summary>The description as it is sent to VRChat.</summary>
         public string ComposeDescription()
         {
@@ -39,7 +43,8 @@ namespace Wirenook.Cass
         /// <summary>What an upload of this variant has to satisfy.</summary>
         public Core.UploadPolicy Policy()
         {
-            return carries.Count > 0 ? Core.UploadPolicy.Carrying(carries) : new Core.UploadPolicy();
+            if (carries.Count > 0) return Core.UploadPolicy.Carrying(carries);
+            return new Core.UploadPolicy { ReleaseStatus = unreleased ? "private" : "public" };
         }
     }
 }

@@ -338,6 +338,7 @@ MonoBehaviour:
     Body: SiroinoSotai by Siroino. Face: Mizunashi Hiyori by HENGE.'
   extraTags: []
   carries: []
+  unreleased: 0
 --- !u!4 &8658064087365775311 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 794809305061706975, guid: 8e3692fc4bd37054f838ea05414808dc,

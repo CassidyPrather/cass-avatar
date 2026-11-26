@@ -476,3 +476,89 @@ status.
 - **Whose licence.** The bought prop was a gift. Its terms license the
   purchaser alone, so the upload is only in order if it was given through
   the shop's own gifting, or bought on the wearer's account.
+
+## Fourth session: the backlog
+
+Written on 2026-11-25, during one unattended session that took a written
+backlog and worked through it: the outfit menu, a way of being away,
+finger poses, a package about contacts, fewer variants, and, handed to
+helpers running beside it, a second avatar's model and a world. The
+README's Status section says what was uploaded and what has been seen.
+
+### What was added
+
+- **The Outfit menu** offers no switch that could leave the body bare
+  where it has nothing to wear (`TileLayout.Offered`), each switch has an
+  icon of its own, and the hat rests off.
+- **A shader of the avatar's own**: lilToon with three hooks, as a lilToon
+  custom shader in `net.wirenook.assets`. It can corrupt the mesh, draw an
+  error screen on one UV tile, and unfold signs: flat artwork inside the
+  avatar's mesh that faces each viewer.
+- **Being away** is a crash (`Wirenook Away`, party-tricks): the body
+  locks, the mesh glitches, the eyes go to error screens, a window reading
+  AFK stands beside the avatar, a device comes unplugged. A helper program
+  mutes the microphone over OSC, since an avatar cannot.
+- **Finger poses** for whatever a hand holds, from a description on the
+  grip, as a step of the build.
+- **`net.wirenook.contacts`**, an eighth package: reactions to VRChat's
+  standard contact tags, a tester that emits each and launches things, a
+  shield that burns, targets.
+- **Nine variants where there were twelve**, by a rule about what a
+  variant carries; one audio source shared between features.
+- **`net.wirenook.bot`** and **`modules/wirenook-world`**: see the README.
+
+### What went wrong
+
+| What happened | Cause | What changed |
+| --- | --- | --- |
+| The eye screens were plain blue, twice | First the picture was fitted to the eye's patch of the atlas, but an eye is seven discs laid over each other on different patches; then to the whole iris, most of which is under the lids | Where a vertex is on its screen is written into a UV set at import, from where the vertex is on the face, and the picture spans the middle of the eye |
+| Body parts would have been drawn as signs | A mesh with no fourth UV set is given a lower one in its place, by Avatar Optimizer when it merges meshes and by the graphics API when it draws; the lower sets hold tile numbers, which read as sign numbers | A sign's number is stored negative, which no other set ever is. Found by a preview that listed sign numbers nobody had made |
+| The refresh script waited five minutes and gave up, three times | It type-checks every module before refreshing, and the world had appeared under `modules/` with code this project cannot compile; then the fix read package paths that ended in a carriage return; then a `sed` meant to strip that wrote the carriage return into the script | It checks the packages `Packages/manifest.json` names. Python on Windows ends lines with CRLF, and a shell `read` keeps the CR |
+| Scripted edits half-applied | A script that edits several files in turn and fails on the third has changed two | The edit helper asserts that each fragment occurs once before replacing; a file is written only after all its edits succeed. Worth doing for the set of files too |
+| A dart's flight lasted a second | One curve, one second long, reused in clips meant to be an eighth of a second; a clip is as long as its longest curve | Each clip makes its own. `FxProbe.Clips` prints clip lengths, which is how it was seen |
+| The shield splashed on load | The first state added to a layer is its default, and the washed state was added first | Read the layer list of a built avatar (`FxProbe.Layers`): the first name after each layer is where it starts |
+| `cass-contacts` came out Poor | Seventeen material slots, one over Medium: every mesh left standing in the world has slots of its own | The moving target's burst, a mesh for itself, was dropped |
+| A helper's batch Unity wrote `.meta` files into a module this editor owns | It was pointed at the shared assets package to see whether a world project could use it | A package folder has one editor that writes its metas. Helpers were told to import only what they own |
+
+### Gotchas, added
+
+- **A layer at weight zero is a pass-through that needs no argument.**
+  The hand poses, the shuffle's switch and the nap before them all work
+  by holding a layer at no weight and raising it with a layer-weight
+  control. Whether a state that animates nothing is one too is less
+  settled than the second session's note says: `LayerProbe`, which runs
+  the FX controller in Unity's own animator, shows the left hand's
+  expression surviving while the right hand's layer, which comes after it
+  and animates the same shapes, sits in its empty neutral state.
+- **Signs and screens live in UV sets no one else uses**, and only as long
+  as the optimiser keeps them: it does for a shader it does not know by
+  name. `cass.sh bundle` shows which channels reached the bundle.
+- **lilToon's custom shader containers** (`.lilcontainer`) import through
+  lilToon's own importer; the included file with the property block has
+  to come before lilToon's common code and functions after it, which is
+  why there are two files.
+- **VRChat writes a bool per tag for a contact receiver**
+  (`advancedParameters` = collision tags), which makes one receiver do for
+  a dozen traits. Untried in the client.
+- **`VRCApi.CreateAvatarRecord` reserves an id** without an upload, which
+  is what lets the rights agreement be recorded for a variant that has
+  never been uploaded.
+- **Material slots are counted per renderer**, not per material: ten
+  things left in the world wearing one material are ten slots.
+
+### Open, from this session
+
+Everything below builds, verifies and was rendered in the editor where
+there was something to render. None of it has run in the client.
+
+- **The body lock.** Whether the pose holds against VRChat's own AFK
+  handling, and how it feels to come back into in a headset.
+- **The glitch** as others see it: how violent, how far the spikes reach
+  in a crowd. One number each in `custom_insert.hlsl`.
+- **The sign** in a headset, in mirrors and through cameras.
+- **Finger poses** against real finger tracking; the thumb.
+- **Every contact**: the reactions, the tester's heads and shots, the
+  hopper, the shield, the targets.
+- **The mic helper** against a running client.
+- **Shared audio**: two cues cutting each other off, and whether that is
+  ever noticed.

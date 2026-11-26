@@ -20,6 +20,18 @@ namespace Wirenook.Cass.Editor
     /// Entry points for regenerating the avatar's assets and for building a
     /// variant the way an upload would, without uploading it.
     /// </summary>
+    /// <summary>
+    /// Marks a static method with no parameters that generates another
+    /// avatar's root prefab (its own materials, animator and descriptor).
+    /// A rebuild calls every such method before it lays the variants of
+    /// Spec/variants.json over their roots, so a variant can name that
+    /// prefab as its `root`.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class AvatarRootBuilderAttribute : Attribute
+    {
+    }
+
     public static class CassBuild
     {
         public const string ReportFolder = "dist/build-report";
@@ -42,6 +54,10 @@ namespace Wirenook.Cass.Editor
             CassFx.Rebuild();
             CassMenus.Rebuild();
             CassShuffle.Rebuild();
+            // Other avatars built by this pipeline make their own root prefabs
+            // before the variants are laid over them.
+            foreach (var builder in TypeCache.GetMethodsWithAttribute<AvatarRootBuilderAttribute>().OrderBy(method => method.DeclaringType.FullName))
+                builder.Invoke(null, null);
             CassPrefabs.Rebuild();
             AssetDatabase.SaveAssets();
             Debug.Log("[cass] Rebuilt generated assets.");

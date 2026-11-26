@@ -54,8 +54,18 @@ namespace Wirenook.Cass.Editor
                     problems.Add("It holds the same avatar id as " + sharing + ", so uploading one would replace the other. " +
                                  "Run a rebuild, which clears ids a variant inherited from the one it extends.");
                 Rank(slug, report, problems);
-                MmdContract(built, problems);
-                Blendshapes(built, problems);
+                // What cass's own model has to keep. Another avatar's root says
+                // what its model needs when it is generated.
+                if (OnCass(variant))
+                {
+                    MmdContract(built, problems);
+                    Blendshapes(built, problems);
+                }
+                else if (built.transform.Find(CassSpec.Blendshapes().Mesh)?.GetComponent<SkinnedMeshRenderer>() == null)
+                {
+                    problems.Add("After the build there is no skinned mesh named " + CassSpec.Blendshapes().Mesh + " directly under the avatar root.");
+                }
+
                 Budgets(built, report, problems);
                 Brightness(built, problems);
                 RestPose(built, problems);
@@ -82,6 +92,14 @@ namespace Wirenook.Cass.Editor
             return summary + "FAILED\n  " + string.Join("\n  ", problems);
         }
 
+        /// <summary>Whether a variant stands on cass's own root, directly or through the variants it extends.</summary>
+        private static bool OnCass(Variant variant)
+        {
+            var all = CassSpec.Variants().Variants;
+            while (variant.Extends != null) variant = all.First(candidate => candidate.Slug == variant.Extends);
+            return variant.Root == null;
+        }
+
         private static void Policy(string slug, BuildReport report, List<string> problems, List<string> notes)
         {
             var prefab = CassBuild.LoadVariant(slug);
@@ -96,7 +114,9 @@ namespace Wirenook.Cass.Editor
             problems.AddRange(Core.UploadGuard.Check(
                 policy, profile.avatarName, profile.ComposeDescription(), report.apiTags, policy.ReleaseStatus));
             if (policy.ReleaseStatus != "public")
-                notes.Add("uploads " + policy.ReleaseStatus + ": it carries " + string.Join("; ", profile.carries));
+                notes.Add("uploads " + policy.ReleaseStatus + ": " + (profile.carries.Count > 0
+                    ? "it carries " + string.Join("; ", profile.carries)
+                    : "it is marked unreleased in Spec/variants.json"));
             foreach (var tag in report.droppedTags)
                 notes.Add("tag " + tag + " does not fit in VRChat's " + FeatureTags.Limit + " tags and is left out");
         }

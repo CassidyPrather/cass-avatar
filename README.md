@@ -105,6 +105,7 @@ scripts/cass.sh upload cass       # build and upload for the editor's platform
 scripts/cass.sh upload '.*' all   # every variant (a regex over slugs) for every platform
 scripts/cass.sh live cass         # what VRChat holds for the uploaded variant
 scripts/cass.sh publish cass      # send name, description, tags, visibility only
+scripts/cass.sh retire cass-party # delete a deprecated variant's avatar from VRChat, for good
 scripts/cass.sh bundle            # inspect the bundle the SDK built last
 scripts/cass.sh all               # export, rebuild, verify every variant on every platform
 ```
@@ -622,6 +623,22 @@ that did not load in the background were found).
 7. **Outfit**: each garment taken off in turn, then all of them, to check
    the skin underneath comes back whole.
 8. **Features**: each optional feature switched on by itself.
+
+Some things no sheet shows, because at rest they are nothing, and each has
+a preview of its own (run with `scripts/unity-bridge.py invoke
+Wirenook.Validation.Editor.<Name>.Render <slug>`, pictures in
+`dist/validation/`):
+
+- `AwayPreview`: the crash while away, with the shader's properties set by
+  hand: the eye screens, the AFK window from every camera, the glitch at a
+  simmer and at its worst.
+- `SignPreview`: every sign the built avatar carries, unfolded one at a
+  time, read back from the built mesh.
+- `GripPreview`: each held prop in its hand with the finger pose the
+  build gave it, from five sides.
+
+`UvProbe.Built <slug>` lists what each built mesh has in each UV set, and
+`ShaderProbe.Check "<shader names>"` says whether a shader compiled.
 
 The sheets show the avatar after the build, so what you review is what
 would be uploaded. Open the scene to look around by hand; the cameras and

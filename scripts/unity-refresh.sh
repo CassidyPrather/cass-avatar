@@ -10,10 +10,14 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# The packages this project compiles: its own, and the ones Packages/manifest.json
-# takes from modules/. A module that is a Unity project of its own (the world,
-# which needs the Worlds SDK) is not this editor's to compile.
-packages=(Assets Packages/net.wirenook.cass)
+# The packages this project compiles: its own (the avatars under Packages/), and
+# the ones Packages/manifest.json takes from modules/. A module that is a Unity
+# project of its own (the world, which needs the Worlds SDK) is not this
+# editor's to compile.
+packages=(Assets)
+for package in Packages/net.wirenook.*; do
+    packages+=("$package")
+done
 for package in $(python -c 'import json, os.path; print(" ".join(os.path.normpath(os.path.join("Packages", path[5:])).replace(os.sep, "/") for path in json.load(open("Packages/manifest.json", encoding="utf-8"))["dependencies"].values() if path.startswith("file:")))'); do
     # Python ends the line the Windows way; a path must not carry that along.
     packages+=("${package%$'\r'}")

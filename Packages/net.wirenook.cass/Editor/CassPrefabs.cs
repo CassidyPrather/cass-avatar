@@ -62,7 +62,7 @@ namespace Wirenook.Cass.Editor
                     continue;
                 }
 
-                var parent = variant.Extends == null ? RootPath : VariantPath(variant.Extends);
+                var parent = variant.Extends != null ? VariantPath(variant.Extends) : variant.Root ?? RootPath;
                 EnsureVariantOf(parent, VariantPath(variant.Slug));
                 Edit(VariantPath(variant.Slug), root => ConfigureVariant(root, variant, spec));
             }
@@ -228,7 +228,7 @@ namespace Wirenook.Cass.Editor
         /// into one at build time. Sharing an anchor also stops the parts of
         /// the avatar from being lit by different probes in the same world.
         /// </summary>
-        private static void UnifyRenderers(GameObject root, SkeletonSpec skeleton)
+        public static void UnifyRenderers(GameObject root, SkeletonSpec skeleton)
         {
             var renderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             var hips = Bone(root, skeleton, HumanBodyBones.Hips);
@@ -666,7 +666,7 @@ namespace Wirenook.Cass.Editor
         /// slots, dropping unused blendshapes and bones. Its components are
         /// not public API, so it is added by name and configured as data.
         /// </summary>
-        private static void ConfigureOptimizer(GameObject root)
+        public static void ConfigureOptimizer(GameObject root)
         {
             var type = Type.GetType("Anatawa12.AvatarOptimizer.TraceAndOptimize, com.anatawa12.avatar-optimizer.runtime");
             if (type == null)
@@ -714,8 +714,9 @@ namespace Wirenook.Cass.Editor
 
             var profile = Ensure<AvatarUploadProfile>(root);
             profile.avatarName = variant.Slug;
-            profile.description = spec.Description;
+            profile.description = variant.Description ?? spec.Description;
             profile.carries = variant.Local.Select(asset => asset.Credit).ToList();
+            profile.unreleased = variant.Unreleased;
             PlaceLocalAssets(root, variant);
 
             var lite = root.GetComponent<CassLiteModel>();
