@@ -602,6 +602,7 @@ Material:
     - _UseShadow: 1
     - _VertexLightStrength: 0
     - _WirenookGlitch: 0
+    - _WirenookPartsSway: 0
     - _WirenookScreen: 0
     - _WirenookScreenTile: 6
     - _WirenookSign: 0
@@ -693,6 +694,7 @@ Material:
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowBorderColor: {r: 1, g: 0.09999997, b: 0, a: 1}
     - _ShadowColor: {r: 0.8, g: 0.74, b: 0.88, a: 1}
+    - _WirenookParts: {r: 1, g: 1, b: 1, a: 1}
     - _WirenookScreenRectA: {r: 0.26725984, g: 0.5904912, b: 0.28481147, a: 0.20569707}
     - _WirenookScreenRectB: {r: 0.35597515, g: 0.5904541, b: 0.331946, a: 0.2056566}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}

@@ -505,7 +505,22 @@ README's Status section says what was uploaded and what has been seen.
   shield that burns, targets.
 - **Nine variants where there were twelve**, by a rule about what a
   variant carries; one audio source shared between features.
-- **`net.wirenook.bot`** and **`modules/wirenook-world`**: see the README.
+- **`net.wirenook.bot`**, a second avatar on the pipeline: a low-poly
+  robot whose face is sprites behind shape keys, standing on a root
+  prefab of its own and carrying cass's features unchanged.
+- **`net.wirenook.skill-checks`**, a ninth package, written twice over:
+  rules with no engine in them, UdonSharp behaviours for worlds, and a
+  generator that builds the same checks into an avatar's animator. Its
+  avatar demo is a campfire.
+- **`modules/wirenook-world`**, the wirenook.net world, as a Unity project
+  that is generated, played in ClientSim and exported without a person in
+  the editor. Its own `docs/PIPELINE.md` is its post-mortem.
+- **One-piece props** (`OnePieceProp`, and `_WirenookParts` in the
+  shader): a prop left in the world as one mesh whose parts the material
+  grows from a point, for an avatar with no slots to spare.
+- **Tools that run an animator in the editor**: `LayerProbe`,
+  `FeaturePlay`, and `AvatarCheckTrial`, which holds an avatar's check
+  against the world's rules.
 
 ### What went wrong
 
@@ -518,6 +533,12 @@ README's Status section says what was uploaded and what has been seen.
 | A dart's flight lasted a second | One curve, one second long, reused in clips meant to be an eighth of a second; a clip is as long as its longest curve | Each clip makes its own. `FxProbe.Clips` prints clip lengths, which is how it was seen |
 | The shield splashed on load | The first state added to a layer is its default, and the washed state was added first | Read the layer list of a built avatar (`FxProbe.Layers`): the first name after each layer is where it starts |
 | `cass-contacts` came out Poor | Seventeen material slots, one over Medium: every mesh left standing in the world has slots of its own | The moving target's burst, a mesh for itself, was dropped |
+| VRChat's validation refused the robot: "please map: Chest" | Unity had made the humanoid avatar from a guess of its own, taking the projected ears for eyes and skipping the chest, although the importer was handed every bone by name on each import and said nothing | The description is saved with the model's import settings, rest poses included (given names alone there, Unity refuses outright, which at least it says). `RigProbe` prints what Unity mapped; building the avatar by hand with `AvatarBuilder` showed the names were never the problem |
+| The robot ranked Medium with five skinned meshes | Its root prefab had no optimiser on it, so nothing merged; and once it had, props had nowhere to go, because the whole avatar was one mesh with blendshapes and the optimiser keeps such a mesh apart | The face became a mesh of its own. The first diagnosis (split the mesh) was right and was acted on before the larger cause (no optimiser) was found; the rank did not move until both were |
+| cass's build step ran on the robot | A build plugin runs on every avatar in the project; it looked for cass's bones and hid cass's tiles on the robot's materials | It asks whether the avatar wears cass's model first |
+| The editor spent ten minutes switching platforms nobody asked for | `cass.sh platform <x>` switches; the platform a build should pretend to is an argument to `verify`. A loop meant as the second did the first, three times | Nothing. It is in the usage text |
+| The campfire took the robot from Good to Medium | Five parts as rigid meshes are five material slots | One mesh, with the parts folded into it and unfolded by the shader |
+| Every picture of the marshmallow showed the first frame | Unity skins a mesh once a frame, and a script that steps an animator and takes eight pictures does it all within one | `forceMatrixRecalculationPerRender` on the meshes being pictured. The numbers the same run printed were right, which is what said the pictures were wrong |
 | A helper's batch Unity wrote `.meta` files into a module this editor owns | It was pointed at the shared assets package to see whether a world project could use it | A package folder has one editor that writes its metas. Helpers were told to import only what they own |
 
 ### Gotchas, added
@@ -545,6 +566,20 @@ README's Status section says what was uploaded and what has been seen.
   never been uploaded.
 - **Material slots are counted per renderer**, not per material: ten
   things left in the world wearing one material are ten slots.
+- **A state's speed can come from a parameter, and below zero the clip
+  runs backwards.** With parameters that clips themselves animate, that
+  is a number an animator keeps and changes at a rate: `skill-checks`'
+  avatar side is built on it. Each hand-over (a sum, a decision, a rate)
+  costs a frame.
+- **An animator evaluated in the editor leaves a humanoid sunk through
+  the floor** when nothing in the controller animates the body. Aim
+  cameras by where things are afterwards, not where the prefab had them.
+- **Avatar Optimizer folds chains of objects into one and joins their
+  names with dollar signs.** A built avatar's objects are found by a
+  piece of their name.
+- **An assembly that needs another SDK** is fenced with a version define
+  and a define constraint; `scripts/compile-check.py` now reads those,
+  so a package that serves worlds and avatars type-checks here.
 
 ### Open, from this session
 
@@ -562,3 +597,14 @@ there was something to render. None of it has run in the client.
 - **The mic helper** against a running client.
 - **Shared audio**: two cues cutting each other off, and whether that is
   ever noticed.
+- **The robot**: everything about wearing it.
+- **Checks on an avatar**: that VRChat writes a receiver's per-tag values
+  into parameters declared as floats, and still does for a receiver that
+  reports proximity. If it does not, the Senses layer needs a bool-to-
+  float layer per tag, and nothing else changes.
+- **The world**: a second player, a late joiner, pedestals, Quest, and
+  its upload.
+- **cass's two hand layers.** `LayerProbe` says the left hand's
+  expression survives the right hand's idle layer. The robot was built
+  with one layer for both hands before that was known, and a change that
+  gives cass the same (`GestureLayers`) was written and not applied.

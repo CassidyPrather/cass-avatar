@@ -16,6 +16,8 @@ not enforced, and it needs the project to have been opened in Unity once so
 Library/ScriptAssemblies exists.
 """
 
+import functools
+import json
 import pathlib
 import re
 import struct
@@ -54,12 +56,48 @@ def is_managed(dll: pathlib.Path) -> bool:
         return False
 
 
+DEFINES = ["UNITY_EDITOR", "UNITY_2022_3_OR_NEWER", "UNITY_2022_1_OR_NEWER", "UNITY_INCLUDE_TESTS", "VRC_SDK_VRCSDK3"]
+
+
+@functools.lru_cache(maxsize=None)
+def installed() -> frozenset:
+    """The packages this project has, by name."""
+    lock = ROOT / "Packages" / "packages-lock.json"
+    names = {path.name for path in (ROOT / "Packages").iterdir() if path.is_dir()}
+    if lock.exists():
+        names |= set(json.loads(lock.read_text(encoding="utf-8")).get("dependencies", {}))
+    return frozenset(names)
+
+
+def left_out(source: pathlib.Path, package: pathlib.Path) -> bool:
+    """True for a source Unity would not compile here: its assembly definition asks for a
+    define that this project does not make. A package that serves worlds and avatars
+    alike keeps each side in an assembly that only exists where its SDK is installed."""
+    folder = source.parent
+    while True:
+        for asmdef in folder.glob("*.asmdef"):
+            data = json.loads(asmdef.read_text(encoding="utf-8"))
+            made = set(DEFINES) | {
+                entry["define"] for entry in data.get("versionDefines", []) if entry.get("name") in installed()
+            }
+            return any(
+                (constraint[1:] in made) if constraint.startswith("!") else (constraint not in made)
+                for constraint in data.get("defineConstraints", [])
+            )
+        if folder == package or folder.parent == folder:
+            return False
+        folder = folder.parent
+
+
 def main() -> int:
     packages = [pathlib.Path(argument).resolve() for argument in sys.argv[1:]]
     if not packages:
         raise SystemExit(__doc__)
 
-    sources = [source for package in packages for source in package.rglob("*.cs")]
+    sources = [
+        source for package in packages for source in package.rglob("*.cs")
+        if not left_out(source, package)
+    ]
     if not sources:
         print("compile-check: no C# under the given directories; nothing to do")
         return 0
@@ -112,7 +150,7 @@ def main() -> int:
         "    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>",
         "    <Nullable>disable</Nullable>",
         "    <NoWarn>$(NoWarn);CS0649;CS0169;CS0414;CS1701;CS1702;MSB3277;MSB3243</NoWarn>",
-        "    <DefineConstants>UNITY_EDITOR;UNITY_2022_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_INCLUDE_TESTS;VRC_SDK_VRCSDK3</DefineConstants>",
+        "    <DefineConstants>" + ";".join(DEFINES) + "</DefineConstants>",
         "  </PropertyGroup>",
         "  <ItemGroup>",
         *(f'    <Compile Include="{source}" />' for source in sources),

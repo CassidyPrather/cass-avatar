@@ -33,6 +33,7 @@ Spec/*.json ──────────────────────�
         Prefabs/Variants/cass-adv.prefab    adds flight, stations, hand tools and what a group needs
         Prefabs/Variants/cass-flashlight.prefab, cass-lantern.prefab   one real light each (extend cass)
         Prefabs/Variants/cass-contacts.prefab   the contact toys and the shape collector (extends cass)
+        Prefabs/Variants/wirenook-bot.prefab    another avatar altogether, on a root of its own (net.wirenook.bot)
                     ▼  at build time, on a copy
         lite model where asked ▶ Modular Avatar ▶ wirenook-assets ▶ Avatar Optimizer ▶ measured, checked, uploaded
 ```
@@ -41,7 +42,8 @@ Spec/*.json ──────────────────────�
 | --- | --- |
 | `blender/` | The source assets, the generator that builds `cass.blend` and `cass-lite.blend` from them, and the headless scripts that validate and export those. |
 | `Packages/net.wirenook.cass/` | The avatar, as a VPM package. `Spec/` holds the contracts, `BlenderExports/` the one place exports land, `Editor/` the generators, `Generated/`, `Materials/` and `Prefabs/` their output. |
-| `modules/` | Eight standalone packages the avatar builds on, as git submodules, each with its own repository, version and README; and beside them the world, a Unity project of its own. |
+| `Packages/net.wirenook.bot/`, `blender/bot/` | A second avatar on the same pipeline, and the generator of its model. See [The robot](#the-robot). |
+| `modules/` | Nine standalone packages the avatars build on, as git submodules, each with its own repository, version and README; and beside them the world, a Unity project of its own. |
 | `Assets/` | The validation scene and development tools. Not shipped. |
 | `tools/`, `art/` | The thumbnail composer, contact-sheet composer and banner. |
 
@@ -58,9 +60,20 @@ Spec/*.json ──────────────────────�
 | [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course to lay out in any world; the pilot for world-sync's bus. |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat's standard contact tags put to use: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. |
 
-`contacts` was made in the session described under [Status](#status), and
-its repository exists only on the machine it was made on until it is
-pushed; the address above is where it is meant to go.
+| [`skill-checks`](https://github.com/CassidyPrather/skill-checks) | `net.wirenook.skill-checks` | Contact- and time-based checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Its avatar demo is a campfire, a match and a marshmallow. |
+
+[`wirenook-world`](https://github.com/CassidyPrather/wirenook-world) is
+mounted beside them and is not a package: it is the wirenook.net world, a
+Unity project of its own with the Worlds SDK, generated, played and checked
+from the command line. Avatar pedestals, a stall for each package here, a
+contact lab, light rooms, a render-queue gallery, Cassidy's grill, and a
+puzzle dungeon built on `skill-checks`. Its README says what is in it and
+how to build it; nothing here opens it.
+
+`contacts`, `skill-checks` and `wirenook-world` were made in the session
+described under [Status](#status), and their repositories exist only on
+the machine they were made on until they are pushed; the addresses above
+are where they are meant to go.
 
 They are mounted as submodules and referenced in place
 (`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
@@ -291,6 +304,7 @@ children.
 | `cass-gaits` | Good | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
 | `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
+| `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. Uploaded private until its owner has looked at it. See [The robot](#the-robot). |
 
 ### How much a variant carries
 
@@ -369,6 +383,55 @@ to push them: sitting lays the cloth over the thighs, and a heel kicked
 back lifts the hem behind. A stride swings the front of the skirt with it,
 by half the thigh's angle. The PhysBones are switched with the skirt and
 are not simulated while the shorts are worn.
+
+### The robot
+
+`wirenook-bot` is a second avatar built by the same pipeline, there to
+show that what cass carries is not cass's: the features are dropped onto
+it unchanged.
+
+It is a low-poly humanoid, 2,105 triangles, with blocky pixel textures on
+one atlas, five jointed fingers on each hand, and rabbit ears and a tail
+projected in light from emitters on its head and back. Its model is
+generated by `blender/bot/` (its README has the contract) and lands in
+`Packages/net.wirenook.bot/BlenderExports/bot.fbx`.
+
+**The face is sprites.** The head is a monitor, and each eye shape, mouth
+shape and overlay is a quad that rests hidden inside the head and is
+brought to the screen by a shape key (`Spec/face.json` lists the 96). So
+the things VRChat and MMD worlds animate by name still work: the fifteen
+visemes are mouth sprites, each MMD shape shows the sprite nearest to
+what it means, and a blink is a sprite. `Spec/expressions.json` says
+which sprites make each of the expressions the hands choose; the gestures
+are cass's own, so the same hand makes the same face on either avatar. While the wearer is
+away the screen shows a bluescreen.
+
+**How it joins the pipeline.** `BotBuild` generates the robot's own
+materials, FX controller, menu and root prefab, and is marked
+`[AvatarRootBuilder]`, which is all `scripts/cass.sh rebuild` needs to
+call it. Its variant in `Spec/variants.json` names that prefab as its
+`root`, and from there it is built, checked, pictured and uploaded like
+any other; the checks that are about cass's model (its blendshapes, the
+MMD contract of its mesh) are skipped for it. Its humanoid bones go by
+cass's `skeleton.json`, whose bone names it shares.
+
+**What it carries**: locomotion, the crash while away with its AFK window
+and sounds, the party tricks, and the campfire of
+[`skill-checks`](https://github.com/CassidyPrather/skill-checks): a fire
+to set down that a match lights and water puts out, and a marshmallow
+that toasts over it, burns if it is left, and can be eaten. The features
+that were there before it were not changed to fit it.
+
+The face is a mesh of its own (`Body`) and everything else is another
+(`Shell`): Avatar Optimizer keeps a mesh with blendshapes apart from the
+rest, so props and signs join the shell. On Android and iOS the hologram
+is drawn with the body's material, solid where on PC it glows, which
+keeps the avatar at two material slots; the tricks and the campfire are
+left out there.
+
+`unreleased` in its variant makes it upload private. To make it public,
+take that line out, run `scripts/cass.sh rebuild` and then
+`scripts/cass.sh publish wirenook-bot`.
 
 ### Wardrobes
 
@@ -636,6 +699,21 @@ Wirenook.Validation.Editor.<Name>.Render <slug>`, pictures in
   time, read back from the built mesh.
 - `GripPreview`: each held prop in its hand with the finger pose the
   build gave it, from five sides.
+- `PartsPreview`: a one-piece prop (`OnePieceProp`) with its parts at
+  chosen sizes.
+
+Two more run an animator instead of posing a clip, for what only shows
+when layers work on each other or over time:
+
+- `LayerProbe.Face <prefab> "GestureLeft=3;AFK=1"` runs a root prefab's FX
+  controller with those parameters and says which of the face's shapes
+  came out raised, with a picture.
+- `FeaturePlay.Run <slug> "<script>"` plays a built variant's FX
+  controller through a script of parameters set, seconds waited and
+  pictures taken (the file's header has the grammar). It stands in for
+  contacts by setting what a receiver would.
+
+`RigProbe.Human <model>` says what Unity made of a model's humanoid rig.
 
 `UvProbe.Built <slug>` lists what each built mesh has in each UV set, and
 `ShaderProbe.Check "<shader names>"` says whether a shader compiled.
@@ -704,63 +782,91 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Twelve variants are uploaded**, eleven public and `cass-quickhack`
-private, each for every platform it is built for, as this page describes
-them; the uploads were last made on 2026-11-20.
-
-The build before this one was worn at an event on 2026-11-19, briefly.
-What was noticed there is what this one changes: the vest's armholes, the
-teeth in the speaking shapes, ears that bent in the middle, a knee coming
-through the skirt, the thin neck, the open boots, the shape collector's
-shapes and gate, how loud the sounds are, the carry seat in a turn, and a
-censor that blurred the room as well. **None of those changes has itself
-been worn.** Neither have the things added alongside them: the skirt and
-vest as the resting outfit, the hand lock, the aimed portal, the cyber
-wardrobe and `cass-quickhack`. The walk styles of `cass-gaits` are still
-unchosen.
+**Ten variants are uploaded**, eight public and two private
+(`cass-quickhack`, which carries a bought prop, and `wirenook-bot`, which
+nobody has looked at yet), each for every platform it is built for, as
+this page describes them. The uploads were made on 2026-11-25.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
 | `cass` | `avtr_83eafc89-950e-4553-bb36-c37238333069` | PC, Android, iOS |
 | `cass-lite` | `avtr_df376716-743f-4bde-a5cc-98ddec85a313` | PC, Android, iOS |
 | `cass-adv` | `avtr_5b291f6b-6058-4b39-83b2-382596f7b6d9` | PC, Android, iOS |
-| `cass-event` | `avtr_eb395cf9-c1b5-45f1-af1c-ea60c6710fba` | PC, Android, iOS |
-| `cass-party` | `avtr_703d3044-1d5c-419f-8136-72743d3290dc` | PC, Android, iOS |
-| `cass-shuffle` | `avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0` | PC |
-| `cass-shapes` | `avtr_01467232-af45-4db8-b1ef-288077548fbe` | PC, Android, iOS |
 | `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC, Android, iOS |
 | `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC, Android, iOS |
+| `cass-contacts` | `avtr_822ccdd3-dfe2-4223-a463-3a9efa50c918` | PC |
 | `cass-gaits` | `avtr_05927e20-4f35-4d3f-a94a-bacbef962f89` | PC |
 | `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
+| `wirenook-bot` (private) | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
+
+**Four more avatars are still on VRChat and are no longer built**:
+`cass-party`, `cass-event`, `cass-shuffle` and `cass-shapes`, as they were
+uploaded on 2026-11-20. What they carried is in the variants above (see
+[How much a variant carries](#how-much-a-variant-carries)). They were left
+up on purpose: they are the last uploads of the build that has been worn,
+and nothing uploaded on 2026-11-25 has. `scripts/cass.sh retire <slug>`
+deletes one, for good.
+
+**Nothing here has been pushed.** This repository and every submodule
+hold the session of 2026-11-25 as local commits on `claude/setup`, and
+three of the repositories (`contacts`, `skill-checks`, `wirenook-world`)
+do not exist anywhere else yet. The public avatars' descriptions point at
+this repository's address for their source, which until the push is the
+source of the build before.
+
+**The world is not uploaded.** It builds to a `.vrcw` and plays in
+ClientSim; putting it on VRChat takes the SDK's control panel and its
+owner.
+
+The build before this one was worn at an event on 2026-11-19, briefly.
+What was noticed there is what the uploads of 2026-11-20 changed: the
+vest's armholes, the teeth in the speaking shapes, ears that bent in the
+middle, a knee coming through the skirt, the thin neck, the open boots,
+the shape collector's shapes and gate, how loud the sounds are, the carry
+seat in a turn, and a censor that blurred the room as well. **None of
+those changes has itself been worn.** Neither have the things added
+alongside them (the skirt and vest as the resting outfit, the hand lock,
+the aimed portal, the cyber wardrobe and `cass-quickhack`), nor anything
+from 2026-11-25: the crash while away, the finger poses, the outfit
+menu's new rule and icons, the contact toys, the regrouped variants, the
+robot, the campfire. The walk styles of `cass-gaits` are still unchosen.
 
 The first pass of the model, as `cass` and `cass-adv`, was worn in the
 client on PC. That is where the portal's pop-out, the notices' early exit
 and the thumbnails were found wanting, and the fixes for those have still
 not been tried there. Everything since was checked in Blender, in the
 Unity editor, against VRChat's API, or headless. `docs/POSTMORTEM.md` has
-the history, the gotchas and the open issues, in three parts: the
+the history, the gotchas and the open issues, in four parts: the
 pipeline, the session of 2026-11-16 and 17 that added most of what is
-listed below as unchecked, and the session of 2026-11-19 and 20 that
-answered the notes from wearing it.
+listed below as unchecked, the session of 2026-11-19 and 20 that answered
+the notes from wearing it, and the session of 2026-11-25 that worked
+through a written backlog.
 
-That session ran unattended. The uploads were made with the owner's
-written certification that they hold the rights to the content, given
-beforehand for the purpose; it was recorded for each avatar id through the
-SDK's own agreement call, not by anyone answering the SDK's dialog. The
-uploads of 2026-11-18 and of 2026-11-20 ran overnight the same way, each
-on a certification the owner gave that evening.
+Each of those sessions after the first ran unattended. The uploads were
+made with the owner's written certification that they hold the rights to
+the content, given beforehand for the purpose; it was recorded for each
+avatar id through the SDK's own agreement call, not by anyone answering
+the SDK's dialog.
 
 Checked:
 
 - Both Blender exports validate against the specs with no errors, and each
   exported file is read back and compared (names, bones, shape keys, UVs,
   orientation).
-- All twelve variants build through Modular Avatar and Avatar Optimizer for
-  the platforms they are built for, and pass `scripts/cass.sh verify`: the
-  rank each is held to, the MMD mesh name and layer order intact after the
-  build, every viseme, required tracking key and MMD shape still present,
-  budgets respected, no brightness floor.
+- All ten variants build through Modular Avatar and Avatar Optimizer for
+  the platforms they are built for (24 builds), and pass
+  `scripts/cass.sh verify`: the rank each is held to, the MMD mesh name
+  and layer order intact after the build, every viseme, required tracking
+  key and MMD shape still present, budgets respected, no brightness floor.
+- The robot's contact sheets were rendered and looked at: every camera,
+  its visemes and the faces its MMD shapes make; and its own FX controller
+  was run in the editor (`LayerProbe`) for the faces its gestures make and
+  the bluescreen while away. The AFK window was rendered on it as on cass.
+- The campfire was played on the built robot (`FeaturePlay`): the fire
+  catching, burning, doused and smoking, and the marshmallow through its
+  five looks, eaten and fresh again. Its rules were compared with the
+  world's (`AvatarCheckTrial` in `skill-checks`).
 - The contact sheets for `cass` were rendered with the new model, and the
   cameras and the outfit sheet looked at: each switch flipped in turn,
   everything on (the original design) and everything off, with whole skin
@@ -777,8 +883,9 @@ Checked:
   arrives after six things are placed has all six, to within 2.9 cm, after
   one turn of the broadcast.
 - All uploads went through `scripts/cass.sh upload`, and VRChat's records
-  read back matching the upload policy (source link, required tags,
-  public).
+  read back matching the upload policy (source link, required tags, and
+  public or private as the variant says). `scripts/cass.sh live <slug>`
+  lists the platforms VRChat holds a build for.
 - Headless tests: 36 for the avatar's core logic, 11 for the thumbnail
   composer, and each submodule's own suite (56 in locomotion).
 
@@ -831,6 +938,21 @@ Not checked, because only the client can:
   skirt, and how the PhysBones' pull, spring, gravity and hinge feel, only
   a client shows. The numbers are in `skeleton.json` (`follow`,
   `colliders`) and `CassPrefabs` (`"skirt"`).
+- **Being away.** The crash was rendered in the editor with the shader's
+  properties set by hand. Whether the body lock holds against VRChat's own
+  AFK handling, how the glitch and the window look to others and in a
+  headset, the sounds, and the helper that mutes the microphone
+  (`tools/away_mic.py` in `party-tricks`, which has to be running) have
+  not met a client.
+- **Contacts**, all of them: cass's reactions to each standard tag, the
+  tester and what it launches, the shield, the targets, and the
+  campfire's checks. They rest on VRChat keeping a value for each tag of a
+  contact receiver, which is documented and has not been seen working
+  here.
+- **The robot**, as a thing to wear: its proportions in a headset, where
+  it sees from, how the sprites read at a distance, the projected ears in
+  motion, its fingers under finger tracking, and MMD worlds, where its
+  face mesh has the names they look for and nothing has danced.
 - **Hands, aiming and the wardrobe.** The hand lock's layer, the portal's
   aiming layers and the cyber wardrobe's meshes are in the built avatars
   (read back with `FxProbe`, rendered in the editor, ranked by `verify`).
@@ -877,11 +999,25 @@ Known gaps:
   avatar as the gaits now are.
 - Lying prone still plays VRChat's own crawl; the gait model has nothing
   to say about it.
-- VRChat's ten tags do not hold every feature of `cass-event`; the
-  least important two are left out.
-- The seven submodule packages are released as 0.1.0 on GitHub, each
-  with its `.zip` and `.unitypackage`. This repository's own v0.1.0 has
-  no files (see [Releasing](#releasing)). None is on the VPM listing yet.
+- VRChat's ten tags do not hold every feature of `cass-adv`: eight are
+  left out, the least important by each feature's own ranking.
+- Being away and the vanishing act are two features that both take the
+  avatar out of the room and share nothing: one corrupts the mesh in the
+  shader, the other shrinks it and leaves a log. Whether they should be
+  one thing with two moods is undecided.
+- The robot has no locomotion fitted to its own proportions (it walks on
+  the package's generic gaits), no eye tracking (its eyes are pictures),
+  and no outfit. Its hologram is solid on mobile.
+- The world's light rooms are baked light and realtime lights; VRC Light
+  Volumes were tried and left out, since setting them up without a person
+  in the editor was not solved.
+- Seven of the submodule packages are released as 0.1.0 on GitHub, each
+  with its `.zip` and `.unitypackage`; `contacts` and `skill-checks` are
+  not released. This repository's own v0.1.0 has no files (see
+  [Releasing](#releasing)). None is on a VPM listing yet. The address on
+  the world's listing board (`github.com/CassidyPrather/vpm`) was made up
+  for the board, and has to become the real one before the world is
+  published.
 
 ## Development
 

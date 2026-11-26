@@ -53,12 +53,14 @@ namespace Wirenook.Validation.Editor
                     var left = words[0] == "left";
                     var feature = words.Length > 1 ? words[1] : "";
                     var held = CassPreview.AllOff(toggles);
-                    var toggle = toggles.FirstOrDefault(candidate =>
+                    // Every prop the feature has: one that puts something in each hand names its toggles after itself.
+                    var shown = toggles.Where(candidate =>
                     {
                         var name = candidate.Name.ToLowerInvariant().Replace(' ', '-');
                         return name.Length > 0 && (feature.Contains(name) || name.Contains(feature));
-                    });
-                    if (toggle.On != null) CassPreview.Hold(held, toggle.On);
+                    }).ToList();
+                    var toggle = shown.FirstOrDefault();
+                    foreach (var prop in shown) CassPreview.Hold(held, prop.On);
                     CassPreview.Hold(held, pose);
                     // Arms out: standing, the hands hang inside the skirt.
                     CassPreview.Sample(built, arms, 0f, held);

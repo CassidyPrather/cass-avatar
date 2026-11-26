@@ -88,6 +88,8 @@ namespace Wirenook.Cass.Editor
                    "description: " + live.Description + "\n" +
                    "tags: " + string.Join(", ", live.Tags ?? new List<string>()) + "\n" +
                    "release: " + live.ReleaseStatus + "\n" +
+                   "platforms: " + string.Join(", ", (live.UnityPackages ?? new List<VRCUnityPackage>())
+                       .Select(package => package.Platform).Distinct().OrderBy(platform => platform)) + "\n" +
                    (problems.Count == 0 ? "policy: ok" : "policy: FAILS\n  " + string.Join("\n  ", problems));
         }
 

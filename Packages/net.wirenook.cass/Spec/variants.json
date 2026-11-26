@@ -139,7 +139,8 @@
         {
           "path": "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Party Tricks.prefab",
           "pcOnly": true
-        }
+        },
+        "Packages/net.wirenook.skill-checks/Prefabs/Wirenook Campfire.prefab"
       ],
       "worstRankMobile": "Medium",
       "unreleased": true
