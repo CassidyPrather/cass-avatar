@@ -1,0 +1,278 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &403294543720226128
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7487301417413550596}
+    m_Modifications:
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6040111752904938728, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Signature
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b5422ea26f2748f4fb73229c0ffc1a92, type: 3}
+--- !u!4 &5167765287252617744 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4769133223731361600, guid: b5422ea26f2748f4fb73229c0ffc1a92,
+    type: 3}
+  m_PrefabInstance: {fileID: 403294543720226128}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2538576547660135019
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7487301417413550596}
+    m_Modifications:
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8215348215751459728, guid: 47c8a687b61e3b540a369e44a56ffca7,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Nap
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 47c8a687b61e3b540a369e44a56ffca7, type: 3}
+--- !u!4 &8311404236511085190 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5792438316318128365, guid: 47c8a687b61e3b540a369e44a56ffca7,
+    type: 3}
+  m_PrefabInstance: {fileID: 2538576547660135019}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &8857860680502597552
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1607394804881633038, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_Name
+      value: meta
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5167765287252617744}
+    - targetCorrespondingSourceObject: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8311404236511085190}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1607394804881633038, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6185939343966061372}
+    - targetCorrespondingSourceObject: {fileID: 1607394804881633038, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 52411873375921658}
+  m_SourcePrefab: {fileID: 100100000, guid: 28af8ed83ce51ed47b9283b27486c1dc, type: 3}
+--- !u!4 &7487301417413550596 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2091162967083546036, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+    type: 3}
+  m_PrefabInstance: {fileID: 8857860680502597552}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7828360425598548158 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1607394804881633038, guid: 28af8ed83ce51ed47b9283b27486c1dc,
+    type: 3}
+  m_PrefabInstance: {fileID: 8857860680502597552}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6185939343966061372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7828360425598548158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b9bbeb42d63c2418fc93cf4ff86610, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  avatarName: meta
+  description: A hooded low-poly game master from wirenook.net, with trim in a colour
+    its wearer chooses. AGPLv3. github.com/CassidyPrather/cass-avatar
+  extraTags: []
+  carries: []
+  unreleased: 1
+--- !u!114 &52411873375921658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7828360425598548158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f743d6449c6d3be488b8e4d5c540dc11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flavour: nap
+  mobileFlavour: nap

@@ -61,7 +61,7 @@ namespace Wirenook.Cass.Editor
                     MmdContract(built, problems);
                     Blendshapes(built, problems);
                 }
-                else if (built.transform.Find(CassSpec.Blendshapes().Mesh)?.GetComponent<SkinnedMeshRenderer>() == null)
+                else if (HasFace(slug) && built.transform.Find(CassSpec.Blendshapes().Mesh)?.GetComponent<SkinnedMeshRenderer>() == null)
                 {
                     problems.Add("After the build there is no skinned mesh named " + CassSpec.Blendshapes().Mesh + " directly under the avatar root.");
                 }
@@ -138,6 +138,20 @@ namespace Wirenook.Cass.Editor
                 problems.Add("The menu has " + switches + " switches for " + WirenookSignals.Away + "; every avatar has the one \"AFK\" switch.");
             else if (!descriptor.expressionsMenu.controls.Any(control => control.parameter != null && control.parameter.name == WirenookSignals.Away))
                 problems.Add("The \"AFK\" switch is not in the top level of the menu.");
+        }
+
+        /// <summary>
+        /// Whether another avatar's variant has a face to keep: a mesh of
+        /// the face's name directly under its root with shape keys on it,
+        /// as the robot has. Visemes and MMD worlds find such a mesh by that
+        /// name, so it has to come through the build under it. A mesh
+        /// without shape keys (the meta figure's one mesh) answers to
+        /// nothing by name, and the optimiser is free to merge it away.
+        /// </summary>
+        private static bool HasFace(string slug)
+        {
+            var face = CassBuild.LoadVariant(slug).transform.Find(CassSpec.Blendshapes().Mesh)?.GetComponent<SkinnedMeshRenderer>();
+            return face != null && face.sharedMesh != null && face.sharedMesh.blendShapeCount > 0;
         }
 
         /// <summary>Whether a variant stands on cass's own root, directly or through the variants it extends.</summary>

@@ -107,6 +107,31 @@ namespace Wirenook.Cass.Editor
             UnityEngine.Object.DestroyImmediate(combined);
             // Clips with root motion would walk the avatar away.
             avatar.transform.SetPositionAndRotation(position, rotation);
+            FollowTurns(avatar);
+        }
+
+        /// <summary>
+        /// Turns every object that a rotation constraint makes copy another
+        /// outright (one source, full weight, every axis) the way its source
+        /// is turned. VRChat's constraints only solve while the game runs,
+        /// so in a picture taken here a head that is seen through such a
+        /// twin (the meta figure's hood) would otherwise stay facing the way
+        /// the neck does whatever the pose. Constraints that take a share of
+        /// a turn (twist helpers, the skirt's lift) are left as they rest.
+        /// </summary>
+        public static void FollowTurns(GameObject avatar)
+        {
+            foreach (var constraint in avatar.GetComponentsInChildren<VRC.SDK3.Dynamics.Constraint.Components.VRCRotationConstraint>(true))
+            {
+                if (!constraint.IsActive || constraint.Sources.Count != 1 || constraint.GlobalWeight < 1f) continue;
+                var source = constraint.Sources[0];
+                if (source.SourceTransform == null || source.Weight < 1f) continue;
+                if (!constraint.AffectsRotationX || !constraint.AffectsRotationY || !constraint.AffectsRotationZ) continue;
+                var target = constraint.TargetTransform != null ? constraint.TargetTransform : constraint.transform;
+                var offset = Quaternion.Euler(constraint.RotationOffset);
+                if (constraint.SolveInLocalSpace) target.localRotation = source.SourceTransform.localRotation * offset;
+                else target.rotation = source.SourceTransform.rotation * offset;
+            }
         }
 
         /// <summary>

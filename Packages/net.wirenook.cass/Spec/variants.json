@@ -158,6 +158,19 @@
         "Packages/net.wirenook.contacts/Prefabs/Wirenook Campfire.prefab"
       ],
       "worstRankMobile": "Medium"
+    },
+    {
+      "slug": "meta",
+      "root": "Packages/net.wirenook.meta-avatar/Prefabs/meta-root.prefab",
+      "description": "A hooded low-poly game master from wirenook.net, with trim in a colour its wearer chooses. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "A third avatar on the pipeline, and the base of the ones that run a game or watch one (net.wirenook.meta-avatar): a low-poly figure in a hooded robe with nothing in the hood, one mesh, one material. Kept as light as an avatar gets, so that strangers' performance filters let it through: all it carries is the dial for its signature colour, which its trim and whatever it later carries take, and the nap while its wearer is away. Variants for particular jobs extend it.",
+      "unreleased": true,
+      "worstRank": "Excellent",
+      "afk": "nap",
+      "features": [
+        "Packages/net.wirenook.assets/Prefabs/Wirenook Signature.prefab"
+      ],
+      "worstRankMobile": "Excellent"
     }
   ],
   "deprecated": [

@@ -1,0 +1,95 @@
+{
+  "$comment": "Facts about the meta figure that Unity needs, written by blender/meta/build_meta.py; do not edit. Lengths are metres. `unity` positions are in the avatar's frame as Unity imports it (x to its right, y up, z forward). The signature colour: every texel that is white in `atlas.tint` is painted in the hue `signature.hue` (0..1), at one of the strengths listed, and nothing else in the atlas is; turning the hue of those texels by (wanted - signature.hue) gives the wearer's colour. `atlas.emission` is white on the subset of them that glows. Each `sway` chain ends at `endUnity`, the far end of its last bone, which is what a physics chain of one bone needs to know to have anything to swing.",
+  "mesh": "Body",
+  "material": "meta",
+  "atlas": {
+    "texture": "Textures/meta-atlas.png",
+    "emission": "Textures/meta-atlas-emission.png",
+    "tint": "Textures/meta-atlas-tint.png",
+    "size": 256,
+    "filter": "point",
+    "metresPerTexel": 0.0078125
+  },
+  "signature": {
+    "hue": 0.513889,
+    "colours": {
+      "sig-hi": "#d6fcff",
+      "sig": "#73f3ff",
+      "sig-lo": "#2f9ea8",
+      "sig-dim": "#236066"
+    }
+  },
+  "height": 1.75,
+  "viewPosition": {
+    "unity": [
+      0.0,
+      1.59375,
+      0.080048
+    ],
+    "note": "Inside the hood, where eyes would be."
+  },
+  "hood": {
+    "openingCentreUnity": [
+      0.0,
+      1.59375,
+      0.126923
+    ],
+    "bone": "HeadVisual"
+  },
+  "fingerLight": {
+    "leftBone": "Index3.L",
+    "rightBone": "Index3.R",
+    "leftTipUnity": [
+      -0.839844,
+      1.359375,
+      0.036328
+    ],
+    "rightTipUnity": [
+      0.839844,
+      1.359375,
+      0.036328
+    ],
+    "note": "The ends of the index fingers in the T-pose; the fingers point along the arm."
+  },
+  "sway": [
+    {
+      "kind": "hood",
+      "bones": [
+        "Sway.Hood",
+        "Sway.Hood.001"
+      ],
+      "endUnity": [
+        0.0,
+        1.539062,
+        -0.265625
+      ]
+    },
+    {
+      "kind": "sleeve",
+      "bones": [
+        "Sway.Sleeve.L"
+      ],
+      "endUnity": [
+        -0.65625,
+        1.203125,
+        0.0
+      ]
+    },
+    {
+      "kind": "sleeve",
+      "bones": [
+        "Sway.Sleeve.R"
+      ],
+      "endUnity": [
+        0.65625,
+        1.203125,
+        0.0
+      ]
+    }
+  ],
+  "counts": {
+    "triangles": 1854,
+    "vertices": 1031,
+    "bones": 56
+  }
+}

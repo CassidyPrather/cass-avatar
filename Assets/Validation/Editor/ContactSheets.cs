@@ -187,7 +187,9 @@ namespace Wirenook.Validation.Editor
             var shapes = CassSpec.Blendshapes();
             var gestures = CassSpec.Gestures();
             var tiles = CassSpec.Tiles();
-            var body = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true).First(renderer => renderer.name == shapes.Mesh);
+            // An avatar without a face (the meta figure) has no such mesh after its build, and no expressions to show.
+            var body = avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true).FirstOrDefault(renderer => renderer.name == shapes.Mesh);
+            if (body == null || body.sharedMesh == null || body.sharedMesh.blendShapeCount == 0) return;
             var block = new MaterialPropertyBlock();
             void Shoot(string sheet, int index, string label, IEnumerable<KeyValuePair<string, float>> weights)
             {

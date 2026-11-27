@@ -252,6 +252,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _WirenookSignatureMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AAStrength: 1
@@ -611,6 +615,7 @@ Material:
     - _WirenookSignC: 0
     - _WirenookSignCShow: 0
     - _WirenookSignShow: 0
+    - _WirenookSignature: 0
     - _ZClip: 1
     - _ZTest: 4
     - _ZWrite: 1

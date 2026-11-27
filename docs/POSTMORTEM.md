@@ -722,3 +722,40 @@ Gotchas from that:
 
 Open: the `VPM_DISPATCH_TOKEN` secret, which only the account's owner can
 make; until then a release does not rebuild the listing by itself.
+
+### The same session: a third avatar
+
+- **`net.wirenook.meta-avatar`**, the hooded game master (`meta`): one
+  mesh, one material, no face, Excellent on PC, Android and iOS. Its
+  humanoid head carries nothing and the hood is on a twin bone, so that
+  later variants can send the head, and the voice with it, away.
+- **The signature colour**, a convention in `net.wirenook.assets`: one
+  synced float, one material property, a mask, and Toon Standard's hue
+  shift standing in on mobile.
+
+Gotchas from that:
+
+- **A package folder must not end in `.meta`.** The package was
+  `net.wirenook.meta` for an hour. It imported and built, and Unity
+  warned on every refresh that the meta file `Packages/net.wirenook.meta`
+  had lost its asset `Packages/net.wirenook`.
+- **Avatar Optimizer's MMD world compatibility keeps `Body` apart.** With
+  it on, the nap's Zs stayed a second skinned mesh and the avatar ranked
+  Good. With it off they merge, into an object the optimiser names
+  itself, so the check for a mesh called `Body` now asks only where there
+  is a face to keep.
+- **`scripts/test.sh`, `check-meta.sh` and `check-manifests.py` read what
+  git tracks.** New files pass unseen until they are added to the index.
+- **VRChat's mobile Toon Standard takes a glow's colour from its own
+  texture**, not from the surface as lilToon can. With a white-on-black
+  glow mask as that texture and the painted colour as the glow's colour,
+  the masked hue shift turns the glow along with the paint.
+- **Material curves on a stand-in were spread to skinned and static
+  meshes only.** Every kind of renderer is given them now, so a trail or
+  a particle system whose shader declares the property follows it.
+
+Open: the avatar has not been in a client. Unknown there: whether the
+rotation constraint keeps the hood on the head without lag, whether
+`VRCHeadChop` at scale 0 on a bone that is not under `Head` hides the
+hood from its wearer, how the cuffs' physics hang, and whether a synced
+float turns the hue smoothly for other people.
