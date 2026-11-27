@@ -67,6 +67,8 @@ namespace Wirenook.Cass.Editor
                 }
 
                 Away(variant, built, problems);
+                Unseen(built, problems);
+                Presence(built, problems);
                 Budgets(built, report, problems);
                 Brightness(built, problems);
                 RestPose(built, problems);
@@ -138,6 +140,103 @@ namespace Wirenook.Cass.Editor
                 problems.Add("The menu has " + switches + " switches for " + WirenookSignals.Away + "; every avatar has the one \"AFK\" switch.");
             else if (!descriptor.expressionsMenu.controls.Any(control => control.parameter != null && control.parameter.name == WirenookSignals.Away))
                 problems.Add("The \"AFK\" switch is not in the top level of the menu.");
+        }
+
+        /// <summary>The layer of the invisible switch (net.wirenook.adventure-tools, PresenceBuild.UnseenLayer).</summary>
+        private const string UnseenLayer = "Unseen";
+
+        private static AnimatorController Fx(GameObject built)
+        {
+            return built.GetComponent<VRCAvatarDescriptor>().baseAnimationLayers
+                .FirstOrDefault(layer => layer.type == VRCAvatarDescriptor.AnimLayerType.FX).animatorController as AnimatorController;
+        }
+
+        private static int Switches(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu, string parameter, HashSet<UnityEngine.Object> seen)
+        {
+            if (menu == null || !seen.Add(menu)) return 0;
+            return menu.controls.Sum(control =>
+                (control.parameter != null && control.parameter.name == parameter ? 1 : 0) + Switches(control.subMenu, parameter, seen));
+        }
+
+        /// <summary>
+        /// Every avatar has the invisible switch, once, and its one layer
+        /// reaches every renderer the build left: a renderer it missed
+        /// would go on being drawn for people the wearer is hidden from.
+        /// </summary>
+        private static void Unseen(GameObject built, List<string> problems)
+        {
+            const string layerName = UnseenLayer;
+            var layer = Fx(built)?.layers.FirstOrDefault(candidate => candidate.name == layerName);
+            if (layer == null)
+            {
+                problems.Add("Every avatar carries the invisible switch (net.wirenook.adventure-tools; a rebuild places it), and the build has no \"" + layerName + "\" layer.");
+                return;
+            }
+
+            var renderers = built.GetComponentsInChildren<Renderer>(true)
+                .Select(renderer => UnityEditor.AnimationUtility.CalculateTransformPath(renderer.transform, built.transform))
+                .Distinct()
+                .ToList();
+            foreach (var state in layer.stateMachine.states)
+            {
+                var clip = state.state.motion as AnimationClip;
+                var reached = clip == null
+                    ? new HashSet<string>()
+                    : new HashSet<string>(UnityEditor.AnimationUtility.GetCurveBindings(clip)
+                        // The optimiser merges meshes that are switched alike and
+                        // then switches the merged one by its object.
+                        .Where(binding => binding.propertyName == "m_Enabled" && typeof(Renderer).IsAssignableFrom(binding.type) ||
+                                          binding.propertyName == "m_IsActive" && binding.type == typeof(GameObject))
+                        .Select(binding => binding.path));
+                var missed = renderers.Where(path => !reached.Contains(path)).ToList();
+                if (missed.Count > 0)
+                    problems.Add("The invisible switch's \"" + state.state.name + "\" does not reach " + missed.Count + " of " + renderers.Count +
+                                 " renderers: " + string.Join(", ", missed.Take(4)) + (missed.Count > 4 ? ", ..." : ""));
+            }
+
+            var switches = Switches(built.GetComponent<VRCAvatarDescriptor>().expressionsMenu, WirenookSignals.Unseen, new HashSet<UnityEngine.Object>());
+            if (switches != 1)
+                problems.Add("The menu has " + switches + " switches for " + WirenookSignals.Unseen + "; every avatar has the one \"Invisible\" switch.");
+        }
+
+        /// <summary>
+        /// Where a variant carries presence (who sees and who hears the
+        /// wearer, net.wirenook.adventure-tools): the build has pointed the
+        /// mover of the head at the humanoid head bone, nothing hangs under
+        /// that bone to be carried off with it, and on Android and iOS no
+        /// animation swaps in a material VRChat would refuse there.
+        /// </summary>
+        private static void Presence(GameObject built, List<string> problems)
+        {
+            var fx = Fx(built);
+            if (fx == null || fx.layers.All(layer => layer.name != "Presence Heard")) return;
+
+            var animator = built.GetComponent<Animator>();
+            var head = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Head) : null;
+            var movers = built.GetComponentsInChildren<VRC.SDK3.Dynamics.Constraint.Components.VRCPositionConstraint>(true)
+                .Where(constraint => head != null && constraint.TargetTransform == head)
+                .ToList();
+            if (movers.Count != 1)
+                problems.Add("It carries presence, and " + movers.Count + " constraints move its head bone; \"heard by\" needs the one. " +
+                             "(On a rig whose head bone carries the head, the build leaves the mover out.)");
+            else if (movers[0].IsActive)
+                problems.Add("Its head bone is moved as it rests; a client that plays no animations would not hear the wearer.");
+            if (head != null && head.childCount > 0)
+                problems.Add("Its head bone is moved for people who are not to hear the wearer, and " + head.childCount +
+                             " objects hang under it and would go with it: " +
+                             string.Join(", ", head.Cast<Transform>().Take(4).Select(child => child.name)));
+
+            if (!WirenookPlatform.IsMobile) return;
+            var foreign = fx.animationClips
+                .SelectMany(clip => UnityEditor.AnimationUtility.GetObjectReferenceCurveBindings(clip)
+                    .SelectMany(binding => UnityEditor.AnimationUtility.GetObjectReferenceCurve(clip, binding)))
+                .Select(key => key.value as Material)
+                .Where(material => material != null && !material.shader.name.StartsWith("VRChat/Mobile/", StringComparison.Ordinal))
+                .Select(material => material.name + " (" + material.shader.name + ")")
+                .Distinct()
+                .ToList();
+            if (foreign.Count > 0)
+                problems.Add("Animations swap in materials with shaders mobile builds may not use: " + string.Join(", ", foreign));
         }
 
         /// <summary>
@@ -363,6 +462,13 @@ namespace Wirenook.Cass.Editor
             var showing = new List<string>();
             foreach (var layer in fx.layers)
             {
+                // The invisible switch starts every avatar undrawn for a
+                // moment, on purpose, and then draws it: one that loads
+                // hidden from someone must not be shown to them on the way.
+                // As it rests, an avatar is drawn (or is not, where it says
+                // so itself), which is the right thing for a viewer who
+                // plays no animations.
+                if (layer.name == UnseenLayer) continue;
                 var state = layer.stateMachine != null ? layer.stateMachine.defaultState : null;
                 if (state == null || !(state.motion is AnimationClip clip)) continue;
 

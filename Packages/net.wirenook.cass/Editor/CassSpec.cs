@@ -262,6 +262,11 @@ namespace Wirenook.Cass.Editor
                 foreach (var feature in features.Where(feature => !variant.Features.Contains(feature))) variant.Features.Add(feature);
             }
 
+            // Every avatar carries the invisible switch, as every avatar has
+            // the "AFK" one: it is not for a variant to list or to leave out.
+            foreach (var variant in spec.Variants)
+                if (!variant.Features.Contains(Variant.UnseenPrefab)) variant.Features.Add(Variant.UnseenPrefab);
+
             foreach (var token in json["deprecated"] ?? new JArray())
             {
                 spec.Deprecated.Add(new DeprecatedVariant
@@ -479,6 +484,9 @@ namespace Wirenook.Cass.Editor
             { WirenookAway.Crash, new[] { "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away.prefab" } },
             { WirenookAway.Vanish, new[] { "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Away (Vanish).prefab", NapPrefab } },
         };
+
+        /// <summary>The invisible switch (net.wirenook.adventure-tools), which every variant is given.</summary>
+        public const string UnseenPrefab = "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Unseen.prefab";
 
         /// <summary>The worst VRChat performance rank this variant may build to on PC.</summary>
         public string WorstRank;

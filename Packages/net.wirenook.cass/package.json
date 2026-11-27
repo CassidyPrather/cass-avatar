@@ -16,13 +16,14 @@
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
     "com.anatawa12.avatar-optimizer": "^1.9.22",
-    "net.wirenook.assets": "^0.2.0",
+    "net.wirenook.assets": "^0.2.1",
     "net.wirenook.locomotion": "^0.2.0",
     "net.wirenook.world-sync": "^0.2.0",
     "net.wirenook.avatar-stations": "^0.2.0",
-    "net.wirenook.adventure-tools": "^0.2.0",
+    "net.wirenook.adventure-tools": "^0.3.0",
     "net.wirenook.party-tricks": "^0.2.0",
-    "net.wirenook.contacts": "^0.1.0"
+    "net.wirenook.contacts": "^0.1.0",
+    "net.wirenook.selective-animation": "^0.1.0"
   },
   "documentationUrl": "https://github.com/CassidyPrather/cass-avatar#readme",
   "changelogUrl": "https://github.com/CassidyPrather/cass-avatar/releases"

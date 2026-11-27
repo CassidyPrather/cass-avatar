@@ -259,6 +259,10 @@ namespace Wirenook.Meta.Editor
                 follow.IsActive = true;
                 follow.Locked = true;
                 follow.FreezeToWorld = false;
+
+                // Says so to the features: what they attach to the head goes
+                // to the twin, and one of them may move the humanoid bone.
+                if ((string)twin["visual"] == "Head") FeaturePrefab.Ensure<WirenookFreeHead>(root).visual = seen;
             }
         }
 

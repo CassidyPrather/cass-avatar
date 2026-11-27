@@ -171,6 +171,32 @@
         "Packages/net.wirenook.assets/Prefabs/Wirenook Signature.prefab"
       ],
       "worstRankMobile": "Excellent"
+    },
+    {
+      "slug": "meta-spectator",
+      "extends": "meta",
+      "description": "A hooded low-poly spectator from wirenook.net: seen and heard only by those who share its backstage circle, unless its wearer says otherwise. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "The spectator: meta as a ghost. It loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees and who hears them: everyone, backstage only, or the people they point at and mark (presence, net.wirenook.adventure-tools, on net.wirenook.selective-animation). Being heard by some and not others moves its head bone, which carries nothing, and the nameplate goes with the voice. Flight on PC.",
+      "unreleased": true,
+      "worstRank": "Good",
+      "features": [
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Presence (Ghost).prefab",
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab"
+      ],
+      "worstRankMobile": "Good"
+    },
+    {
+      "slug": "meta-probe",
+      "extends": "meta",
+      "description": "A test rig from wirenook.net: lamps over the head that show what each viewer's client worked out. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "Not for wearing: meta with the probe of net.wirenook.selective-animation, five lamps over the head that are each lit separately on each viewer's client. Two people wearing it find out in two minutes whether the mechanisms under presence work in a VRChat client: the pointer that finds one viewer, the latch that keeps them selected, the circle that knows its own, and whether parameter drivers run on other people's copies. PC and Android.",
+      "unreleased": true,
+      "worstRank": "Good",
+      "features": [
+        "Packages/net.wirenook.selective-animation/Prefabs/Wirenook Selective Probe.prefab"
+      ],
+      "platforms": ["pc", "android"],
+      "worstRankMobile": "Medium"
     }
   ],
   "deprecated": [

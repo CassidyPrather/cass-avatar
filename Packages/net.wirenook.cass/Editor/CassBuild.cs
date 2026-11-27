@@ -143,6 +143,10 @@ namespace Wirenook.Cass.Editor
             var tags = ComposeTags(built, out var dropped);
 
             AvatarProcessor.ProcessAvatar(built);
+            // An avatar that is hidden from most people uploads with its
+            // renderers disabled as it rests. This copy is for measuring and
+            // for pictures, and a picture of nothing is no use.
+            WirenookRenderers.DrawAtRest(built);
 
             var stats = new AvatarPerformanceStats(false);
             // VRChat ranks Android and iOS avatars on a stricter scale.

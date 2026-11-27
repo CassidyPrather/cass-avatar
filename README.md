@@ -57,7 +57,7 @@ Spec/*.json ──────────────────────�
 | [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, collider flight, a stepladder for a lifted play space, and a standing nap while away. |
 | [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners: one at a time, or many on a shared bus. |
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
-| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
+| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon; an invisible switch, and presence: who sees you and who hears you, decided for each person in the room. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign, the crash and the vanish for when you are away, and the shape collector: a collect-the-shapes course laid out in any world from the avatar (the pilot for world-sync's bus). |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat contacts put to use. A kit on the standard contact tags: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. And skill checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Their avatar demo is a campfire, a match and a marshmallow. |
 | [`selective-animation`](https://github.com/CassidyPrather/selective-animation) | `net.wirenook.selective-animation` | Things an avatar does for only some of the people looking at it: whoever its wearer points at and marks (one raycast against the viewer's own collider, after VRLabs' Selective Animation), or whoever carries the same circle. With a reticle, a latch, and a probe for testing it in a client. No variant carries it yet. |
@@ -333,6 +333,8 @@ children.
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 | `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. Uploaded private until its owner has looked at it. See [The robot](#the-robot). |
 | `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. Not uploaded yet, and private when it is. See [The game master](#the-game-master). |
+| `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. Not uploaded yet, and private when it is. See [The spectator](#the-spectator). |
+| `meta-probe` | Good | Not for wearing: `meta` with five lamps over its head that show what each viewer's client worked out, to find out in a VRChat client whether the mechanisms under the spectator work. PC and Android (Medium there). See [The spectator](#the-spectator). |
 
 ### How much a variant carries
 
@@ -351,6 +353,13 @@ which one to wear was a question with too many answers. The rule now:
   and iOS builds, where they would take it from Medium to Very Poor, and
   keeps their parameters so that the list is the same on every platform.
   On mobile, `cass` is therefore `cass-lite`.
+- **Two things are on every variant, by rule.** The "AFK" switch, with
+  whichever of the three ways of being away the variant names, and the
+  "Invisible" switch (`Wirenook Unseen`, `net.wirenook.adventure-tools`):
+  one synced bit and one animator layer, with no component, so it costs
+  no variant its rank, `cass-lite` included. Neither is listed under a
+  variant's `features`; the spec adds them, and `verify` fails a build
+  without them.
 - **Features share what they can.** The build keeps one audio source for
   every feature whose sounds are short cues from the avatar itself
   (`WirenookSharedSound`), where each used to bring its own; signs (the
@@ -598,8 +607,9 @@ every refresh.
 
 It is kept as light as an avatar gets, so that the performance filters of
 people who have never seen it let it through. Built, it ranks
-**Excellent on PC, Android and iOS**, and costs 9 synced bits. All it
-carries is the dial for its colour and the nap while its wearer is away.
+**Excellent on PC, Android and iOS**, and costs 10 synced bits. All it
+carries is the dial for its colour, the nap while its wearer is away and
+the invisible switch every avatar has.
 Variants for particular jobs extend it; what they add is theirs to
 account for.
 
@@ -610,9 +620,11 @@ by them. So the humanoid `Head` carries no weights and nothing hangs off
 it in the model. The hood is on `HeadVisual`, a bone beside it under the
 neck in the same place, which a rotation constraint makes turn as `Head`
 turns (the turn, not the place) and a `VRCHeadChop` hides from its own
-wearer, since VRChat only shrinks `Head` itself in first person. Nothing
-moves `Head` yet. A feature that mounts something on the head bone (the
-nap's Zs do) goes where `Head` goes.
+wearer, since VRChat only shrinks `Head` itself in first person. Its root says so (`WirenookFreeHead`,
+`net.wirenook.assets`), and the build then sends whatever a feature
+mounts on the head bone (the nap's Zs) to `HeadVisual` instead, so that
+it stays where the head is seen. `meta` itself never moves `Head`;
+[the spectator](#the-spectator) does.
 
 **The signature colour.** The trim, the runes, the gems and the tips of
 the index fingers are painted in one cyan, and the wearer turns a dial
@@ -650,6 +662,59 @@ Weak, and seen in pictures only: an arm raised above the shoulder comes
 through the mantle; the robe is joined trouser legs, which widens in a
 long stride and stretches in a deep crouch. `unreleased` in its variant
 makes it upload private. It has not been uploaded.
+
+### The spectator
+
+`meta-spectator` is `meta` carrying **presence**
+(`net.wirenook.adventure-tools`, on `net.wirenook.selective-animation`):
+its wearer chooses who sees them and who hears them, and each viewer's
+own client works out which side of each choice it is on. It loads as a
+ghost.
+
+- **Shown to** and **Heard by** are each one of everyone, backstage only,
+  or chosen people. Five pairs have a menu entry of their own: Everyone,
+  Ghost (backstage for both), Narrate (heard by all, seen by none),
+  Whisper (heard by the chosen) and Appear (seen and heard by the chosen).
+- **Backstage** is everyone whose avatar carries presence: spectators,
+  and the game masters to come. They always see and hear each other.
+  Someone who is hidden from the room is drawn for them, and for
+  themself, as a spectre in their own signature colour, so that a crowd
+  backstage can tell at a glance who the players cannot see.
+- **Chosen people** are whoever the wearer points at and marks (aim with
+  the head, hold Mark until the reticle shows a green disc).
+- **Not shown** is the invisible switch's layer, told by presence: no
+  renderer of the avatar is drawn on that client. **Not heard** moves the
+  humanoid head bone two thousand kilometres up on that client, and the
+  nameplate goes with the voice; this is what `meta`'s empty head bone is
+  for. The avatar's root is marked `WirenookFreeHead`, the build sends
+  what features mount on the head (the nap's Zs, the selector's eye) to
+  `HeadVisual`, and nothing is left under `Head` to be carried off.
+- **It rests undrawn.** Where its animations do not run (a viewer's safety
+  settings), and for a tenth of a second after it loads, nobody sees it.
+  Pictures of it here are of a copy with the renderers switched back on.
+
+It ranks **Good on PC, Android and iOS** (one mesh on each; the
+selector's two raycasts keep it from Excellent, and on PC the flight's
+collider does too) and costs 19 synced bits: `meta`'s 10, presence's 8
+and the flight's 1. Flight is PC only, as
+everywhere.
+
+`meta-probe` is `meta` with the probe of `net.wirenook.selective-animation`:
+five lamps over the head, each lit separately on each viewer's client.
+Two people wearing it find out in two minutes whether the pointer finds
+one viewer, the latch keeps them, the circle knows its own and parameter
+drivers run on other people's copies (that package's README has the
+steps). It is the first thing to wear, before the spectator: presence
+rests on the first three.
+
+The package's README has presence in full, including what it costs to be
+unheard this way: it leans on where VRChat happens to put a voice, which
+VRChat may change, and hiding a nameplate is something to check against
+VRChat's rules before doing it anywhere people have not agreed to it.
+
+`PresencePreview.Render <slug>` (through `scripts/unity-bridge.py invoke
+Wirenook.Validation.Editor.PresencePreview.Render`) writes what each kind
+of viewer is drawn to `dist/validation/presence/<slug>/`.
 
 ### Wardrobes
 
@@ -881,7 +946,12 @@ the optimiser kept every viseme, tracking and MMD shape, the synced
 parameter and station budgets, that no material has a brightness floor,
 and that everything the FX layers scale or switch rests the way they start
 it (a prop that relies on the animator to hide it shows permanently for
-anyone who has the avatar's animations blocked).
+anyone who has the avatar's animations blocked). It checks that the
+"AFK" and "Invisible" switches are each there once, that the invisible
+switch reaches every renderer the optimiser left, and, on a variant with
+presence, that the head's mover found the humanoid head bone, that
+nothing hangs under that bone, and that no animation swaps in a material
+a mobile build may not use.
 With the SDK control panel open it also runs the SDK's own upload
 validation on the result. Anything that fails stops an upload after the
 build, so it is cheaper to hear about it here (it is how sound effects
@@ -1034,10 +1104,15 @@ it is built for, as this page describes them. The uploads were made on
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
 
-**`meta` is built and checked, and not uploaded.** It is marked
-`unreleased`, so its first upload will be private; it has no avatar id
-yet, and so no rights agreement on record (an unattended upload passes
-it over until its owner has answered that once).
+**`meta`, `meta-spectator` and `meta-probe` are built and checked, and
+not uploaded.** They are marked `unreleased`, so their first uploads will
+be private; they have no avatar ids yet, and so no rights agreement on
+record (an unattended upload passes them over until their owner has
+answered that once).
+
+**The invisible switch is on every variant here and on none of the
+uploads**, which were made before it. The next upload of each carries
+it, and one more synced bit.
 
 **Three more avatars are still on VRChat and are no longer built**:
 `cass-party`, `cass-event` and `cass-shapes`, as they were
@@ -1207,6 +1282,18 @@ Not checked, because only the client can:
   (read back with `FxProbe`, rendered in the editor, ranked by `verify`).
   Whether a fist reads as a click, whether the preview keeps up with the
   hand, and how the outfit sits in motion, nobody has seen.
+- **Who sees and who hears.** The invisible switch and presence were
+  played in the editor against the rule they implement (every pair of
+  settings for every kind of viewer), read back from the built avatars
+  and rendered (`PresencePreview`). Everything they rest on is untried:
+  that a pointer against the viewer's own collider finds one client and
+  no other, that a circle knows its own, that a client stops drawing
+  another person's renderers when an animation says so, and that a voice
+  and a nameplate go where the head bone goes and are gone at that
+  distance. `meta-probe` answers the first two in two minutes with one
+  friend; wearing `meta-spectator` beside someone in any other avatar
+  answers the rest (they should neither see nor hear you until you choose
+  "Everyone").
 
 Known gaps:
 
@@ -1267,6 +1354,12 @@ Known gaps:
   no sound.
 - The robot has no eye tracking (its eyes are pictures) and no outfit, and
   its hologram is solid on mobile.
+- A spectre still casts a shadow on PC, and is made by leaving out every
+  other pixel, which may shimmer in a headset. On Android and iOS it is a
+  flat shape of coloured light. The wearer has no list of whom they have
+  chosen; the reticle's disc is the only receipt.
+- The invisible switch leaves a real light's fixture dark for other
+  people but not sounds: a tool that chirps still chirps.
 - The world's light volumes (VRC Light Volumes 3.0.1, baked headless) have
   been seen lighting a beam in the editor's stills and nowhere else: not
   an avatar standing in one, not the fade at a volume's edge.
