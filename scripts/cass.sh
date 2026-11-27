@@ -24,6 +24,8 @@
 # "cass-(adv|lite)" two and ".*" all of them. Without platforms it uploads for the platform the
 # editor is on; with a comma-separated list (pc,android,ios) or "all" it switches the editor to
 # each in turn and back again afterwards.
+# With CASS_UNATTENDED set, upload passes over a variant Unity would stop to ask about (the
+# rights agreement, which it asks for in a window that blocks every other command).
 # platform is pc, android or ios. Given to verify, report or sheets, the build
 # is made as that platform's would be without switching the editor to it.
 set -euo pipefail
@@ -74,6 +76,18 @@ upload_matching() {
     fi
     local failed=0
     for variant in $found; do
+        # The SDK asks for the rights agreement in a window that blocks the editor, and
+        # everything after it waits behind that window. With nobody there to answer, pass
+        # the variant over and say so.
+        if [ -n "${CASS_UNATTENDED:-}" ]; then
+            local asks
+            asks=$(unity invoke Wirenook.Cass.Editor.CassUpload.Asks "$variant" | tail -1)
+            if [ "$asks" != "no" ]; then
+                echo "Not uploaded: $variant. Unity would stop to ask for the rights agreement (${asks#yes: })." >&2
+                failed=1
+                continue
+            fi
+        fi
         # Uploads take as long as the build plus the network; do not give up early.
         unity --timeout 3600 invoke Wirenook.Cass.Editor.CassUpload.Upload "$variant" || failed=1
     done

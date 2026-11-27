@@ -56,8 +56,7 @@ Spec/*.json ──────────────────────�
 | [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners: one at a time, or many on a shared bus. |
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
-| [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign. |
-| [`shape-collector`](https://github.com/CassidyPrather/shape-collector) | `net.wirenook.shape-collector` | A collect-the-shapes course: laid out in any world from an avatar (the pilot for world-sync's bus), or built into a world from skill checks. |
+| [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign, the crash and the vanish for when you are away, and the shape collector: a collect-the-shapes course laid out in any world from the avatar (the pilot for world-sync's bus). |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat contacts put to use. A kit on the standard contact tags: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. And skill checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Their avatar demo is a campfire, a match and a marshmallow. |
 
 
@@ -66,24 +65,22 @@ mounted beside them and is not a package: it is the wirenook.net world, a
 Unity project of its own with the Worlds SDK, generated, played and checked
 from the command line. Avatar pedestals, a stall for each package here, a
 contact lab, light rooms, a render-queue gallery, Cassidy's grill, and a
-puzzle dungeon built on `skill-checks`. Its README says what is in it and
+puzzle dungeon built on the skill checks of `contacts`. Its README says what is in it and
 how to build it; nothing here opens it.
 
-**Packages for both targets.** `skill-checks` and `shape-collector` serve
-worlds as well as avatars. Each side of such a package is an assembly that
-only compiles where what it needs is installed (a version define and a
-define constraint on the SDK and on the packages it builds with), so the
-one package imports cleanly into an avatar project and into a world
-project. The price is that it can name neither SDK as a dependency: its
-README says what each side needs, and whoever installs it adds those.
-`scripts/compile-check.py` reads the same fences. `shape-collector` was
-the proof: its world side is the course in the wirenook.net world, which
-calls the package to build it.
-
-`contacts`, `skill-checks` and `wirenook-world` were made in the session
-described under [Status](#status), and their repositories exist only on
-the machine they were made on until they are pushed; the addresses above
-are where they are meant to go.
+**A package for both targets.** `contacts` serves worlds as well as
+avatars. Each side of it is an assembly that only compiles where what it
+needs is installed (a version define and a define constraint on the SDK
+and on the packages it builds with), so the one package imports cleanly
+into an avatar project and into a world project. The price is that it can
+name neither SDK as a dependency: its README says what each side needs,
+and whoever installs it adds those. `scripts/compile-check.py` reads the
+same fences. Two packages were folded away on 2026-11-26 rather than keep
+more of them that way: `skill-checks` into `contacts`, and
+`shape-collector` in two halves, the avatar's game into `party-tricks`
+(which stays an avatar package, with its dependencies declared) and the
+world's course into `contacts`, since it is made of nothing but skill
+checks.
 
 They are mounted as submodules and referenced in place
 (`Packages/manifest.json` points at `modules/<repo>/Packages/<id>`), so one
@@ -685,7 +682,9 @@ VRChat asks whoever uploads to confirm they hold the rights to the
 content. That dialog is left to you. It can come up as a window of its
 own ("Copyright ownership agreement") that blocks the whole editor, and
 `upload` waits behind it without saying so; if an upload seems stuck,
-look at Unity.
+look at Unity. A run nobody is watching sets `CASS_UNATTENDED=1`: `upload`
+then asks first whether Unity would stop for a variant
+(`CassUpload.Asks`) and passes it over, saying so, instead of waiting.
 
 Each variant uploads to its own avatar id, kept on its prefab once the
 first upload has reserved one. A variant that extends another would
@@ -936,10 +935,10 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Ten variants are uploaded**, eight public and two private
-(`cass-quickhack`, which carries a bought prop, and `wirenook-bot`, which
-nobody has looked at yet), each for every platform it is built for, as
-this page describes them. The uploads were made on 2026-11-25.
+**Eleven variants are uploaded**, ten public and one private
+(`cass-quickhack`, which carries a bought prop), each for every platform
+it is built for, as this page describes them. The uploads were made on
+2026-11-26.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -949,31 +948,34 @@ this page describes them. The uploads were made on 2026-11-25.
 | `cass-flashlight` | `avtr_a22b0123-710f-49f9-a2a5-01870c26a4e9` | PC, Android, iOS |
 | `cass-lantern` | `avtr_411ef326-6e48-4d16-ba22-48299840102c` | PC, Android, iOS |
 | `cass-contacts` | `avtr_822ccdd3-dfe2-4223-a463-3a9efa50c918` | PC |
+| `cass-shuffle` | `avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0` | PC |
 | `cass-gaits` | `avtr_05927e20-4f35-4d3f-a94a-bacbef962f89` | PC |
 | `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
-| `wirenook-bot` (private) | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
-
-**`cass-shuffle` is built again and has not been uploaded since**: its
-avatar (`avtr_3c5130fb-ca48-4958-81ae-1c1087e9eff0`) is still the build of
-2026-11-20, and its next upload replaces that with the shuffle with
-guests. The three ways of being away (2026-11-26) are likewise in the
-repository and in none of the uploads above.
+| `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
 
 **Three more avatars are still on VRChat and are no longer built**:
 `cass-party`, `cass-event` and `cass-shapes`, as they were
 uploaded on 2026-11-20. What they carried is in the variants above (see
 [How much a variant carries](#how-much-a-variant-carries)). They were left
-up on purpose: they are the last uploads of the build that has been worn,
-and nothing uploaded on 2026-11-25 has. `scripts/cass.sh retire <slug>`
-deletes one, for good.
+up on purpose, and their owner has said they will be deleted later:
+`scripts/cass.sh retire <slug>` deletes one, for good.
 
-**Nothing here has been pushed.** This repository and every submodule
-hold the session of 2026-11-25 as local commits on `claude/setup`, and
-three of the repositories (`contacts`, `skill-checks`, `wirenook-world`)
-do not exist anywhere else yet. The public avatars' descriptions point at
-this repository's address for their source, which until the push is the
-source of the build before.
+**Everything is pushed and released.** Every repository's `main` holds
+what is described here. The packages are on the VPM listing at
+<https://wirenook.net/vpm/listing.json>, each with its `.zip` and
+`.unitypackage` on GitHub: `net.wirenook.assets`, `locomotion`,
+`world-sync`, `avatar-stations`, `adventure-tools` and `party-tricks` at
+0.2.0 (their 0.1.0 of 2026-11-18 is still listed beside it), and
+`contacts` at 0.1.0, its first. This repository's two packages are 0.2.0
+(see [Releasing](#releasing)).
+
+**One thing is left for the listing.** A release asks the listing to
+rebuild, which takes a `VPM_DISPATCH_TOKEN` secret in each repository: a
+fine-grained token only the account's owner can make. Until it is issued
+(`issue-dispatch-token.sh` in [CassidyPrather/vpm](https://github.com/CassidyPrather/vpm)),
+a release publishes with a warning and the listing is rebuilt by hand
+from that repository's Actions tab, as it was for these.
 
 **The world is not uploaded.** It builds to a `.vrcw` and plays in
 ClientSim; putting it on VRChat takes the SDK's control panel and its
@@ -990,7 +992,9 @@ alongside them (the skirt and vest as the resting outfit, the hand lock,
 the aimed portal, the cyber wardrobe and `cass-quickhack`), nor anything
 from 2026-11-25: the crash while away, the finger poses, the outfit
 menu's new rule and icons, the contact toys, the regrouped variants, the
-robot, the campfire. The walk styles of `cass-gaits` are still unchosen.
+robot, the campfire; nor from 2026-11-26: the three ways of being away,
+the shuffle with guests, the robot's own way of moving. The walk styles
+of `cass-gaits` are still unchosen.
 
 The first pass of the model, as `cass` and `cass-adv`, was worn in the
 client on PC. That is where the portal's pop-out, the notices' early exit
@@ -1026,7 +1030,7 @@ Checked:
 - The campfire was played on the built robot (`FeaturePlay`): the fire
   catching, burning, doused and smoking, and the marshmallow through its
   five looks, eaten and fresh again. Its rules were compared with the
-  world's (`AvatarCheckTrial` in `skill-checks`).
+  world's (`AvatarCheckTrial` in `contacts`).
 - The contact sheets for `cass` were rendered with the new model, and the
   cameras and the outfit sheet looked at: each switch flipped in turn,
   everything on (the original design) and everything off, with whole skin
@@ -1178,16 +1182,9 @@ Known gaps:
   no sound.
 - The robot has no eye tracking (its eyes are pictures) and no outfit, and
   its hologram is solid on mobile.
-- The world's light rooms are baked light and realtime lights; VRC Light
-  Volumes were tried and left out, since setting them up without a person
-  in the editor was not solved.
-- Seven of the submodule packages are released as 0.1.0 on GitHub, each
-  with its `.zip` and `.unitypackage`; `contacts` and `skill-checks` are
-  not released. This repository's own v0.1.0 has no files (see
-  [Releasing](#releasing)). None is on a VPM listing yet. The address on
-  the world's listing board (`github.com/CassidyPrather/vpm`) was made up
-  for the board, and has to become the real one before the world is
-  published.
+- The world's light volumes (VRC Light Volumes 3.0.1, baked headless) have
+  been seen lighting a beam in the editor's stills and nowhere else: not
+  an avatar standing in one, not the fade at a volume's edge.
 
 ## Development
 
@@ -1217,11 +1214,11 @@ The avatar is versioned in `Packages/net.wirenook.cass/package.json`.
 4. Add the repositories to the listing's `githubRepos`
    ([CassidyPrather/vpm](https://github.com/CassidyPrather/vpm)) once.
 
-Step 2 does not work in this repository as it stands. Its releases are
-immutable, which GitHub only lets take files while they are still drafts,
-and CI attaches them after publication. v0.1.0 was published that way on
-2026-11-18 and has no files, and its tag cannot be used again. The
-submodules do not have the setting and released normally.
+This repository's releases are immutable, which GitHub only lets take
+files while they are still drafts. That is why the release is made by CI
+from the tag, files and all, and not by hand first: v0.1.0 was published
+by hand on 2026-11-18, has no files, and its tag cannot be used again.
+v0.2.0 was the first made this way.
 
 ## Legal
 

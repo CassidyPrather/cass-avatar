@@ -673,3 +673,52 @@ that costs.
 - How the robot roll looks in motion, and whether three rolls in twenty
   is the right share.
 - The low-polygon cyber garments over the full body, up close.
+
+### The same session, outside the avatar
+
+- **Two packages were folded away.** `skill-checks` went into `contacts`
+  whole. `shape-collector` went in two halves: the avatar's game into
+  `party-tricks`, the world's course into `contacts`. The second was
+  split that way so that `party-tricks` could stay an avatar package
+  with its dependencies declared; a package for both targets can declare
+  neither SDK, and one such package is enough.
+- **Everything was merged to `main`, pushed and released**: 0.2.0 for
+  what already had a 0.1.0, 0.1.0 for `contacts`, and the VPM listing at
+  wirenook.net now carries them. The robot went public.
+- **The world got VRC Light Volumes**, baked headless, after its owner
+  pointed at a world of theirs where that had been done.
+
+Gotchas from that:
+
+- **Copying a package's files into another package while Unity can see
+  both gives the copies new ids.** Unity resolves the clash by rewriting
+  the newcomers' `.meta` files, and every reference to them is then
+  wrong. Move the files instead of copying them, or take the old package
+  out of the manifest and have the package manager resolve
+  (`UnityEditor.PackageManager.Client.Resolve`, which a plain refresh
+  does not do) before the copies arrive.
+- **A release that is immutable takes no files once it is published.**
+  The release job now runs on a `v*` tag and makes the release with its
+  files in one step (`gh release create` uploads to a draft and then
+  publishes). Making the release by hand first is what left this
+  repository's v0.1.0 empty for good.
+- **A script written on Windows is not executable in git** until
+  `git update-index --chmod=+x` says so, and CI's first step fails with
+  exit code 126. `contacts` was made on this machine and had that.
+- **GitHub Pages: deploy from a job of its own.** Deploying in the job
+  that uploaded the artifact began to fail with "no artifacts named
+  github-pages" on the listing, twice running.
+- **Batch renders do not see reflection probes** until
+  `ReflectionProbe.UpdateCachedState()` is called; the world's chrome
+  balls were black in stills over a scene that was right.
+- **The rights agreement is kept per avatar id and per editor session,
+  and an id that turns up mid-session has none.** `cass-shuffle` came
+  back that afternoon; its upload put up the SDK's window, and the
+  upload run sat behind it for six hours, every later command timing
+  out in turn. `CASS_UNATTENDED=1` now makes `upload` ask first and
+  pass such a variant over. A request the bridge never got to is still
+  in `Temp/UnityBridge/in` when the editor comes back, and runs then
+  unless it is deleted first.
+
+Open: the `VPM_DISPATCH_TOKEN` secret, which only the account's owner can
+make; until then a release does not rebuild the listing by itself.

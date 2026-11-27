@@ -211,6 +211,28 @@ namespace Wirenook.Cass.Editor
             return latest >= 0 && file.Versions[latest]?.File?.MD5 == hash;
         }
 
+        /// <summary>
+        /// Whether the SDK would stop an upload of this variant to ask for
+        /// the rights agreement: "no", or "yes" and why. It asks in a window
+        /// that blocks the whole editor, and every command after it waits
+        /// without a word, so a run nobody is watching asks this first
+        /// (`CASS_UNATTENDED` in scripts/cass.sh) and passes the variant over.
+        /// The SDK keeps an agreement per avatar id for the editor's session.
+        /// </summary>
+        public static async Task<string> Asks(string slug)
+        {
+            await SignedIn();
+            var prefab = CassBuild.LoadVariant(slug);
+            var blueprint = prefab.GetComponent<PipelineManager>()?.blueprintId;
+            if (string.IsNullOrEmpty(blueprint)) return "yes: " + slug + " has no avatar id yet, and the SDK asks for every new one";
+
+            // Internal to the SDK. One that has renamed it is taken to ask.
+            var has = typeof(VRC.SDKBase.VRCCopyrightAgreement).GetMethod("HasAgreement", BindingFlags.Static | BindingFlags.NonPublic);
+            if (has == null) return "yes: this SDK does not say whether an agreement is recorded";
+            var agreed = await (Task<bool>)has.Invoke(null, new object[] { blueprint });
+            return agreed ? "no" : "yes: no rights agreement is recorded for " + blueprint + " in this session of the editor";
+        }
+
         /// <summary>Builds and uploads a variant. Needs an account signed in through the SDK control panel.</summary>
         public static async Task<string> Upload(string slug)
         {
