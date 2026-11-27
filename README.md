@@ -1377,9 +1377,14 @@ fine-grained token only the account's owner can make. Until it is issued
 a release publishes with a warning and the listing is rebuilt by hand
 from that repository's Actions tab, as it was for these.
 
-**The world is not uploaded.** It builds to a `.vrcw` and plays in
-ClientSim; putting it on VRChat takes the SDK's control panel and its
-owner.
+**The world is uploaded and public** (Community Labs), for PC and
+Android, since 2026-11-27:
+`wrld_fb7e84be-3276-443d-bcb1-104d031144d5`. Its own project builds it in
+batch mode, where nobody is signed in, and this project's editor, which
+is, sends the build (`Assets/DevTools/WorldUpload`;
+`scripts/world.sh upload|live|publish` in `modules/wirenook-world`). It
+has a pedestal for each `meta` variant. Nobody has been in it: it is
+checked by tests played in ClientSim, by stills and by measurement.
 
 The build before this one was worn at an event on 2026-11-19, briefly.
 What was noticed there is what the uploads of 2026-11-20 changed: the
