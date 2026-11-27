@@ -164,7 +164,6 @@
       "root": "Packages/net.wirenook.meta-avatar/Prefabs/meta-root.prefab",
       "description": "A hooded low-poly game master from wirenook.net, with trim in a colour its wearer chooses. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "A third avatar on the pipeline, and the base of the ones that run a game or watch one (net.wirenook.meta-avatar): a low-poly figure in a hooded robe with nothing in the hood, one mesh, one material. Kept as light as an avatar gets, so that strangers' performance filters let it through: all it carries is the dial for its signature colour, which its trim and whatever it later carries take, and the nap while its wearer is away. Variants for particular jobs extend it.",
-      "unreleased": true,
       "worstRank": "Excellent",
       "afk": "nap",
       "features": [
@@ -177,7 +176,6 @@
       "extends": "meta",
       "description": "A hooded low-poly spectator from wirenook.net: seen and heard only by those who share its backstage circle, unless its wearer says otherwise. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "The spectator: meta as a ghost. It loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees and who hears them: everyone, backstage only, or the people they point at and mark (presence, net.wirenook.adventure-tools, on net.wirenook.selective-animation). Being heard by some and not others moves its head bone, which carries nothing, and the nameplate goes with the voice. Flight on PC.",
-      "unreleased": true,
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Presence (Ghost).prefab",
@@ -190,7 +188,6 @@
       "extends": "meta",
       "description": "A hooded low-poly game master from wirenook.net, with what it takes to run a scene: dice, a pause, zone markers, a pointer, a portal and a key. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "The game master: meta carrying the kit of net.wirenook.adventure-tools behind one menu entry. Dice rolled for everyone or in secret; a pause dropped where it stands; three zone markers and a portal with two ends, aimed with the finger and set down in the world for everyone (all on one anchor bus, so together they sync what one position costs); a light and a laser on the fingertip; a skeleton key that sends or feels any of VRChat's contact traits; notices for running a scene. With presence, so its wearer chooses who sees and who hears them, flight, and a seat to carry someone on. It has to stay clear of Very Poor everywhere: a game master hidden by someone's performance filter spoils the scene. Android and iOS builds leave out what needs a shader of the kit's own, the key's contacts and the seat.",
-      "unreleased": true,
       "worstRank": "Medium",
       "features": [
         "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Presence.prefab",
@@ -208,7 +205,6 @@
       "extends": "meta-dm",
       "description": "A hooded low-poly game master from wirenook.net, fitted out for one adventure, The Sunken Crypt: zones of heat, cold and wind, a danger zone, a barricade, a locked chest, a pendulum and a rift. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "An example of a game master made over for one module, The Sunken Crypt (net.wirenook.meta-avatar, Editor/Crypt): meta-dm with one more tool in its kit. It sets out zones that are hot, cold or windy and give off the contact trait they look like; a danger zone that shows where it will strike before it does; a barricade that comes apart under hands or burns; a chest whose padlock opens to a hand once its key has been found; a swinging blade; and a rift, a stencil window on somewhere else that hands seal. The pieces that react are skill checks from net.wirenook.contacts. The whole course is laid out behind the scenes, seen as spectres by the people backstage, and one switch makes it live. Fifteen things stand on one anchor bus, which also carries a value for each (sizes and headings) for eight synced bits between them. A demonstration and priced like one: the key and the course together are thirty contacts, which is Poor. PC only: the rift and the tints need shaders of their own.",
-      "unreleased": true,
       "worstRank": "Poor",
       "features": [
         "Packages/net.wirenook.meta-avatar/Prefabs/Wirenook Game Master (Crypt).prefab"
@@ -223,7 +219,6 @@
       "extends": "meta",
       "description": "A test rig from wirenook.net: lamps over the head that show what each viewer's client worked out. AGPLv3. github.com/CassidyPrather/cass-avatar",
       "about": "Not for wearing: meta with the probe of net.wirenook.selective-animation, five lamps over the head that are each lit separately on each viewer's client. Two people wearing it find out in two minutes whether the mechanisms under presence work in a VRChat client: the pointer that finds one viewer, the latch that keeps them selected, the circle that knows its own, and whether parameter drivers run on other people's copies. PC and Android.",
-      "unreleased": true,
       "worstRank": "Good",
       "features": [
         "Packages/net.wirenook.selective-animation/Prefabs/Wirenook Selective Probe.prefab"

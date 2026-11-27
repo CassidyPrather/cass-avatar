@@ -135,6 +135,12 @@ def make_mesh(data, atlas, armature, collection, material):
 
     mesh.materials.append(material)
     mesh.polygons.foreach_set("use_smooth", [False] * len(mesh.polygons))
+    # Which part each face belongs to, for the validator: it poses the figure and looks for one part
+    # coming through another. The attribute is not exported.
+    names = sorted(set(data["solids"]))
+    part = mesh.attributes.new(meta_spec.PART_ATTRIBUTE, "INT", "FACE")
+    part.data.foreach_set("value", [names.index(name) for name in data["solids"]])
+    mesh[meta_spec.PART_NAMES] = json.dumps(names)
 
     body = bpy.data.objects.new(meta_spec.MESH, mesh)
     collection.objects.link(body)

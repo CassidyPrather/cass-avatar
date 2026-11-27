@@ -13,8 +13,8 @@ the cass avatar's humanoid bone names.
 | | |
 | --- | --- |
 | Mesh | `Body`, one skinned mesh with one material, `meta` |
-| Triangles | 1,854 (limit 5,000) |
-| Vertices | 1,031 in Blender |
+| Triangles | 1,878 (limit 5,000) |
+| Vertices | 1,043 in Blender |
 | Bones | 56 (limit 60): 51 humanoid, `HeadVisual`, and 4 that only sway |
 | Shape keys | none |
 | Textures | `meta-atlas.png`, `meta-atlas-emission.png`, `meta-atlas-tint.png`, 256 x 256, for point filtering; 148 rows are used |
@@ -35,7 +35,13 @@ BLENDER="/c/Program Files/Blender Foundation/Blender 5.0/blender.exe"
 Each exits non-zero on any error. `build_meta.py --force` overwrites a
 `.blend` that was edited by hand; `--draft` saves one that fails validation.
 `render_meta.py -- --only idle,hues` renders some of the sheets (`rest`,
-`idle`, `head`, `hands`, `point`, `walk`, `sit`, `reach`, `hues`).
+`idle`, `head`, `hands`, `point`, `walk`, `sit`, `reach`, `arms`, `hues`);
+`--tag=-before` adds a suffix to their names, to keep a sheet from before
+a change. `META_PACKAGE=dist/staging` in the environment sends everything
+the build and the export write under the package to that folder instead,
+for work in progress while Unity is busy or must not see it; a `.blend`
+built that way refers to the textures there (`--output` and `--blend`
+name it).
 
 ## Files
 
@@ -43,9 +49,10 @@ Each exits non-zero on any error. `build_meta.py --force` overwrites a
 | --- | --- |
 | `build_meta.py` | Builds everything and saves `meta.blend`. Also writes the three textures and the two Spec files. |
 | `meta_model.py` | The design: bone positions, the shape of every part, how each bends and how it is painted. |
-| `meta_geo.py` | What cloth needs on top of the robot's kit: mirrored halves welded into one solid, strips and fans turned outward by an interior point, and paints that know the face they are painting. |
+| `meta_geo.py` | What cloth needs on top of the robot's kit: mirrored halves welded into one solid, strips and fans turned outward by an interior point, paints that know the face they are painting, and parts drawn as worn and stored as they rest. |
+| `meta_pose.py` | Poses of the arms as turns of bones: the ends of what a player does. The `arms` sheet and the validator share them. |
 | `meta_spec.py` | Paths, names, the humanoid map, the extra bones and the signature colour. |
-| `meta_validate.py` | Checks an open `.blend` against the contract below. The build and the export both gate on it. |
+| `meta_validate.py` | Checks an open `.blend` against the contract below, and poses it to see that no sleeve comes through the mantle. The build and the export both gate on it. |
 | `export_meta.py` | Exports the FBX and verifies the file. |
 | `render_meta.py` | Review sheets: views, close-ups, poses, and the signature colour turned to other hues. |
 | `meta.blend` | Generator output, stamped like `cass.blend`. Do not edit; change the scripts. |
@@ -83,9 +90,22 @@ under the mirror, `.L` and `.R` are swapped in whatever it returns.
   It is pleated: every other corner of its outline stands out and the ones
   between stand in, more towards the hem. There are no legs inside it. Its
   underside is closed, dark, and the boots come out through it.
-- **The mantle** hangs from the chest; towards the shoulders it follows the
-  shoulder and then, up to 55 %, the upper arm, so that it drapes when the
-  arms come down from the T-pose.
+- **The mantle** is two things sewn together. The bib, front and back,
+  hangs from the chest (and near the shoulders partly from the shoulder
+  bone) and keeps inside x = 12.5 pixels wherever an arm could come. The
+  cap on each shoulder is six points that belong to the upper arm alone:
+  they turn with it rigidly, standing clear of the sleeve, so the arm can
+  never come through them. The faces between bib and cap are the slack,
+  and stretch. Cloth that only half follows an arm is what an arm comes
+  through: before 2026-11-27 the mantle followed the upper arm by up to
+  55 %, and an arm raised above the shoulder or brought forward went
+  through it.
+- **The mantle is drawn as it is worn**, with the arms hanging 76 degrees
+  below the T-pose, because that is how it is seen. `on_arm` gives a cap
+  point both as worn and at rest; the builder's `worn` turns, unwraps and
+  paints the faces in the worn shape and stores the rest shape, so the
+  trim keeps its width with the arms down. In the T-pose the caps stand up
+  like the corners of a collar; that is the rest pose, not a look.
 - **The hood** is cross-sections from its rim back to its point, with a lip
   round the opening and a dark hollow 13 pixels deep behind it, closed by a
   black back.
@@ -142,6 +162,16 @@ writer without metadata.
   material never discards.
 - At most four bones to a vertex, weights summing to 1. Every finger bone
   and every sway bone is followed by something.
+- **No sleeve comes through the mantle** with both arms in any of eleven
+  poses (`meta_pose.CHECKED`): straight up, raised, hands on the head, up
+  with the shoulders shrugged, the T-pose, forward, forward and up, a hand
+  before the face, crossed, hanging, and held back. The validator poses
+  the armature and looks for a face of the sleeves crossing a face of the
+  mantle; the mantle's dark underside is left out, since it closes the
+  mantle from the middle of the body and passes through the arms by
+  design. For this the `.blend` keeps, on every face, which part it is
+  (the attribute `part`, with the names in the mesh's `parts`); neither is
+  exported.
 
 ### The signature colour
 
@@ -183,8 +213,19 @@ unchanged, every bone with its parent, and nothing weighted to `Head`.
 - The robe has no legs inside and follows the legs it hides. Walking and
   sitting look right in the sheets; a deep crouch or a high kick will
   stretch it, and the stole widens between the legs in a long stride.
-- An arm raised above the shoulder comes through the mantle, which only
-  follows it part of the way.
+- The mantle is checked against the sleeves and nothing else. With an arm
+  straight up, its cap and the slack beside it fold into the cowl and the
+  top of the chest, and with a hand on the head the arm is in the hood:
+  cloth in cloth, not an arm through cloth.
+- An upper arm twisted more than about 45 degrees about its own length
+  while it hangs takes a corner of its cap round with it, and the slack
+  behind that corner cuts the back of the sleeve. So does an arm brought
+  across the chest far enough to be in the bib. Neither is in the checked
+  poses.
+- The poses turn the upper arm and, in one, the shoulder. VRChat's IK
+  also turns the shoulder a little whenever the arm is raised; the bib
+  follows the shoulder bone by up to 60 % for that, and it has not been
+  seen in the game.
 - With the cuffs' sway bones rigid, the lobe of a cuff points at the hip
   when the arm hangs, and its tip rests against the robe, the book and the
   pouch, a pixel or two into them.

@@ -332,10 +332,10 @@ children.
 | `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. It crashes while away where `cass` vanishes. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 | `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. See [The robot](#the-robot). |
-| `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. Not uploaded yet, and private when it is. See [The game master](#the-game-master). |
-| `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. Not uploaded yet, and private when it is. See [The spectator](#the-spectator). |
-| `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. Not uploaded yet, and private when it is. See [Running a scene](#running-a-scene). |
-| `meta-dm-crypt` | Poor | `meta-dm` made over for one adventure, as an example of doing that: zones that are hot, cold or windy, a danger zone that warns before it strikes, a barricade that hands take apart or fire burns, a chest that opens once its key is found, a swinging blade and a rift that hands seal, all laid out behind the scenes and made live with one switch. PC only. Not uploaded yet, and private when it is. See [One module's game master](#one-modules-game-master). |
+| `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. See [The game master](#the-game-master). |
+| `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. See [The spectator](#the-spectator). |
+| `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. See [Running a scene](#running-a-scene). |
+| `meta-dm-crypt` | Poor | `meta-dm` made over for one adventure, as an example of doing that: zones that are hot, cold or windy, a danger zone that warns before it strikes, a barricade that hands take apart or fire burns, a chest that opens once its key is found, a swinging blade and a rift that hands seal, all laid out behind the scenes and made live with one switch. PC only. See [One module's game master](#one-modules-game-master). |
 | `meta-probe` | Good | Not for wearing: `meta` with five lamps over its head that show what each viewer's client worked out, to find out in a VRChat client whether the mechanisms under the spectator work. PC and Android (Medium there). See [The spectator](#the-spectator). |
 
 ### How much a variant carries
@@ -592,15 +592,15 @@ or the locomotion package have changed (`Generated/Locomotion/baked-from.txt`).
 
 It went up private at first (`unreleased` in its variant) and was made
 public on 2026-11-26: that line taken out, `scripts/cass.sh rebuild`,
-then `scripts/cass.sh publish wirenook-bot`. The `meta` variants are
-where it was.
+then `scripts/cass.sh publish wirenook-bot`. The `meta` variants went
+the same way a day later.
 
 ### The game master
 
 `meta` is a third avatar on the pipeline, and the base of the ones that
 run a game or watch one: a low-poly figure in a hooded robe, 1.75 m, with
 nothing in the hood. No face, no visemes, no shape keys; one mesh, one
-material, one 256 px atlas, 1,854 triangles. Its model is generated by
+material, one 256 px atlas, 1,878 triangles. Its model is generated by
 `blender/meta/` (its README has the contract) and lands in
 `Packages/net.wirenook.meta-avatar/`, where `MetaBuild` makes the rest
 and is marked `[AvatarRootBuilder]` like the robot's. The package is not
@@ -661,10 +661,14 @@ same arithmetic, and drives that; the two come out alike
   parameters only), for a feature that wants to answer to the wearer's
   voice.
 
-Weak, and seen in pictures only: an arm raised above the shoulder comes
-through the mantle; the robe is joined trouser legs, which widens in a
-long stride and stretches in a deep crouch. `unreleased` in its variant
-makes it upload private. It has not been uploaded.
+The mantle is a bib that hangs from the chest and a cap on each shoulder
+that belongs to the upper arm alone, so a raised arm lifts its cap and
+does not come through it (before 2026-11-27 it did; the model's validator
+now poses the arms eleven ways and fails on a sleeve through the mantle).
+Weak, and seen in pictures only: an upper arm twisted more than about 45
+degrees while it hangs pulls a corner of its cap through the back of the
+sleeve; the robe is joined trouser legs, which widens in a long stride
+and stretches in a deep crouch.
 
 ### The spectator
 
@@ -771,7 +775,7 @@ scene.
 
 | | PC | Android, iOS |
 | --- | --- | --- |
-| Triangles | 14,284 | 7,416 |
+| Triangles | 14,308 | 7,440 |
 | Skinned meshes | 3 (Medium) | 2 (Medium) |
 | Material slots | 10 (Medium) | 2 (Medium) |
 | Contacts | 21 (Medium) | 1 |
@@ -826,13 +830,19 @@ Crypt":
   it is to be found. A hand on the key takes it, for the whole party.
   Until then the padlock rattles under a hand; after, it gives and the
   lid goes back.
-- **A pendulum**: a blade on a long arm under a gantry, carrying
-  `Damage` and `DamageSharp` through its swing.
-- **A rift**: a ball of somewhere else hanging in the air. Seen through
-  it, from any side, are a violet sky with an eye in it, a broken
-  skyline, and rocks adrift that slide against the sky as the viewer
-  moves. Hands on it draw it shut over eight seconds; left half shut it
-  creeps open again; shut, it stays shut. It hums until then.
+- **A pendulum**: a blade on a long arm, hung from a pivot wherever the
+  game master sets it (it has no frame of its own), carrying `Damage`
+  and `DamageSharp` through its swing. Everyone sees it swing in step.
+- **A rift**: a tear in the air, the way paper tears. A tall ragged gash
+  hangs there with the torn edge of the world curled back round it in
+  flaps, white on the side that was hidden, and scraps of the sheet
+  drifting about it. It is not a flat cut-out: the gash is a crumpled
+  body with two faces and an edge, so it has a shape from the side, and
+  it is a window from behind as well. Through it are a violet sky with
+  an eye in it, a broken skyline, and rocks adrift that slide against
+  the sky as the viewer moves. Hands on it draw its sides together to a
+  seam, and the seam shut, over eight seconds; left half shut it creeps
+  open again; shut, it stays shut. It hums until then.
 
 Four things are worth taking from it.
 
@@ -847,9 +857,9 @@ whole of it to everyone at once, solid, and switches its contacts on.
 each thing beside its place, sent in the thing's turn and ahead of it
 when the wearer has just changed it. Fifteen things use eight synced
 bits for that, where a synced float each would be 120: the sizes of the
-zones, and the headings of the three pieces that have a front. (The bus
-syncs no heading, so the barricade, the chest and the pendulum each have
-a "Turn" dial, which is their value.) The price is a second or two of
+zones, and the headings of the four pieces that have a front. (The bus
+syncs no heading, so the barricade, the chest, the pendulum and the rift
+each have a "Turn" dial, which is their value.) The price is a second or two of
 delay and no smooth following; `net.wirenook.world-sync`'s README has the
 whole account. It took 24 bits off `meta-dm` as well.
 
@@ -862,25 +872,59 @@ whether it is done as the wearer's client sees it, which is what makes
 "the barricade is down" true for someone who was not near enough to be
 shown the hands on it.
 
+**The pendulum keeps one time for everyone, for one synced bit.** The
+wearer's client is the clock: while the pendulum is set out, a layer
+that only runs there turns the bit over every 1.3 seconds, and the bit
+says which end of the swing the blade is going to. Every client, the
+wearer's too, swings the blade across when the bit turns over and holds
+it at the end until it turns again. The crossing takes 0.14 s less than
+the time between two turns, so the blade waits a moment where a pendulum
+is still anyway, and an update that comes late eats into the wait and is
+not carried into the next swing. Someone who arrives part way through is
+shown the blade at the end it is going to and is in step from the next
+turn. What is left is the time an update takes to cross the network: a
+viewer's blade is that far behind the wearer's, and each is cut by the
+blade they see. (A synced parameter cannot be animated, so no curve can
+be shared; the edges of one bit can.)
+
 **The rift is stencil work**, in one small shader
 (`Shaders/WirenookRift.shader`) used by three materials in queue order:
-the ball marks its pixels and writes its depth, the far side is drawn
-only on marked pixels and only behind the ball's surface, and the ball is
-drawn again to take the mark off. The far sky is shaded by the direction
-it is seen in, which is what makes it look far away. It is a ball and
-not a flat tear because a ball needs no heading.
+the tear's body marks its pixels and writes its depth, the far side is
+drawn only on marked pixels and only behind the body's surface, and the
+body is drawn again, from the same points, to take the mark off and to
+light the torn edge in two stepped bands. The far sky is shaded by the
+direction it is seen in, which is what makes it look far away; that
+direction is taken in the tear's own frame (the build animates the
+tear's heading into the material), so the eye stays behind the same
+face however the tear is turned. The torn flaps and the scraps are
+solid shapes in the crypt's ordinary mesh.
+
+**The pieces wear the figure's pixels.** They are flat-coloured shapes
+that take each colour from one point of the wirenook palette, so their
+own UV set has no room for a drawing. `CryptDetail` lays the detail over
+instead, with the two extra layers lilToon has: a 64 by 64 tile of wood
+grain and one of grit, see-through but for pixels a little darker or
+lighter than what is under them, repeated over every face at the meta
+figure's 128 pixels to the metre and masked to the swatches each suits.
+Where a point falls on the tiles is the mesh's fourth UV set, worked out
+after the mesh is built: every face flat, its longest edge along the
+grain (so grain runs along a plank and up a post), measured from its own
+corner so that nothing goes below zero, which the toon shader's signs
+need of that set. It costs four small textures and no slot, mesh or
+triangle. The chest also carries two of the figure's runes, and nails,
+studs and stepped tops are a few more boxes.
 
 It ranks **Poor on PC**, the only platform it is built for, and is
 priced like the demonstration it is:
 
 | | `meta-dm` | `meta-dm-crypt` |
 | --- | --- | --- |
-| Triangles | 14,284 | 18,464 |
+| Triangles | 14,308 | 20,010 |
 | Skinned meshes | 3 | 5 (Medium) |
 | Material slots | 10 | 17 (Poor) |
 | Contacts | 21 | 30 (Poor) |
 | Audio sources | 3 | 7 (Medium) |
-| Synced bits | 136 | 151 |
+| Synced bits | 136 | 152 |
 
 Thirty-two contacts and eight audio sources are where Very Poor begins,
 so there is room for two more contacts and one more sound, and not for
@@ -1276,11 +1320,11 @@ No atlasing happens at build time: the model is built with its one atlas.
 ## Status
 
 **Sixteen variants are uploaded**, each for every platform it is built
-for, as this page describes them. Ten are public. Six are private:
-`cass-quickhack`, which carries a bought prop, and the five `meta`
-variants, which are marked `unreleased` until their owner has worn them.
-The uploads were made on 2026-11-27, and every one carries the invisible
-switch.
+for, as this page describes them. Fifteen are public. `cass-quickhack`,
+which carries a bought prop, is private. The uploads were made on
+2026-11-27, and every one carries the invisible switch. The five `meta`
+variants went up private that morning and again, public, that afternoon,
+with the mantle refitted and the crypt's pendulum, rift and props redone.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -1295,21 +1339,19 @@ switch.
 | `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
-| `meta` (private) | `avtr_ac7b2354-77c3-4ae5-9890-fc467fdb1d46` | PC, Android, iOS |
-| `meta-spectator` (private) | `avtr_93dc487a-4fa4-4e4e-a672-95bfc3f15673` | PC, Android, iOS |
-| `meta-dm` (private) | `avtr_94f7f812-36b3-4923-82be-c684d4e14d71` | PC, Android, iOS |
-| `meta-dm-crypt` (private) | `avtr_c79c13b2-b311-4857-ae25-4d19fde60b2b` | PC |
-| `meta-probe` (private) | `avtr_99fab1f6-5c12-4b74-880d-7aa79c40d2f0` | PC, Android |
+| `meta` | `avtr_ac7b2354-77c3-4ae5-9890-fc467fdb1d46` | PC, Android, iOS |
+| `meta-spectator` | `avtr_93dc487a-4fa4-4e4e-a672-95bfc3f15673` | PC, Android, iOS |
+| `meta-dm` | `avtr_94f7f812-36b3-4923-82be-c684d4e14d71` | PC, Android, iOS |
+| `meta-dm-crypt` | `avtr_c79c13b2-b311-4857-ae25-4d19fde60b2b` | PC |
+| `meta-probe` | `avtr_99fab1f6-5c12-4b74-880d-7aa79c40d2f0` | PC, Android |
 
 **None of the `meta` variants has been worn.** Everything they do that
 depends on what another person's client does (who is pointed at, who is
-chosen, who is backstage, who hears, where a thing set down arrives) is
-checked here against models and not in VRChat. `meta-probe` is the
-two-minute test for the mechanisms underneath, and it and
-`meta-spectator` each need a second person in the same avatar, which a
-private avatar cannot have: make one public by taking `unreleased` out of
-its variant, then `scripts/cass.sh rebuild` and
-`scripts/cass.sh publish <slug>`.
+chosen, who is backstage, who hears, where a thing set down arrives,
+whether two people see the pendulum in the same place) is checked here
+against models and not in VRChat. `meta-probe` is the two-minute test for
+the mechanisms underneath; it and `meta-spectator` each need a second
+person in the same avatar.
 
 **Three more avatars are still on VRChat and are no longer built**:
 `cass-party`, `cass-event` and `cass-shapes`, as they were
@@ -1324,7 +1366,8 @@ what is described here. The packages are on the VPM listing at
 `.unitypackage` on GitHub: `net.wirenook.adventure-tools` 0.3.0;
 `assets`, `world-sync` and `party-tricks` 0.2.1; `locomotion` and
 `avatar-stations` 0.2.0; `contacts` and `selective-animation` 0.1.0.
-This repository's three packages are 0.3.0 (see
+Of this repository's three packages, `net.wirenook.cass` and
+`net.wirenook.meta-avatar` are 0.3.1 and `net.wirenook.bot` is 0.3.0 (see
 [Releasing](#releasing)). Earlier versions stay listed beside them.
 
 **One thing is left for the listing.** A release asks the listing to
@@ -1508,8 +1551,10 @@ Not checked, because only the client can:
   or solid, and where its contacts are on; the barricade under hands and
   fire against the check's own rules; the chest with and without its
   key; the danger zone's two seconds of warning and third of a second of
-  blow; the rift sealing, creeping open and staying shut; a size and a
-  heading reaching a stranger by the bus), with what a contact would
+  blow; the pendulum in step for a stranger and for someone who arrives
+  part way through with updates at uneven intervals; the rift sealing,
+  creeping open and staying shut; a size and a heading reaching a
+  stranger by the bus), with what a contact would
   report written into the animator, and its shaders compile and are
   rendered. Untried, each with the two minutes that would settle it:
   - *Whether a zone's trait reaches people.* Stand in the hot zone
@@ -1521,9 +1566,11 @@ Not checked, because only the client can:
     should come off for both, and stay off. The checks listen for the
     `Hand` and `Finger` tags VRChat puts on every avatar.
   - *The rift in a client and a headset.* Look into it and walk round
-    it: the sky should hold still and the rocks slide. If it is a grey
-    or empty ball, the stencil or the depth trick is not surviving
-    VRChat's rendering; in a mirror it may differ again.
+    it: the sky should hold still and the rocks slide, from both faces.
+    If the gash is grey or empty between its flaps, the stencil or the
+    depth trick is not surviving VRChat's rendering; in a mirror it may
+    differ again. Turn its dial: the eye should stay behind the same
+    face.
   - *The course going live.* Lay it out with a friend backstage (in
     `meta-spectator`) and one not: spectres for the first, nothing for
     the second, until the switch.
@@ -1531,8 +1578,12 @@ Not checked, because only the client can:
     should follow within about two seconds, in steps.
   - *The danger zone's timing* for two people at once, and whether its
     third of a second of `Damage` is long enough for a receiver to see.
-  - *The pendulum*, which every client swings from the moment it is
-    shown it: two people will not see the blade in the same place.
+  - *The pendulum in step.* Set it out with a friend watching and call
+    out each time the blade reaches an end: they should agree to within
+    a beat, and still agree after five minutes. If their blade stutters
+    at the ends, updates are arriving more than 0.14 s late as a rule
+    and `PendulumPiece.HoldSeconds` wants raising. A parameter driver
+    on a layer that only the wearer runs is what turns the bit over.
 
 Known gaps:
 

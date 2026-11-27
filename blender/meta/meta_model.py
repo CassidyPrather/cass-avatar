@@ -15,6 +15,7 @@ import math
 import numpy as np
 
 from bot_geo import frame, ngon, place, rrect
+from meta_spec import MANTLE_UNDER
 from meta_geo import edge_along, edge_distance, facepaint, sides, swatch, unit, vec
 
 X, Y, Z = vec(1, 0, 0), vec(0, 1, 0), vec(0, 0, 1)
@@ -46,14 +47,35 @@ TORSO = ((117.0, 15.0, 12.0), (126.0, 15.5, 12.3), (142.0, 17.5, 13.2), (160.0, 
 TORSO_SIDES = 10
 BELT_Z0, BELT_Z1 = 116.0, 123.0
 
+# How far down the arms hang when the figure is worn, in degrees from the T-pose. What lies on an
+# arm is drawn with the arm there.
+ARM_HANGS = 76.0
+
+
+def on_arm(along, front, out):
+    """A point that rides the left upper arm, with the arm hanging: `along` it from the shoulder,
+    `front` of it, and `out` from it (which is up in the T-pose). Returns (as worn, at rest)."""
+    c, s_ = math.cos(math.radians(ARM_HANGS)), math.sin(math.radians(ARM_HANGS))
+    worn = SHOULDER + along * vec(c, 0.0, -s_) + out * vec(s_, 0.0, c) + front * FRONT
+    return tuple(float(v) for v in worn), tuple(float(v) for v in SHOULDER + vec(along, -front, out))
+
+
 # The mantle, as rows of points from the middle of the front, round the left shoulder, to the
-# middle of the back: its edge, the line of the shoulders, and the collar it hangs from.
-MANTLE_EDGE = ((0.0, -17.5, 150.0), (10.5, -16.5, 156.0), (27.0, -13.0, 168.0), (40.0, 0.0, 181.5),
-               (27.0, 13.5, 167.0), (11.0, 17.0, 154.0), (0.0, 18.0, 145.0))
-MANTLE_MID = ((0.0, -14.5, 173.0), (7.5, -13.8, 174.5), (18.0, -10.5, 180.0), (27.0, 0.0, 183.8),
-              (18.0, 11.0, 180.0), (7.5, 14.0, 174.5), (0.0, 14.8, 173.0))
-MANTLE_TOP = ((0.0, -10.5, 184.0), (5.0, -9.5, 184.0), (9.5, -5.5, 184.0), (11.0, 0.0, 184.0),
-              (9.5, 5.5, 184.0), (5.0, 9.5, 184.0), (0.0, 10.5, 184.0))
+# middle of the back: its edge, the line of the shoulders, and the collar it hangs from. As worn,
+# with the arms down. It is two things sewn together. The bib, front and back, hangs from the chest
+# and keeps inside x = 12.5 wherever an arm could come: nearer the shoulder than that, an arm that is
+# raised or brought forward would pass through it. The cap lies on the upper arm and is the arm's
+# alone, so the arm can never come through it; its points are given by on_arm and stand clear of the
+# sleeve. The faces between the two are the slack.
+CAP_FRONT, CAP_EDGE, CAP_BACK = on_arm(8.0, 10.0, 3.5), on_arm(12.0, 0.0, 10.5), on_arm(8.0, -10.5, 3.5)
+CAP_RIM_FRONT, CAP_TOP, CAP_RIM_BACK = on_arm(-4.0, 8.0, 7.0), on_arm(-4.0, 0.0, 9.35), on_arm(-4.0, -8.0, 7.0)
+CAP = {worn: rest for worn, rest in (CAP_FRONT, CAP_EDGE, CAP_BACK, CAP_RIM_FRONT, CAP_TOP, CAP_RIM_BACK)}
+MANTLE_EDGE = ((0.0, -17.5, 150.0), (10.5, -16.5, 156.0), (12.5, -15.7, 157.3), CAP_FRONT[0], CAP_EDGE[0],
+               CAP_BACK[0], (12.5, 16.4, 155.2), (11.0, 17.0, 154.0), (0.0, 18.0, 145.0))
+MANTLE_MID = ((0.0, -14.5, 173.0), (7.5, -13.8, 174.5), (12.5, -11.5, 180.5), CAP_RIM_FRONT[0], CAP_TOP[0],
+              CAP_RIM_BACK[0], (12.5, 12.0, 180.5), (7.5, 14.0, 174.5), (0.0, 14.8, 173.0))
+MANTLE_TOP = ((0.0, -10.5, 184.0), (5.0, -9.5, 184.0), (9.5, -5.5, 184.0), (10.6, -2.8, 184.0), (11.0, 0.0, 184.0),
+              (10.6, 2.8, 184.0), (9.5, 5.5, 184.0), (5.0, 9.5, 184.0), (0.0, 10.5, 184.0))
 
 # The hood, as cross-sections from its rim back to its tip:
 # (y at the bottom, y at the top, half width, bottom, height of the widest point, top).
@@ -73,7 +95,7 @@ SLEEVE_SWAY_END = (84, 0, 154)
 VOID_CENTRE = vec(0.0, -8.0, 204.0)
 
 # The sleeve, as sections along the arm: (x, centre y, centre z, half depth, up, down).
-SLEEVE = ((16.0, 0.0, 174.0, 6.5, 6.0, 7.0), (30.0, 0.0, 173.5, 7.0, 6.2, 8.5), (46.0, 0.3, 173.2, 7.8, 7.0, 9.5),
+SLEEVE = ((16.0, 0.0, 174.0, 6.5, 4.5, 7.0), (30.0, 0.0, 173.5, 7.0, 6.2, 8.5), (46.0, 0.3, 173.2, 7.8, 7.0, 9.5),
           (54.0, 0.5, 173.0, 8.0, 7.0, 10.5), (62.0, 0.4, 172.5, 8.6, 7.4, 12.0), (70.0, 0.2, 172.0, 9.5, 8.0, 14.0),
           (84.0, 0.0, 171.0, 11.0, 9.0, 17.0))
 SLEEVE_LIP = (84.0, 0.0, 171.0, 9.3, 7.3, 15.2)
@@ -666,13 +688,26 @@ def build_belt(b):
         box(b, (-23.0, -5.0, 103.0), (-17.5, 3.0, 114.0), lambda face: pouch_front if face == "right" else swatch("leather" if face != "bottom" else "leather-dark"))
 
 
+def _cap_key(p):
+    return tuple(round(float(c), 4) for c in p)
+
+
+_CAP_REST = {_cap_key(worn): rest for worn, rest in CAP.items()}
+
+
+def mantle_rest(p):
+    """Where a point of the mantle as worn is in the T-pose: the cap goes up with the arm."""
+    return _CAP_REST.get(_cap_key(p), p)
+
+
 def mantle_weights(p):
-    x = abs(float(p[0]))
-    if float(p[2]) >= 183.9:
-        return {"Chest": 1.0}
-    arm = clamp((x - 20.0) / 15.0) * 0.55
-    shoulder = clamp((x - 6.0) / 14.0) * (1.0 - arm) * 0.5
-    return blend(("UpperArm.L", arm), ("Shoulder.L", shoulder), ("Chest", 1.0 - arm - shoulder))
+    if _cap_key(p) in _CAP_REST:
+        return {"UpperArm.L": 1.0}
+    # The bib is the chest's, and towards the shoulder, at its height, more and more the shoulder's:
+    # a shoulder that is shrugged takes the root of the sleeve up with it, under the bib.
+    x, z = abs(float(p[0])), float(p[2])
+    shoulder = clamp((x - 4.0) / 9.0) * clamp((z - 160.0) / 15.0) * 0.6
+    return blend(("Shoulder.L", shoulder), ("Chest", 1.0 - shoulder))
 
 
 def build_mantle(b):
@@ -689,10 +724,10 @@ def build_mantle(b):
 
     def half():
         b.strip(rings, wall, key="mantle", inside=inside, anchor=anchor)
-        b.fan((0.0, 0.0, 170.0), rings[0], swatch("night-0"), key="mantle/under", inside=inside)
+        b.fan(MANTLE_UNDER, rings[0], swatch("night-0"), key="mantle/under", inside=inside)
         b.fan((0.0, 0.0, 185.0), rings[-1], swatch("mantle-dark"), key="mantle/top", inside=inside)
 
-    with b.solid("mantle", weights=mantle_weights):
+    with b.solid("mantle", weights=mantle_weights), b.worn(mantle_rest):
         half()
         with b.mirrored():
             half()

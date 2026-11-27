@@ -200,6 +200,8 @@ namespace Wirenook.Meta.Crypt.Editor
 
             var solid = _crypt.Solid.Build(kit.Root, CryptSet.SolidName, CryptBuild.SolidMesh, GameMasterBuild.Material(CryptBuild.CryptMaterial));
             kit.Stage.Reach(solid);
+            // Where each face falls on the tiles of pixel detail the material lays over it.
+            CryptDetail.Unwrap(solid.sharedMesh);
             // Not part of the wearer's figure: a game master who goes unseen leaves the course standing.
             FeaturePrefab.Ensure<WirenookApart>(solid.gameObject);
 

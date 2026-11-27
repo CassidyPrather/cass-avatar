@@ -12,14 +12,17 @@ import pathlib
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
+import json
 import math
 import struct
 
 import bpy
 import numpy as np
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 import meta_spec
+import meta_pose
 
 WEIGHT_TOLERANCE = 1e-3
 UV_TOLERANCE = 1e-5
@@ -238,6 +241,50 @@ def check_mesh(report, body, armature):
         report.error(f"the figure is not centred on X=0 (off by {lopsided:.3f} m)")
 
 
+def check_cloth(report, armature, body):
+    """Puts the arms where a player puts them and fails if a sleeve comes through the mantle.
+
+    The mantle lies over the shoulders and the arms turn under it; whether it follows them well enough
+    is a matter of its weights and its shape, and nothing else here would notice it going wrong. Faces
+    are compared as the armature deforms them. The mantle's underside is left out: it closes the
+    mantle from the middle of the body outward and passes through the arms by design."""
+    mesh = body.data
+    attribute = mesh.attributes.get(meta_spec.PART_ATTRIBUTE)
+    names = json.loads(mesh.get(meta_spec.PART_NAMES, "[]"))
+    if attribute is None or "mantle" not in names or "sleeve" not in names:
+        report.error(f"{body.name}: the faces do not say which part they are ('{meta_spec.PART_ATTRIBUTE}'); build with build_meta.py")
+        return
+    parts = np.empty(len(mesh.polygons), dtype=np.int32)
+    attribute.data.foreach_get("value", parts)
+    under = Vector(meta_spec.MANTLE_UNDER) * meta_spec.PX
+    middle = {v.index for v in mesh.vertices if (v.co - under).length < 1e-6}
+    polygons = [tuple(polygon.vertices) for polygon in mesh.polygons]
+    mantle = [polygons[i] for i in np.flatnonzero(parts == names.index("mantle")) if not middle.intersection(polygons[i])]
+    sleeve = [polygons[i] for i in np.flatnonzero(parts == names.index("sleeve"))]
+
+    saved = [(bone, bone.matrix_basis.copy()) for bone in armature.pose.bones]
+    position, armature.data.pose_position = armature.data.pose_position, "POSE"
+    found = []
+    try:
+        for pose in meta_pose.CHECKED:
+            meta_pose.arms(armature, pose, pose)
+            evaluated = body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+            posed = evaluated.to_mesh()
+            co = [v.co.copy() for v in posed.vertices]
+            evaluated.to_mesh_clear()
+            pairs = BVHTree.FromPolygons(co, mantle).overlap(BVHTree.FromPolygons(co, sleeve))
+            found.append((pose, len(pairs)))
+    finally:
+        for bone, basis in saved:
+            bone.matrix_basis = basis
+        armature.data.pose_position = position
+        bpy.context.view_layer.update()
+    report.note("Sleeves through the mantle, in face pairs: " + ", ".join(f"{pose} {count}" for pose, count in found))
+    for pose, count in found:
+        if count:
+            report.error(f"{body.name}: with the arms in the pose '{pose}' a sleeve comes through the mantle ({count} pairs of faces cross)")
+
+
 def check_textures(report):
     for path in (meta_spec.ATLAS_PNG, meta_spec.EMISSION_PNG, meta_spec.TINT_PNG):
         size = png_size(path) if path.exists() else None
@@ -253,6 +300,7 @@ def validate():
     if armature is not None:
         check_skeleton(report, armature)
         check_mesh(report, body, armature)
+        check_cloth(report, armature, body)
     check_textures(report)
     return report
 

@@ -2,6 +2,7 @@
 
 import colorsys
 import json
+import os
 import pathlib
 import sys
 import tomllib
@@ -15,6 +16,10 @@ import cass_spec  # noqa: E402  (the humanoid bone names are the cass avatar's, 
 # Where the model's outputs land: the avatar's package. Not "net.wirenook.meta": Unity takes a
 # folder whose name ends in .meta for the meta file of a folder that is not there.
 PACKAGE = REPO / "Packages" / "net.wirenook.meta-avatar"
+# Work in progress goes somewhere Unity is not watching: META_PACKAGE=dist/staging sends the textures,
+# the Spec files and the FBX there instead. A .blend built that way refers to those textures.
+if os.environ.get("META_PACKAGE"):
+    PACKAGE = (REPO / os.environ["META_PACKAGE"]).resolve()
 TEXTURES = PACKAGE / "Textures"
 ATLAS_PNG = TEXTURES / "meta-atlas.png"
 EMISSION_PNG = TEXTURES / "meta-atlas-emission.png"
@@ -32,6 +37,14 @@ MESH = "Body"
 MATERIAL = "meta"
 UV_ATLAS = cass_spec.UV_PALETTE
 UV_TILE = cass_spec.UV_TILE
+# In the .blend only: an integer on each face saying which part of the figure it is, and the parts' names.
+PART_ATTRIBUTE = "part"
+PART_NAMES = "parts"
+
+# Metres to a pixel of the model, as on the robot (bot_geo.PX), and where the mantle's underside
+# meets in the middle of the body, in pixels: the validator leaves the faces that meet there out.
+PX = 1.0 / 128.0
+MANTLE_UNDER = (0.0, 0.0, 170.0)
 
 ATLAS_SIZE = 256
 MAX_TRIANGLES = 5000

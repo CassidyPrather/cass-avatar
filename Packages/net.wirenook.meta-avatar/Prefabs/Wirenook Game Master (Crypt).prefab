@@ -1225,6 +1225,7 @@ SkinnedMeshRenderer:
   - {fileID: 1929123424119928878}
   - {fileID: 85957101458599283}
   - {fileID: 2939261129120701747}
+  - {fileID: 8988927882537090379}
   - {fileID: 4994084259920158891}
   m_BlendShapeWeights:
   - 0
@@ -2767,6 +2768,72 @@ MonoBehaviour:
   AffectsRotationX: 1
   AffectsRotationY: 1
   AffectsRotationZ: 1
+--- !u!1 &1546700000757821660
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9155160625116337425}
+  - component: {fileID: 4268321768481502563}
+  m_Layer: 0
+  m_Name: Menu Turn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9155160625116337425
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546700000757821660}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5081992937019868643}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4268321768481502563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546700000757821660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Turn
+    icon: {fileID: 2800000, guid: 4c945459a12fd1748a255a0d0fec315d, type: 3}
+    type: 203
+    parameter:
+      name: 
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters:
+    - name: GM/Stage/Bus/15/Value
+    labels: []
+  MenuSource: 0
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 0
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Turn
 --- !u!1 &1560241963122697949
 GameObject:
   m_ObjectHideFlags: 0
@@ -8484,7 +8551,7 @@ Transform:
   m_GameObject: {fileID: 4351735698496544430}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.4, z: 0}
+  m_LocalPosition: {x: 0, y: 1.45, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8790,6 +8857,7 @@ Transform:
   m_Children:
   - {fileID: 4030482860859061122}
   - {fileID: 9044771179171156376}
+  - {fileID: 9155160625116337425}
   m_Father: {fileID: 7112500396110737772}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8178881756649821389
@@ -20107,6 +20175,16 @@ MonoBehaviour:
     hasExplicitDefaultValue: 0
     m_overrideAnimatorDefaults: 0
   - nameOrPrefix: WN/Check/crypt-opened/Done
+    remapTo: 
+    internalParameter: 0
+    isPrefix: 0
+    syncType: 3
+    localOnly: 0
+    defaultValue: 0
+    saved: 0
+    hasExplicitDefaultValue: 1
+    m_overrideAnimatorDefaults: 0
+  - nameOrPrefix: GM/Crypt/Swing
     remapTo: 
     internalParameter: 0
     isPrefix: 0

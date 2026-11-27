@@ -8,7 +8,9 @@ A robe bends, is symmetric, and wears its trim along edges that slope. So this b
 - lays strips and fans between rings that need not close on themselves (`strip`, `fan`), turning
   each face outward by an interior point instead of by the order of its corners;
 - gives a paint the face it is painting (`facepaint`): where each corner lies on the canvas, so
-  that a hem can follow a slanted edge and a stripe can sit exactly on the seam.
+  that a hem can follow a slanted edge and a stripe can sit exactly on the seam;
+- lets a part be drawn as it is worn and stored as it rests (`worn`): the figure rests in a T-pose
+  that it is never seen in, and cloth that lies on an arm is designed, and painted, with the arm down.
 
 One pixel is still PX metres and one texel still one square pixel of surface.
 """
@@ -16,6 +18,8 @@ One pixel is still PX metres and one texel still one square pixel of surface.
 import math
 
 import numpy as np
+
+import contextlib
 
 import bot_geo
 from bot_geo import PX, unit, vec, swatch  # noqa: F401  (re-exported for the model)
@@ -65,6 +69,10 @@ def edge_along(a, b, x, y):
 
 
 class MetaBuilder(bot_geo.Builder):
+    def __init__(self, atlas):
+        super().__init__(atlas)
+        self._rest = None
+
     def _side(self, name):
         if not self._mirror:
             return name
@@ -73,6 +81,54 @@ class MetaBuilder(bot_geo.Builder):
         if ".R" in name:
             return name.replace(".R", ".L")
         return name
+
+    # -- worn and at rest ---------------------------------------------------------------------
+
+    @contextlib.contextmanager
+    def worn(self, rest):
+        """Everything emitted inside is given as it is worn: its faces are turned, unwrapped and
+        painted in that shape, and its weights are asked for there. `rest(point)` is where a worn
+        point is in the rest pose, which is what goes into the mesh; a point that does not move
+        between the two comes back as it is. A quad that is flat as worn and not at rest is cut in
+        two, along the diagonal that leaves a triangle whose corners all moved or all stayed."""
+        self._rest = rest
+        yield
+        self._rest = None
+
+    def _emit(self, points, island, uvs):
+        if self._rest is None:
+            return super()._emit(points, island, uvs)
+        solid = self._solid
+        points = [np.asarray(p, dtype=np.float64) for p in points]
+        weights = [{self._side(bone): w for bone, w in solid.weights(p).items()} for p in points]
+        points = [np.asarray(self._rest(p), dtype=np.float64) for p in points]
+        if self._mirror:
+            points = [p * np.array([-1.0, 1.0, 1.0]) for p in points][::-1]
+            uvs, weights = list(uvs)[::-1], weights[::-1]
+        solid.faces.append((points, island, [tuple(uv) for uv in uvs], weights))
+
+    def face_uv(self, points, uvs, island):
+        if self._rest is None or len(points) != 4:
+            return super().face_uv(points, uvs, island)
+        points = [np.asarray(p, dtype=np.float64) for p in points]
+        rest = [np.asarray(self._rest(p), dtype=np.float64) for p in points]
+        moved = [self._key(a) != self._key(b) for a, b in zip(points, rest)]
+        if not any(moved):
+            return super().face_uv(points, uvs, island)
+        normal = bot_geo._newell(rest)
+        if float(np.linalg.norm(normal)) > 1e-12 and self._convex_parts(rest, unit(normal)) == [[0, 1, 2, 3]]:
+            return self._emit(points, island, uvs)
+
+        def uniform(part):
+            return len({moved[i] for i in part}) == 1
+
+        splits = ([[0, 1, 2], [0, 2, 3]], [[1, 2, 3], [1, 3, 0]])
+        score = [sum(uniform(part) for part in split) for split in splits]
+        if score[0] == score[1]:
+            # Neither says more: the shorter diagonal, as worn.
+            score = [-float(np.linalg.norm(points[0] - points[2])), -float(np.linalg.norm(points[1] - points[3]))]
+        for part in splits[0 if score[0] >= score[1] else 1]:
+            self._emit([points[i] for i in part], island, [uvs[i] for i in part])
 
     # -- one face -----------------------------------------------------------------------------
 

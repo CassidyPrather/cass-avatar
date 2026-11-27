@@ -16,8 +16,8 @@ namespace Wirenook.Validation.Editor
     /// Pictures of the pieces a game master's kit gains for The Sunken
     /// Crypt (net.wirenook.meta-avatar): the zones of an element, the
     /// danger zone warning and striking, the barricade whole, half down
-    /// and burning, the chest and its key, the pendulum, the rift from two
-    /// sides and half sealed, and the course as the people backstage see
+    /// and burning, the chest and its key, the pendulum and where its arm meets
+    /// its blade, the rift from all round and half sealed, and the course as the people backstage see
     /// it before it is live.
     ///
     /// As <see cref="GameMasterPreview"/>: the kit's prefab is played on
@@ -180,11 +180,21 @@ namespace Wirenook.Validation.Editor
                 Out(ChestPiece.KeyName, false);
                 Play(0.4f);
 
+                // The pendulum. No driver runs here, so the bit the wearer's clock would turn over is turned over by hand.
+                var swing = PendulumPiece.Swing(Prefix + "/Crypt");
+                var pivot = new Vector3(0f, PendulumPiece.PivotHeight, 0f);
                 Out(PendulumPiece.ThingName, true);
-                Play(0.4f + PendulumPiece.SwingSeconds * 0.5f);
-                Shot("pendulum, at one end of its swing", new Vector3(1.4f, 1.7f, 6.2f), new Vector3(0f, 1.6f, 0f), 50f);
-                Play(PendulumPiece.SwingSeconds * 0.25f);
-                Shot("pendulum, coming through the middle", new Vector3(3.6f, 1.7f, 5f), new Vector3(0f, 1.5f, 0f), 50f);
+                Play(0.6f);
+                Shot("pendulum, at rest at one end", new Vector3(1.4f, 1.9f, 6.4f), new Vector3(0f, 1.9f, 0f), 50f);
+                animator.SetBool(swing, true);
+                Play((PendulumPiece.SwingSeconds * 0.5f - PendulumPiece.HoldSeconds) * 0.5f);
+                Shot("pendulum, coming through the middle", new Vector3(3.6f, 1.9f, 5f), new Vector3(0f, 1.8f, 0f), 50f);
+                Shot("pendulum, where the arm meets the blade", new Vector3(0.9f, 1.1f, 1.5f), new Vector3(0f, 0.85f, 0f), 40f);
+                Shot("pendulum, the same from the side", new Vector3(1.6f, 1f, 0.5f), new Vector3(0f, 0.85f, 0f), 40f);
+                Shot("pendulum, its pivot", pivot + new Vector3(0.9f, -0.5f, 1.3f), pivot, 40f);
+                Play(PendulumPiece.SwingSeconds * 0.5f);
+                Shot("pendulum, waiting at the far end", new Vector3(1.4f, 1.9f, 6.4f), new Vector3(0f, 1.9f, 0f), 50f);
+                animator.SetBool(swing, false);
                 Out(PendulumPiece.ThingName, false);
                 Play(0.4f);
 
@@ -193,16 +203,26 @@ namespace Wirenook.Validation.Editor
                 var middle = new Vector3(0f, RiftPiece.Height, 0f);
                 Out(RiftPiece.ThingName, true);
                 Play(0.8f);
-                Shot("rift, from in front", middle + new Vector3(0f, 0.1f, 2.4f), middle, 40f);
-                Shot("rift, from a step to the side", middle + new Vector3(1.1f, 0.1f, 2.1f), middle, 40f);
-                Shot("rift, towards the eye", middle - new Vector3(0.55f, 0.3f, 0.78f).normalized * 2.2f, middle, 40f);
-                Shot("rift, in the room", new Vector3(2.6f, 1.7f, 4.2f), new Vector3(0f, 1.2f, 0f), 50f);
+                Shot("rift, from in front", middle + new Vector3(0f, 0.1f, 3f), middle, 40f);
+                Shot("rift, from a step to the side", middle + new Vector3(1.6f, 0.1f, 2.5f), middle, 40f);
+                Shot("rift, from half way round", middle + new Vector3(2.6f, 0.2f, 1.2f), middle, 40f);
+                Shot("rift, edge on", middle + new Vector3(3f, 0.1f, 0f), middle, 40f);
+                Shot("rift, from behind", middle + new Vector3(-1.2f, 0.1f, -2.8f), middle, 40f);
+                Shot("rift, close, the torn edge", middle + new Vector3(0.7f, 0.5f, 1.1f), middle + new Vector3(0f, 0.3f, 0f), 45f);
+                Shot("rift, from above", middle + new Vector3(0.6f, 2.2f, 1.6f), middle, 40f);
+                Shot("rift, in the room", new Vector3(2.6f, 1.7f, 4.6f), new Vector3(0f, 1.2f, 0f), 50f);
+                animator.SetFloat(Value(RiftPiece.ThingName), 0.125f);
+                Play(0.3f);
+                Shot("rift, turned an eighth, from in front", middle + new Vector3(0f, 0.1f, 3f), middle, 40f);
+                animator.SetFloat(Value(RiftPiece.ThingName), 0f);
                 animator.SetFloat(sealing.Touching(SkillTags.Hand), 1f);
-                Play(RiftPiece.SealSeconds * 0.72f);
-                Shot("rift, most of the way sealed", middle + new Vector3(0f, 0.1f, 2.4f), middle, 40f);
+                Play(RiftPiece.SealSeconds * 0.4f);
+                Shot("rift, under hands for three seconds", middle + new Vector3(0.8f, 0.1f, 2.9f), middle, 40f);
+                Play(RiftPiece.SealSeconds * 0.36f);
+                Shot("rift, drawn to a seam", middle + new Vector3(0.8f, 0.1f, 2.9f), middle, 40f);
                 Play(RiftPiece.SealSeconds * 0.35f);
                 animator.SetFloat(sealing.Touching(SkillTags.Hand), 0f);
-                Shot("rift, sealed", middle + new Vector3(0f, 0.1f, 2.4f), middle, 40f);
+                Shot("rift, sealed", middle + new Vector3(0.8f, 0.1f, 2.9f), middle, 40f);
                 Out(RiftPiece.ThingName, false);
                 Play(0.4f);
 

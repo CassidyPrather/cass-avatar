@@ -28,6 +28,7 @@ Material:
     - _Bit: 8
     - _ColorMask: 15
     - _Cull: 0
+    - _Heading: 0
     - _Part: 1
     - _StencilComp: 3
     - _StencilPass: 0
@@ -36,6 +37,6 @@ Material:
     m_Colors:
     - _Deep: {r: 0.03, g: 0.01, b: 0.06999998, a: 1}
     - _Eye: {r: 0.75, g: 1, b: 0.54999995, a: 1}
-    - _EyeDirection: {r: 0.55, g: 0.3, b: 0.78, a: 0}
+    - _EyeDirection: {r: 0.07, g: 0.1, b: -1, a: 0}
     - _Glow: {r: 0.41999996, g: 0.19999996, b: 0.75, a: 1}
   m_BuildTextureStacks: []

@@ -117,7 +117,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main2ndBlendMask:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 922ec8efb0afb8848b8df7d2981a81e9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main2ndDissolveMask:
@@ -129,11 +129,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main2ndTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 46aa2e019336c074fac247856a42957d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main3rdBlendMask:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 7301092fdede7a3499537a76458dab53, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main3rdDissolveMask:
@@ -145,7 +145,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Main3rdTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 41916c5e07577034d9731c295d99c751, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainColorAdjustMask:
@@ -401,7 +401,7 @@ Material:
     - _Main2ndTexShouldFlipCopy: 0
     - _Main2ndTexShouldFlipMirror: 0
     - _Main2ndTex_Cull: 0
-    - _Main2ndTex_UVMode: 0
+    - _Main2ndTex_UVMode: 3
     - _Main3rdDissolveNoiseStrength: 0.1
     - _Main3rdEnableLighting: 1
     - _Main3rdTexAlphaMode: 0
@@ -415,7 +415,7 @@ Material:
     - _Main3rdTexShouldFlipCopy: 0
     - _Main3rdTexShouldFlipMirror: 0
     - _Main3rdTex_Cull: 0
-    - _Main3rdTex_UVMode: 0
+    - _Main3rdTex_UVMode: 3
     - _MainGradationStrength: 0
     - _MatCap2ndApplyTransparency: 1
     - _MatCap2ndBackfaceMask: 0
@@ -593,8 +593,8 @@ Material:
     - _UseEmission: 1
     - _UseEmission2nd: 0
     - _UseGlitter: 0
-    - _UseMain2ndTex: 0
-    - _UseMain3rdTex: 0
+    - _UseMain2ndTex: 1
+    - _UseMain3rdTex: 1
     - _UseMatCap: 0
     - _UseMatCap2nd: 0
     - _UseOutline: 0

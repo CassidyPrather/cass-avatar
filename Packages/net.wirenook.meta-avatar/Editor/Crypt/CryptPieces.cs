@@ -298,7 +298,9 @@ namespace Wirenook.Meta.Crypt.Editor
                 var out_ = spike == 0 ? 0f : 0.35f + 0.25f * (spike % 2);
                 var height = 0.5f + 0.12f * (spike % 3);
                 crypt.Solid.At(new Vector3(Mathf.Cos(around) * out_, 0f, Mathf.Sin(around) * out_), Quaternion.Euler(0f, spike * 40f, 0f))
-                    .Box(new Vector3(0f, height * 0.5f, 0f), new Vector3(0.16f, height, 0.16f));
+                    .Box(new Vector3(0f, height * 0.5f, 0f), new Vector3(0.16f, height, 0.16f))
+                    .Box(new Vector3(0.01f, height + 0.05f, -0.01f), new Vector3(0.1f, 0.1f, 0.1f))
+                    .Box(new Vector3(0f, 0.04f, 0f), new Vector3(0.22f, 0.08f, 0.22f));
             }
 
             crypt.Solid.At(Vector3.zero);
@@ -364,7 +366,7 @@ namespace Wirenook.Meta.Crypt.Editor
             release.To(waiting).IfFalse(once);
         }
 
-        private static void Drive(VRCAvatarParameterDriver driver, string name, float value)
+        internal static void Drive(VRCAvatarParameterDriver driver, string name, float value)
         {
             driver.localOnly = true;
             driver.parameters = new List<VRC_AvatarParameterDriver.Parameter>
@@ -433,7 +435,9 @@ namespace Wirenook.Meta.Crypt.Editor
 
             var solid = crypt.Solid.On(_turn).Colour("wood-dark")
                 .Box(new Vector3(-0.98f, 0.8f, 0f), new Vector3(0.14f, 1.6f, 0.14f))
-                .Box(new Vector3(0.98f, 0.8f, 0f), new Vector3(0.14f, 1.6f, 0.14f));
+                .Box(new Vector3(0.98f, 0.8f, 0f), new Vector3(0.14f, 1.6f, 0.14f))
+                .Colour("wood").Box(new Vector3(-0.98f, 1.62f, 0f), new Vector3(0.1f, 0.05f, 0.1f))
+                .Box(new Vector3(0.98f, 1.62f, 0f), new Vector3(0.1f, 0.05f, 0.1f));
             for (var plank = 1; plank <= Planks; plank++)
             {
                 // Nailed up in a hurry: none of them quite level.
@@ -443,6 +447,11 @@ namespace Wirenook.Meta.Crypt.Editor
                     .Colour(plank % 2 == 0 ? "wood" : "wood-dark")
                     .Vanishing(Plank(plank), new Vector3(0f, -height, 0f))
                     .Box(Vector3.zero, new Vector3(2.1f, 0.2f, 0.05f));
+                // A nail through each end, its head on the side the plank was hammered from.
+                var face = plank % 2 == 0 ? -0.029f : 0.029f;
+                solid.Colour("grey-dark")
+                    .Box(new Vector3(-0.98f, 0.03f * (plank % 3 - 1), face), new Vector3(0.03f, 0.03f, 0.008f))
+                    .Box(new Vector3(0.98f, -0.03f * (plank % 3 - 1), face), new Vector3(0.03f, 0.03f, 0.008f));
             }
 
             solid.Vanishing(null).At(Vector3.zero);
@@ -590,10 +599,20 @@ namespace Wirenook.Meta.Crypt.Editor
             crypt.Solid.On(_turn).Colour("wood").Box(new Vector3(0f, 0.2f, 0f), new Vector3(0.7f, 0.4f, 0.45f))
                 .Colour("brass").Box(new Vector3(-0.24f, 0.2f, 0f), new Vector3(0.05f, 0.41f, 0.46f))
                 .Box(new Vector3(0.24f, 0.2f, 0f), new Vector3(0.05f, 0.41f, 0.46f));
+            foreach (var band in new[] { -0.24f, 0.24f })
+                foreach (var stud in new[] { 0.07f, 0.2f, 0.33f })
+                    crypt.Solid.Colour("grey-dark").Box(new Vector3(band, stud, 0.233f), new Vector3(0.022f, 0.022f, 0.008f));
+            crypt.Solid.Colour("glow-cyan");
+            CryptDetail.Rune(crypt.Solid, CryptDetail.Runes[0], new Vector3(-0.135f, 0.2f, 0.225f), 0.018f);
+            CryptDetail.Rune(crypt.Solid, CryptDetail.Runes[1], new Vector3(0.135f, 0.2f, 0.225f), 0.018f);
             crypt.Solid.On(_lid).Colour("wood-dark").Box(new Vector3(0f, 0.06f, 0.225f), new Vector3(0.72f, 0.12f, 0.47f))
                 .Colour("brass").Box(new Vector3(-0.24f, 0.06f, 0.225f), new Vector3(0.05f, 0.13f, 0.48f))
                 .Box(new Vector3(0.24f, 0.06f, 0.225f), new Vector3(0.05f, 0.13f, 0.48f))
-                .Box(new Vector3(0f, 0.02f, 0.46f), new Vector3(0.12f, 0.08f, 0.02f));
+                .Box(new Vector3(0f, 0.02f, 0.46f), new Vector3(0.12f, 0.08f, 0.02f))
+                // The lid steps up towards its middle.
+                .Colour("wood-dark").Box(new Vector3(0f, 0.14f, 0.225f), new Vector3(0.6f, 0.04f, 0.33f))
+                .Colour("brass").Box(new Vector3(-0.24f, 0.14f, 0.225f), new Vector3(0.05f, 0.05f, 0.34f))
+                .Box(new Vector3(0.24f, 0.14f, 0.225f), new Vector3(0.05f, 0.05f, 0.34f));
             // The padlock hangs from the hasp at the front: a body, and a shackle standing over it.
             crypt.Solid.On(_padlock).Colour("brass").Box(new Vector3(0f, -0.07f, 0.02f), new Vector3(0.12f, 0.1f, 0.045f))
                 .Colour("soot").Box(new Vector3(0f, -0.075f, 0.044f), new Vector3(0.02f, 0.035f, 0.004f))
@@ -729,13 +748,26 @@ namespace Wirenook.Meta.Crypt.Editor
     }
 
     /// <summary>
-    /// A blade on a long arm, swinging from a gantry across whatever way
-    /// the gantry straddles. The blade carries <c>Damage</c> and
+    /// A blade on a long arm, swinging from a pivot hung wherever the game
+    /// master sets it: under a beam, a doorway, a ceiling. It has no
+    /// frame of its own. The blade carries <c>Damage</c> and
     /// <c>DamageSharp</c> wherever it is in its swing.
     ///
-    /// Every client swings it from the moment it is shown the pendulum, so
-    /// two people do not see the blade in the same place: each is cut by
-    /// the blade they see, which is the only fair way round.
+    /// Everyone sees it swing in step. The wearer's client keeps the time:
+    /// while the pendulum is set out it turns one synced bit over at each
+    /// end of the swing, and that bit says which end the blade is going
+    /// to. Every client, the wearer's too, swings the blade across when
+    /// the bit turns over and then holds it at the end until it turns
+    /// again. The crossing takes a little less than the time between two
+    /// turns, so the blade waits a moment at each end, where a pendulum
+    /// is still anyway; an update that comes late eats into that wait
+    /// and the lateness is not carried into the next swing. Someone who
+    /// arrives part way through is shown the blade at the end it is going
+    /// to, and is in step from the next turn.
+    ///
+    /// What is left is the time an update takes to cross the network:
+    /// viewers see the blade a fraction of a second after the wearer
+    /// does, and each is cut by the blade they see.
     ///
     /// Its value on the stage is which way it faces.
     /// </summary>
@@ -743,11 +775,23 @@ namespace Wirenook.Meta.Crypt.Editor
     {
         public const string ThingName = "Pendulum";
 
-        /// <summary>Seconds for a swing there and back.</summary>
+        /// <summary>Seconds for a swing there and back, by the wearer's clock.</summary>
         public const float SwingSeconds = 2.6f;
+
+        /// <summary>Seconds the blade waits at each end, when updates come on time: the slack that takes up a late one.</summary>
+        public const float HoldSeconds = 0.14f;
 
         /// <summary>How far to each side it swings, in degrees.</summary>
         public const float SwingDegrees = 38f;
+
+        /// <summary>Metres from the pivot down to the middle of the crescent.</summary>
+        public const float ArmLength = 2.02f;
+
+        /// <summary>Metres above the ground the pivot hangs.</summary>
+        public const float PivotHeight = 3.2f;
+
+        /// <summary>Synced bool: the end of the swing the blade is going to, or resting at.</summary>
+        public static string Swing(string prefix) => prefix + "/Swing";
 
         private Transform _bone;
         private Transform _turn;
@@ -763,21 +807,32 @@ namespace Wirenook.Meta.Crypt.Editor
         {
             _bone = crypt.Stage.Hold(ThingName, crypt.Stage[ThingName]);
             _turn = crypt.Turn(_bone);
-            _arm = GameMasterBuild.Bone(_turn.gameObject, "Arm", new Vector3(0f, 3.2f, 0f));
+            _arm = GameMasterBuild.Bone(_turn.gameObject, "Arm", new Vector3(0f, PivotHeight, 0f));
 
-            crypt.Solid.On(_turn).Colour("wood-dark")
-                .Box(new Vector3(-1.9f, 1.65f, 0f), new Vector3(0.16f, 3.3f, 0.16f))
-                .Box(new Vector3(1.9f, 1.65f, 0f), new Vector3(0.16f, 3.3f, 0.16f))
-                .Colour("wood").Box(new Vector3(0f, 3.28f, 0f), new Vector3(4.1f, 0.16f, 0.2f))
-                .Colour("grey-dark").Box(new Vector3(0f, 3.2f, 0f), new Vector3(0.14f, 0.14f, 0.3f));
-            // The arm, and at its end a crescent with the edge downward.
-            crypt.Solid.On(_arm).Colour("grey-dark").Box(new Vector3(0f, -1.05f, 0f), new Vector3(0.06f, 2.1f, 0.06f))
-                .At(new Vector3(0f, -2.02f, 0f), Quaternion.Euler(-90f, 0f, 0f))
-                .Colour("silver").Bend(0.3f, 0.6f, -0.012f, 0.012f, 200f, 140f, 7)
-                .Colour("white").Bend(0.6f, 0.63f, -0.004f, 0.004f, 200f, 140f, 7)
+            // The pivot: a bracket and the pin the arm turns on. Nothing holds it up but the game master's say-so.
+            crypt.Solid.On(_turn).Colour("grey-dark")
+                .Box(new Vector3(0f, PivotHeight + 0.11f, 0f), new Vector3(0.34f, 0.06f, 0.34f))
+                .Box(new Vector3(0f, PivotHeight + 0.02f, 0.1f), new Vector3(0.12f, 0.2f, 0.04f))
+                .Box(new Vector3(0f, PivotHeight + 0.02f, -0.1f), new Vector3(0.12f, 0.2f, 0.04f))
+                .Colour("brass").Box(new Vector3(0f, PivotHeight, 0f), new Vector3(0.05f, 0.05f, 0.3f));
+
+            // The arm, and at its end a crescent with the edge downward. The
+            // crescent's inner edge is 0.3 m below its middle: the arm runs
+            // on past that into the steel, and a collar grips the two.
+            const float inner = 0.3f;
+            const float outer = 0.6f;
+            var grip = ArmLength + inner;
+            crypt.Solid.On(_arm).Colour("grey-dark")
+                .Box(new Vector3(0f, -(grip + 0.1f) * 0.5f, 0f), new Vector3(0.06f, grip + 0.1f, 0.06f))
+                .Box(new Vector3(0f, -0.02f, 0f), new Vector3(0.1f, 0.14f, 0.1f))
+                .Colour("brass").Box(new Vector3(0f, -(grip + 0.03f), 0f), new Vector3(0.2f, 0.12f, 0.07f))
+                .Colour("grey-dark").Box(new Vector3(0f, -(grip + 0.03f), 0f), new Vector3(0.05f, 0.05f, 0.1f))
+                .At(new Vector3(0f, -ArmLength, 0f), Quaternion.Euler(-90f, 0f, 0f))
+                .Colour("silver").Bend(inner, outer, -0.012f, 0.012f, 200f, 140f, 7)
+                .Colour("white").Bend(outer, outer + 0.03f, -0.004f, 0.004f, 200f, 140f, 7)
                 .At(Vector3.zero);
 
-            _contacts = crypt.Contacts(_arm, new Vector3(0f, -2.5f, 0f));
+            _contacts = crypt.Contacts(_arm, new Vector3(0f, -(ArmLength + 0.48f), 0f));
             CryptSet.Sender(_contacts, 0.35f, SkillTags.Damage, SkillTags.DamageSharp);
         }
 
@@ -785,59 +840,125 @@ namespace Wirenook.Meta.Crypt.Editor
         {
             var fx = crypt.Fx;
             var thing = crypt.Stage[ThingName];
+            var swing = Swing(crypt.Prefix);
+            fx.Bool(swing).Bool("IsLocal");
             crypt.TurnLayer(ThingName, _turn, thing);
-            var armPath = crypt.Path(_arm);
-            crypt.Stage.Show(fx, ThingName, new[] { crypt.Path(_bone) }, thing.Shown, (clip, phase) =>
-            {
-                if (phase != "on") return;
-                clip.Curve(armPath, typeof(Transform), "localEulerAnglesRaw.z",
-                    Curves.Eased((0f, SwingDegrees), (SwingSeconds * 0.5f, -SwingDegrees), (SwingSeconds, SwingDegrees))).Loop();
-            });
+            crypt.Stage.Show(fx, ThingName, new[] { crypt.Path(_bone) }, thing.Shown);
             crypt.ContactsLayer(ThingName, _contacts, thing);
+
+            var armPath = crypt.Path(_arm);
+            const float half = SwingSeconds * 0.5f;
+            const float crossing = half - HoldSeconds;
+            AnimationClip At(string name, float degrees) => fx.Clip("pendulum " + name, clip =>
+                clip.Curve(armPath, typeof(Transform), "localEulerAnglesRaw.z", Curves.Flat(1f / 60f, degrees)));
+            // Still at both ends and quickest through the middle, as a pendulum is.
+            AnimationClip Across(string name, float from, float to) => fx.Clip("pendulum " + name, clip =>
+                clip.Curve(armPath, typeof(Transform), "localEulerAnglesRaw.z",
+                    new AnimationCurve(new Keyframe(0f, from, 0f, 0f), new Keyframe(crossing, to, 0f, 0f))));
+
+            // Every client: across when the bit turns over, then wait for it to turn again.
+            var layer = fx.Layer("Pendulum Swing");
+            var join = layer.State("Join", At("joining", SwingDegrees));
+            var near = layer.State("Near", At("near end", SwingDegrees));
+            var away = layer.State("Away", Across("away", SwingDegrees, -SwingDegrees));
+            var far = layer.State("Far", At("far end", -SwingDegrees));
+            var back = layer.State("Back", Across("back", -SwingDegrees, SwingDegrees));
+            // Whoever comes to it part way through starts at the end it is going to.
+            join.To(far).IfTrue(swing);
+            join.To(near).IfFalse(swing);
+            near.To(away).IfTrue(swing);
+            away.To(far).AfterTime(1f);
+            far.To(back).IfFalse(swing);
+            back.To(near).AfterTime(1f);
+
+            // The wearer's client: the clock, running while the pendulum is set out.
+            var clock = fx.Layer("Pendulum Clock");
+            var stopped = clock.State("Stopped");
+            var tick = clock.State("Tick", fx.Clip("pendulum tick", clip => clip.Hold(half)));
+            var tock = clock.State("Tock", fx.Clip("pendulum tock", clip => clip.Hold(half)));
+            tick.Behaviour<VRCAvatarParameterDriver>(driver => DangerPiece.Drive(driver, swing, 1f));
+            tock.Behaviour<VRCAvatarParameterDriver>(driver => DangerPiece.Drive(driver, swing, 0f));
+            stopped.To(tick).IfTrue("IsLocal").IfTrue(thing.On);
+            tick.To(tock).AfterTime(1f);
+            // It stops with the blade on its way back to the near end, where it starts from next time.
+            tock.To(stopped).IfFalse(thing.On);
+            tock.To(tick).AfterTime(1f);
         }
 
         public void Menu(CryptSet crypt, GameObject parent)
         {
             var thing = crypt.Stage[ThingName];
+            crypt.Kit.Parameters.Add(FeaturePrefab.SyncedBool(Swing(crypt.Prefix)));
             var folder = crypt.MenuThing(parent, thing, "Pendulum", "hammer");
             crypt.Stage.MenuValue(FeaturePrefab.Child(folder, "Menu Turn"), thing, "Turn", "reset");
         }
     }
 
     /// <summary>
-    /// A rift: a ball of somewhere else, hanging in the air with shards
-    /// of dark stone going round it and a hum coming out of it. Look into
-    /// it from any side and there is a sky with an eye in it, and rocks
-    /// adrift between here and there that slide against that sky as the
-    /// viewer moves. Hands on it draw it shut over eight seconds; left
-    /// half shut it creeps open again; shut, it stays shut.
+    /// A rift: a tear in the air, the way a sheet of paper tears. A tall
+    /// ragged gash hangs there, and round it the torn edge of the world
+    /// curls back in flaps, white on the side that was hidden. Through
+    /// the gash there is a sky with an eye in it, and rocks adrift
+    /// between here and there that slide against that sky as the viewer
+    /// moves. Scraps of the torn sheet drift round it, and a hum comes
+    /// out of it. Hands on it draw it shut over eight seconds, the two
+    /// sides coming together to a seam before the seam closes; left half
+    /// shut it creeps open again; shut, it stays shut.
     ///
-    /// The window is stencil work (Shaders/WirenookRift): the ball marks
+    /// It is not a flat cut-out. The gash is a crumpled, lens-shaped
+    /// body with two faces and an edge, and flaps stand off both faces,
+    /// so it has a shape from the side and from behind, where it is a
+    /// window as well.
+    ///
+    /// The window is stencil work (Shaders/WirenookRift): the body marks
     /// its pixels and writes its depth, the far side is drawn only on
-    /// marked pixels and only behind the ball's surface, and the ball is
-    /// drawn once more to take the mark off. It is a ball and not a flat
-    /// tear because the stage syncs no heading, and a ball needs none. It
-    /// needs a shader of this package's own, so it is PC only, like the
-    /// variant.
+    /// marked pixels and only behind the body's surface, and the body is
+    /// drawn once more to take the mark off, with bands of light along
+    /// the torn edge. It needs a shader of this package's own, so it is
+    /// PC only, like the variant.
     ///
     /// Sealing is a skill check, synced: the wearer's client says when it
-    /// is shut.
+    /// is shut. Its value on the stage is which way it faces; the far
+    /// side turns with it, so the eye is always behind the same face.
     /// </summary>
     public sealed class RiftPiece : ICryptPiece
     {
         public const string ThingName = "Rift";
 
-        /// <summary>Metres across half of the window.</summary>
+        /// <summary>Metres from the middle of the tear that a hand counts as on it, less the margin the receiver adds.</summary>
         public const float Radius = 0.55f;
 
+        /// <summary>Metres from the tip of the tear to its other tip.</summary>
+        public const float Tall = 1.7f;
+
+        /// <summary>Metres across the tear, about, where it gapes widest.</summary>
+        public const float Wide = 0.84f;
+
         /// <summary>Metres above the ground its middle hangs.</summary>
-        public const float Height = 1.4f;
+        public const float Height = 1.45f;
 
         /// <summary>Seconds of hands on it that seal it.</summary>
         public const float SealSeconds = 8f;
 
         /// <summary>Seconds a rift left half sealed takes to open all the way again.</summary>
         public const float ReopenSeconds = 20f;
+
+        /// <summary>The material property that tells the far side which way the tear faces, as a share of a turn.</summary>
+        public const string Heading = "_Heading";
+
+        // The tear, row by row from its lower tip to its upper: how far the
+        // line of it wanders to one side, how far each edge stands off that
+        // line (as a share of the width there), and how far the row is
+        // crumpled out of the flat.
+        private const int Rows = 9;
+        private static readonly float[] Wander = { 0f, 0.05f, -0.04f, 0.07f, -0.01f, -0.08f, 0.03f, -0.05f, 0f };
+        private static readonly float[] Left = { 0f, 0.95f, 0.55f, 1f, 0.7f, 1.05f, 0.6f, 0.9f, 0f };
+        private static readonly float[] Right = { 0f, 0.6f, 1f, 0.65f, 1.1f, 0.75f, 0.95f, 0.5f, 0f };
+        private static readonly float[] Crumple = { 0f, 0.05f, -0.06f, 0.04f, -0.03f, 0.07f, -0.05f, 0.03f, 0f };
+
+        // Each face is cut into bands from the edge inwards; the last drawing of the body lights the outer two.
+        private static readonly float[] Bands = { 1f, 0.86f, 0.66f, 0f };
+        private static readonly string[] BandLight = { "0.9", "0.38", "0" };
 
         public AvatarCheck Sealed { get; private set; }
 
@@ -853,31 +974,167 @@ namespace Wirenook.Meta.Crypt.Editor
             plan.Thing(ThingName, rehearsed: true);
         }
 
+        /// <summary>How wide open the tear is at a row, from nothing at the tips to one in the middle.</summary>
+        private static float Gape(int row) => Mathf.Pow(Mathf.Sin(Mathf.PI * row / (Rows - 1f)), 0.7f);
+
+        /// <summary>
+        /// A point of the tear's body.
+        /// </summary>
+        /// <param name="across">From -1, the left edge, through 0, the line of the tear, to 1, the right edge.</param>
+        /// <param name="face">1 for the front face, -1 for the back.</param>
+        private static Vector3 Point(int row, float across, float face)
+        {
+            var gape = Gape(row);
+            var reach = Wide * 0.5f * gape * (across < 0f ? Left[row] : Right[row]);
+            // A few centimetres thick at the edge, and bellying out towards the middle.
+            var depth = gape < 0.001f ? 0f : 0.03f + 0.1f * gape * (1f - Mathf.Abs(across));
+            return new Vector3(Wander[row] + across * reach, (row / (Rows - 1f) - 0.5f) * Tall, Crumple[row] + face * depth);
+        }
+
+        /// <summary>A flat face through corners that may coincide, as they do at the tips of the tear, seen from the side <paramref name="toward"/> points to.</summary>
+        private static void Patch(ShapeMesh mesh, Vector3 toward, params Vector3[] corners)
+        {
+            var distinct = new List<Vector3>();
+            foreach (var corner in corners)
+                if (distinct.Count == 0 || (distinct[distinct.Count - 1] - corner).sqrMagnitude > 1e-10f)
+                    distinct.Add(corner);
+            if (distinct.Count > 1 && (distinct[0] - distinct[distinct.Count - 1]).sqrMagnitude < 1e-10f) distinct.RemoveAt(distinct.Count - 1);
+            if (distinct.Count < 3) return;
+            var normal = Vector3.Cross(distinct[1] - distinct[0], distinct[2] - distinct[0]);
+            if (normal.sqrMagnitude < 1e-14f) return;
+            normal.Normalize();
+            if (Vector3.Dot(normal, toward) < 0f) normal = -normal;
+            mesh.Face(normal, distinct.ToArray());
+        }
+
+        /// <summary>The tear's body: two faces in bands and the edge between them. Drawn twice, by the window and by the rim, from the same points.</summary>
+        private static void Body(ShapeMesh mesh, bool lit)
+        {
+            for (var row = 0; row < Rows - 1; row++)
+            {
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    foreach (var face in new[] { 1f, -1f })
+                    {
+                        for (var band = 0; band < Bands.Length - 1; band++)
+                        {
+                            mesh.Colour(lit ? BandLight[band] : "");
+                            Patch(mesh, new Vector3(0f, 0f, face),
+                                Point(row, side * Bands[band], face), Point(row, side * Bands[band + 1], face),
+                                Point(row + 1, side * Bands[band + 1], face), Point(row + 1, side * Bands[band], face));
+                        }
+                    }
+
+                    mesh.Colour(lit ? BandLight[0] : "");
+                    Patch(mesh, new Vector3(side, 0f, 0f),
+                        Point(row, side, 1f), Point(row, side, -1f), Point(row + 1, side, -1f), Point(row + 1, side, 1f));
+                }
+            }
+
+            mesh.Colour("");
+        }
+
+        /// <summary>
+        /// A slab of the torn sheet with some thickness: white on the side
+        /// <paramref name="toward"/> points to, which is the side that was
+        /// hidden until it tore, and grey underneath.
+        /// </summary>
+        private static void Slab(ShapeMesh mesh, Vector3 toward, Vector3 thickness, string top, bool[] open, params Vector3[] outline)
+        {
+            var under = outline.Select(corner => corner - thickness).ToArray();
+            var middle = outline.Aggregate(Vector3.zero, (sum, corner) => sum + corner) / outline.Length;
+            mesh.Colour(top);
+            Patch(mesh, toward, outline);
+            mesh.Colour("lilac-1");
+            Patch(mesh, -toward, under);
+            mesh.Colour("lilac-4");
+            for (var edge = 0; edge < outline.Length; edge++)
+            {
+                if (open[edge]) continue;
+                var next = (edge + 1) % outline.Length;
+                Patch(mesh, (outline[edge] + outline[next]) * 0.5f - middle, outline[edge], outline[next], under[next], under[edge]);
+            }
+        }
+
+        /// <summary>The flaps of the torn sheet, curled back from the edge on both faces: two to each stretch of the edge, none two alike.</summary>
+        private static void Flaps(ShapeMesh mesh)
+        {
+            var lengths = new[] { 0.2f, 0.09f, 0.26f, 0.13f, 0.17f, 0.07f, 0.23f, 0.11f, 0.15f, 0.28f, 0.1f };
+            var leans = new[] { 0.25f, 0.7f, 0.45f, 0.8f, 0.35f, 0.6f, 0.15f };
+            var tops = new[] { "paper", "cream", "paper", "white", "cream" };
+            var flap = 0;
+            for (var row = 0; row < Rows - 1; row++)
+            {
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    foreach (var face in new[] { 1f, -1f })
+                    {
+                        for (var part = 0; part < 2; part++)
+                        {
+                            flap++;
+                            // The back keeps fewer: the sheet tore towards the front.
+                            if (face < 0f && flap % 3 == 0) continue;
+                            var start = Point(row, side, face);
+                            var end = Point(row + 1, side, face);
+                            var from = Vector3.Lerp(start, end, part * 0.5f);
+                            var to = Vector3.Lerp(start, end, part * 0.5f + 0.5f);
+                            var along = (to - from).normalized;
+                            // Away from the gash, in the plane of the sheet.
+                            var away = new Vector3(along.y, -along.x, 0f).normalized;
+                            if (away.x * side < 0f) away = -away;
+                            var out_ = new Vector3(0f, 0f, face);
+                            var open = Mathf.Lerp(Gape(row), Gape(row + 1), part * 0.5f + 0.25f);
+                            var length = lengths[flap % lengths.Length] * (0.5f + 0.5f * open);
+                            // It lies nearly flat where it joins and lifts as it goes: a curl.
+                            var lift = away * (0.4f * length) + out_ * (0.08f * length);
+                            var bendFrom = Vector3.Lerp(from, to, 0.08f) + lift;
+                            var bendTo = Vector3.Lerp(from, to, 0.92f) + lift;
+                            var tip = Vector3.Lerp(from, to, leans[flap % leans.Length]) + away * length + out_ * (0.65f * length);
+
+                            var normal = Vector3.Cross(to - from, bendFrom - from).normalized;
+                            if (Vector3.Dot(normal, out_) < 0f) normal = -normal;
+                            var thickness = normal * 0.016f;
+                            var top = tops[flap % tops.Length];
+                            Slab(mesh, normal, thickness, top, new[] { true, false, true, false }, from, to, bendTo, bendFrom);
+                            Slab(mesh, normal, thickness, top, new[] { true, false, false }, bendFrom, bendTo, tip);
+                        }
+                    }
+                }
+            }
+        }
+
         public void Build(CryptSet crypt)
         {
             var thing = crypt.Stage[ThingName];
             _bone = crypt.Stage.Hold(ThingName, thing);
+            // The bone it hangs from is also the one its heading turns.
             _float = GameMasterBuild.Bone(_bone.gameObject, "Float", new Vector3(0f, Height, 0f));
             _tear = GameMasterBuild.Bone(_float.gameObject, "Tear", Vector3.zero);
             _shards = GameMasterBuild.Bone(_tear.gameObject, "Shards", Vector3.zero);
             var beyond = GameMasterBuild.Bone(_tear.gameObject, "Beyond", Vector3.zero);
             _drift = GameMasterBuild.Bone(beyond.gameObject, "Drift", Vector3.zero);
 
-            // On this side: shards of dark stone going round it, and three motes of light.
+            // On this side: the torn edge of the sheet, curled back.
+            Flaps(crypt.Solid.On(_tear));
+
+            // Scraps of it going round, and three motes of light.
             var solid = crypt.Solid.On(_shards);
-            for (var shard = 0; shard < 6; shard++)
+            for (var scrap = 0; scrap < 5; scrap++)
             {
-                var around = shard * 60f * Mathf.Deg2Rad;
-                var at = new Vector3(Mathf.Cos(around) * 0.78f, (shard % 3 - 1) * 0.32f, Mathf.Sin(around) * 0.78f);
-                solid.Colour(shard % 2 == 0 ? "night-1" : "violet")
-                    .At(at, Quaternion.Euler(shard * 23f, shard * 51f, 20f), 1f + 0.4f * (shard % 2))
-                    .Box(Vector3.zero, new Vector3(0.07f, 0.26f, 0.07f));
+                var around = (scrap * 72f + 20f) * Mathf.Deg2Rad;
+                var out_ = 0.62f + 0.07f * (scrap % 3);
+                var at = new Vector3(Mathf.Cos(around) * out_, (scrap * 2 % 5 - 2) * 0.3f, Mathf.Sin(around) * out_);
+                var size = 0.07f + 0.02f * (scrap % 3);
+                solid.At(at, Quaternion.Euler(scrap * 37f, scrap * 61f, scrap * 23f));
+                Slab(solid, Vector3.forward, Vector3.forward * 0.012f, scrap % 2 == 0 ? "paper" : "cream", new[] { false, false, false, false },
+                    new Vector3(-size, -size * 0.7f, 0f), new Vector3(size * 0.8f, -size, 0f),
+                    new Vector3(size, size * 0.5f, 0f), new Vector3(-size * 0.3f, size, 0f));
             }
 
             for (var mote = 0; mote < 3; mote++)
             {
                 var around = (mote * 120f + 30f) * Mathf.Deg2Rad;
-                solid.Colour("glow-lavender").At(new Vector3(Mathf.Cos(around) * 0.68f, 0.1f * mote - 0.1f, Mathf.Sin(around) * 0.68f))
+                solid.Colour("glow-lavender").At(new Vector3(Mathf.Cos(around) * 0.58f, 0.35f * mote - 0.35f, Mathf.Sin(around) * 0.58f))
                     .Ball(Vector3.zero, 0.025f, 2, 4);
             }
 
@@ -887,7 +1144,7 @@ namespace Wirenook.Meta.Crypt.Editor
             var window = crypt.Effect(GameMasterBuild.Material(CryptBuild.RiftWindowMaterial));
             var far = crypt.Effect(GameMasterBuild.Material(CryptBuild.RiftBeyondMaterial));
             var rim = crypt.Effect(GameMasterBuild.Material(CryptBuild.RiftRimMaterial));
-            crypt.Effects.On(_tear).Slot(window).Colour("").Ball(Vector3.zero, Radius, 5, 10);
+            Body(crypt.Effects.On(_tear).Slot(window), false);
 
             // The far side is drawn in the order it is added, farthest
             // first: the sky all round, then the rocks adrift in it.
@@ -908,7 +1165,7 @@ namespace Wirenook.Meta.Crypt.Editor
             }
 
             crypt.Effects.At(Vector3.zero);
-            crypt.Effects.On(_tear).Slot(rim).Colour("").Ball(Vector3.zero, Radius, 5, 10);
+            Body(crypt.Effects.On(_tear).Slot(rim), true);
 
             Sealed = new AvatarCheck("crypt-sealed", new CheckSpec
             {
@@ -934,15 +1191,27 @@ namespace Wirenook.Meta.Crypt.Editor
             crypt.Stage.Show(fx, ThingName, new[] { crypt.Path(_bone) }, thing.Shown, (clip, phase) =>
             {
                 if (phase != "on") return;
-                clip.Curve(shardsPath, typeof(Transform), "localEulerAnglesRaw.y", AnimationCurve.Linear(0f, 0f, 60f, 360f * 4f));
+                clip.Curve(shardsPath, typeof(Transform), "localEulerAnglesRaw.y", AnimationCurve.Linear(0f, 0f, 60f, 360f * 3f));
                 clip.Curve(driftPath, typeof(Transform), "localEulerAnglesRaw.y", AnimationCurve.Linear(0f, 0f, 60f, -360f));
                 clip.Loop();
             });
             crypt.ContactsLayer(ThingName, _contacts, thing);
 
-            // Sealing draws the whole of it down to nothing.
+            // Its heading: the tear turns, and the far side is told so that it turns too.
+            var floatPath = crypt.Path(_float);
+            fx.Layer("Rift Turn").State("Turn", fx.Clip("rift turn", clip => clip
+                .Curve(floatPath, typeof(Transform), "localEulerAnglesRaw.y", AnimationCurve.Linear(0f, 0f, 1f, 360f))
+                .Material<SkinnedMeshRenderer>(CryptSet.EffectsName, Heading, AnimationCurve.Linear(0f, 0f, 1f, 1f)))).MotionTime(thing.Value);
+
+            // Sealing draws the two sides together to a seam, and then the seam shut.
             var tearPath = crypt.Path(_tear);
-            Sealed.Look = clip => PopToggle.Scale(clip, tearPath, Curves.Eased((0f, 1f), (0.7f, 0.45f), (1f, 0f)));
+            Sealed.Look = clip =>
+            {
+                var closing = Curves.Eased((0f, 1f), (0.78f, 0.1f), (1f, 0f));
+                clip.Curve(tearPath, typeof(Transform), "m_LocalScale.x", closing)
+                    .Curve(tearPath, typeof(Transform), "m_LocalScale.z", closing)
+                    .Curve(tearPath, typeof(Transform), "m_LocalScale.y", Curves.Eased((0f, 1f), (0.78f, 0.88f), (1f, 0f)));
+            };
             AvatarSkillCheck.Layers(fx, Sealed);
 
             // It hums for as long as it is open, and sighs shut.
@@ -966,8 +1235,10 @@ namespace Wirenook.Meta.Crypt.Editor
 
         public void Menu(CryptSet crypt, GameObject parent)
         {
+            var thing = crypt.Stage[ThingName];
             crypt.Kit.Parameters.AddRange(AvatarSkillCheck.Parameters(Sealed));
-            crypt.MenuThing(parent, crypt.Stage[ThingName], "Rift", "ring");
+            var folder = crypt.MenuThing(parent, thing, "Rift", "ring");
+            crypt.Stage.MenuValue(FeaturePrefab.Child(folder, "Menu Turn"), thing, "Turn", "reset");
         }
     }
 }

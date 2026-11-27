@@ -24,6 +24,7 @@ from mathutils import Matrix, Vector
 
 import meta_spec
 import bot_geo
+import meta_pose
 
 BACKGROUND = (0.32, 0.36, 0.5)
 LIGHT = Vector((-0.45, -0.65, 0.62)).normalized()
@@ -35,7 +36,8 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="render_meta.py", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--out", default=str(meta_spec.REVIEW_DIR))
     parser.add_argument("--blend", default=str(meta_spec.BLEND_PATH))
-    parser.add_argument("--only", default="", help="comma-separated picture groups (rest, idle, head, hands, point, walk, sit, reach, hues); default all")
+    parser.add_argument("--only", default="", help="comma-separated picture groups (rest, idle, head, hands, point, walk, sit, reach, arms, hues); default all")
+    parser.add_argument("--tag", default="", help="a suffix for the pictures' names, to keep a sheet from before a change beside the one after")
     return parser.parse_args(argv)
 
 
@@ -44,17 +46,19 @@ def review_material(body):
     unshaded, and the hue of the signature texels on a dial. Returns the dial (a Hue/Saturation node)."""
     material = body.material_slots[0].material
     tree = material.node_tree
-    images = {node.label or node.image.name: node.image for node in tree.nodes if node.type == "TEX_IMAGE"}
     for node in list(tree.nodes):
         tree.nodes.remove(node)
 
-    def texture(name):
+    def texture(path):
+        # From the file the build wrote, wherever the .blend remembers it to have been.
         node = tree.nodes.new("ShaderNodeTexImage")
-        node.image = next(image for label, image in images.items() if image.name.startswith(name))
+        node.image = bpy.data.images.load(str(path), check_existing=False)
         node.interpolation = "Closest"
         return node
 
-    colour, glow, tint = texture(meta_spec.ATLAS_PNG.name), texture(meta_spec.EMISSION_PNG.name), texture(meta_spec.TINT_PNG.name)
+    colour, glow, tint = texture(meta_spec.ATLAS_PNG), texture(meta_spec.EMISSION_PNG), texture(meta_spec.TINT_PNG)
+    for node in (glow, tint):
+        node.image.colorspace_settings.name = "Non-Color"
     output = tree.nodes.new("ShaderNodeOutputMaterial")
     dial = tree.nodes.new("ShaderNodeHueSaturation")
     tree.links.new(colour.outputs["Color"], dial.inputs["Color"])
@@ -308,6 +312,19 @@ def main():
         pose_reach(armature)
         close("reach", {"front": (FULL, (0, -1, 0.03), 2.2), "three-quarter": (FULL, (-0.62, -1, 0.22), 2.2),
                         "back": (FULL, (0.5, 1, 0.2), 2.2), "head": ((0, 0, 1.52), (0.4, -1, 0.1), 0.9)}, 4)
+    if wanted("arms"):
+        # The ends of what arms do, a row to a pose: where cloth over the shoulders gives way.
+        views = {"front": ((0, 0, 1.42), (0, -1, 0.05), 1.5), "front-high": ((0, 0, 1.42), (-0.6, -1, 0.7), 1.5),
+                 "back": ((0, 0, 1.42), (0, 1, 0.05), 1.5), "back-high": ((0, 0, 1.42), (0.6, 1, 0.7), 1.5)}
+        paths = []
+        for name, left, right in meta_pose.SHEET:
+            meta_pose.arms(armature, left, right)
+            for view, (target, direction, width) in views.items():
+                aim(camera, target, direction, width)
+                path = out / "tiles" / f"arms{args.tag}-{name}-{view}.png"
+                render(scene, path, (560, 560))
+                paths.append(path)
+        sheet(paths, len(views), out / f"arms{args.tag}.png")
     if wanted("hues"):
         pose_idle(armature)
         paths = []

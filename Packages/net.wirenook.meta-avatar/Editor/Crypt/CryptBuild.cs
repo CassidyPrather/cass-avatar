@@ -33,7 +33,7 @@ namespace Wirenook.Meta.Crypt.Editor
         public const string SolidMesh = Generated + "/crypt-solid.asset";
         public const string EffectsMesh = Generated + "/crypt-effects.asset";
 
-        /// <summary>What the crypt's solid shapes are drawn with: the wirenook palette, glowing where the palette glows.</summary>
+        /// <summary>What the crypt's solid shapes are drawn with: the wirenook palette, glowing where the palette glows, with pixel detail laid over (<see cref="CryptDetail"/>).</summary>
         public const string CryptMaterial = Generated + "/crypt.mat";
 
         public const string RiftWindowMaterial = Generated + "/crypt-rift-window.mat";
@@ -103,6 +103,8 @@ namespace Wirenook.Meta.Crypt.Editor
             var crypt = AssetFolders.LoadOrCreate(CryptMaterial, () => new Material(Shader.Find(ToonMaterial.ShaderName)));
             // Rings and blades are single sheets, seen from both sides.
             ToonMaterial.Configure(crypt, palette, glow, doubleSided: true);
+            // Grain and grit in the figure's pixels, over the flat colours.
+            CryptDetail.Paint(crypt);
             EditorUtility.SetDirty(crypt);
 
             var volume = Shader.Find("Wirenook/Stage Volume");
@@ -138,6 +140,9 @@ namespace Wirenook.Meta.Crypt.Editor
                 material.SetFloat("_ColorMask", colour ? 15f : 0f);
                 material.SetFloat("_StencilComp", (float)stencil);
                 material.SetFloat("_StencilPass", (float)then);
+                // Behind the tear's front face and a little above its middle; the far side turns with the tear.
+                material.SetVector("_EyeDirection", new Vector4(0.07f, 0.1f, -1f, 0f));
+                material.SetFloat(RiftPiece.Heading, 0f);
                 material.renderQueue = queue;
                 EditorUtility.SetDirty(material);
                 return material;

@@ -559,9 +559,9 @@ class Builder:
         """Welds each chosen solid's vertices and returns plain lists for mesh creation.
 
         Returns a dict with `vertices` (pixels), `faces` (index tuples), `loops` (island, u, v per
-        face corner), `materials` (per face), `weights` (per vertex), `sprite` (per vertex, bool)
-        and `tags` (tag -> vertex indices)."""
-        vertices, faces, loops, materials, weights, sprite, tags = [], [], [], [], [], [], {}
+        face corner), `materials` (per face), `solids` (per face, the name of its solid), `weights`
+        (per vertex), `sprite` (per vertex, bool) and `tags` (tag -> vertex indices)."""
+        vertices, faces, loops, materials, weights, sprite, tags, solids = [], [], [], [], [], [], {}, []
         for solid in self.solids:
             if not chosen(solid):
                 continue
@@ -584,5 +584,6 @@ class Builder:
                 faces.append(tuple(face))
                 loops.append([(island, uv[0], uv[1]) for uv in uvs])
                 materials.append(solid.material)
-        return {"vertices": vertices, "faces": faces, "loops": loops, "materials": materials, "weights": weights,
-                "sprite": sprite, "tags": tags}
+                solids.append(solid.name)
+        return {"vertices": vertices, "faces": faces, "loops": loops, "materials": materials, "solids": solids,
+                "weights": weights, "sprite": sprite, "tags": tags}

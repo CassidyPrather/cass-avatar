@@ -344,7 +344,7 @@ MonoBehaviour:
     its wearer chooses. AGPLv3. github.com/CassidyPrather/cass-avatar
   extraTags: []
   carries: []
-  unreleased: 1
+  unreleased: 0
 --- !u!114 &52411873375921658
 MonoBehaviour:
   m_ObjectHideFlags: 0

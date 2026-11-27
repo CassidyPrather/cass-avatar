@@ -33,8 +33,10 @@ namespace Wirenook.Meta.Crypt.Editor
     /// on, how the barricade comes down under hands and under fire, that
     /// the chest opens only once the key is taken, that the danger zone
     /// warns for as long as it says before it strikes, that the rift
-    /// seals, creeps open and stays shut, and that a value on the bus
-    /// reaches a viewer. It cannot prove that VRChat's contacts, stencils
+    /// seals, creeps open and stays shut, that the pendulum swings in step
+    /// for a viewer and for someone who arrives part way through, over a
+    /// network that is late by a different amount each time, and that a
+    /// value on the bus reaches a viewer. It cannot prove that VRChat's contacts, stencils
     /// or drivers behave as stood in for; none of this has run in a
     /// client.
     /// </summary>
@@ -181,6 +183,7 @@ namespace Wirenook.Meta.Crypt.Editor
             using (var table = Seat()) Barricade(table, text, problems);
             using (var table = Seat()) Chest(table, controller, text, problems);
             using (var table = Seat()) Danger(table, text, problems);
+            using (var table = Seat()) Pendulum(table, prefab, controller, synced, text, problems);
             using (var table = Seat()) Rift(table, controller, text, problems);
             using (var table = Seat()) Values(table, text, problems);
             return text + (problems.Count == 0 ? "ok" : "FAILED\n  " + string.Join("\n  ", problems.Distinct()));
@@ -244,7 +247,7 @@ namespace Wirenook.Meta.Crypt.Editor
         {
             var sized = plan.Things.Count(thing => thing.name.StartsWith("Zone ", StringComparison.Ordinal) || thing.name == PauseTool.ThingName ||
                                                    thing.name.EndsWith(" Zone", StringComparison.Ordinal) || thing.name == DangerPiece.ThingName);
-            var turned = new[] { BarricadePiece.ThingName, ChestPiece.ChestName, PendulumPiece.ThingName }.Count(name => plan.Things.Any(thing => thing.name == name));
+            var turned = new[] { BarricadePiece.ThingName, ChestPiece.ChestName, PendulumPiece.ThingName, RiftPiece.ThingName }.Count(name => plan.Things.Any(thing => thing.name == name));
             return sized + " sizes and " + turned + " headings";
         }
 
@@ -488,6 +491,147 @@ namespace Wirenook.Meta.Crypt.Editor
             table.Run(cycle + 0.5f);
             var after = Watch(table.Stranger, 4f);
             if (after.strikes > 0) problems.Add("The danger zone went on striking after it was told to stop.");
+        }
+
+        /// <summary>
+        /// The pendulum: that the wearer's clock keeps its time, that a
+        /// stranger's blade crosses the middle when the wearer's does and
+        /// does not fall further behind as the minutes go, and the same
+        /// for someone who arrives part way through a swing and whose
+        /// updates come at uneven intervals.
+        /// </summary>
+        private static void Pendulum(Table table, GameObject prefab, AnimatorController controller, List<string> synced, StringBuilder text, List<string> problems)
+        {
+            const string arm = "Stage/" + PendulumPiece.ThingName + "/Turn/Arm";
+            float Angle(Client client) => Mathf.DeltaAngle(0f, At(client, arm).localEulerAngles.z);
+
+            table.Stand(PendulumPiece.ThingName, true);
+            table.GoLive(true);
+            table.Run(2f);
+
+            // When each client's blade came through the middle, and how far it has swung.
+            var now = 0f;
+            var crossed = new Dictionary<Client, List<float>>();
+            var last = new Dictionary<Client, float>();
+            var widest = new Dictionary<Client, float>();
+            void Watch(Client client)
+            {
+                var angle = Angle(client);
+                if (!crossed.ContainsKey(client))
+                {
+                    crossed[client] = new List<float>();
+                    widest[client] = 0f;
+                    last[client] = angle;
+                }
+
+                if (angle * last[client] < 0f) crossed[client].Add(now);
+                if (angle != 0f) last[client] = angle;
+                widest[client] = Mathf.Max(widest[client], Mathf.Abs(angle));
+            }
+
+            // Someone whose client first hears of the avatar a third of the way through a swing,
+            // and hears from it afterwards at anything from a twentieth to three tenths of a second.
+            Client late = null;
+            var grid = new WorldGrid(512f);
+            var chance = new System.Random(20261127);
+            var untilHeard = 0f;
+            const float joinsAt = 7.43f;
+            const float watched = 60f;
+            try
+            {
+                for (now = 0f; now < watched; now += Step)
+                {
+                    table.Frame();
+                    if (late == null && now >= joinsAt)
+                    {
+                        late = new Client(prefab, controller, BusPrefix, false, false);
+                        late.AlsoSynced.AddRange(synced);
+                        late.Receive(table.Wearer);
+                    }
+
+                    if (late != null)
+                    {
+                        untilHeard -= Step;
+                        if (untilHeard <= 0f)
+                        {
+                            late.Receive(table.Wearer);
+                            untilHeard = 0.05f + 0.25f * (float)chance.NextDouble();
+                        }
+
+                        late.Ease(false);
+                        late.Advance(grid);
+                        Watch(late);
+                    }
+
+                    Watch(table.Wearer);
+                    Watch(table.Stranger);
+                }
+
+                // The wearer's blade comes through the middle twice a swing.
+                var expected = Mathf.RoundToInt(watched / PendulumPiece.SwingSeconds * 2f);
+                var count = crossed[table.Wearer].Count;
+                if (Mathf.Abs(count - expected) > 2)
+                    problems.Add("In " + watched + " s the wearer's pendulum came through the middle " + count + " times; " + expected + " was expected.");
+                foreach (var (client, name) in new[] { (table.Wearer, "the wearer"), (table.Stranger, "a stranger"), (late, "someone who arrived part way through") })
+                    if (Mathf.Abs(widest[client] - PendulumPiece.SwingDegrees) > 0.5f)
+                        problems.Add("For " + name + " the pendulum swings " + widest[client].ToString("0.0") + " degrees to a side; it should be " + PendulumPiece.SwingDegrees + ".");
+
+                // How long after the wearer's blade each viewer's comes through the middle. (Here a viewer
+                // can be a frame ahead: an update may arrive in the frame the wearer's clock turned the
+                // bit over, which the wearer's own blade acts on a frame later.)
+                (float worst, float atEnd, int counted) Behind(Client client, float from)
+                {
+                    var worst = 0f;
+                    var atEnd = 0f;
+                    var counted = 0;
+                    foreach (var time in crossed[client].Where(time => time >= from))
+                    {
+                        if (crossed[table.Wearer].Count == 0) continue;
+                        var nearest = crossed[table.Wearer].OrderBy(wearer => Mathf.Abs(wearer - time)).First();
+                        atEnd = time - nearest;
+                        worst = Mathf.Max(worst, Mathf.Abs(atEnd));
+                        counted++;
+                    }
+
+                    return (worst, atEnd, counted);
+                }
+
+                var stranger = Behind(table.Stranger, 0f);
+                // A tenth of a second of network, and a frame or two.
+                if (stranger.counted < count - 2 || stranger.worst > NetworkSeconds + 0.1f)
+                    problems.Add("A stranger's pendulum came through the middle " + stranger.counted + " times, up to " + stranger.worst.ToString("0.00") +
+                                 " s after the wearer's; it should keep within " + (NetworkSeconds + 0.1f).ToString("0.00") + " s every time.");
+
+                // The late client is given two swings to fall in, though it should need less than one.
+                var joiner = Behind(late, joinsAt + PendulumPiece.SwingSeconds);
+                var wanted = Mathf.RoundToInt((watched - joinsAt - PendulumPiece.SwingSeconds) / PendulumPiece.SwingSeconds * 2f);
+                if (joiner.counted < wanted - 2 || joiner.worst > 0.3f + 0.12f)
+                    problems.Add("Someone who arrived part way through, hearing from the wearer unevenly, saw the pendulum come through the middle " + joiner.counted +
+                                 " times (about " + wanted + " expected), up to " + joiner.worst.ToString("0.00") + " s after the wearer's; no update was more than 0.30 s late.");
+                var soon = Behind(late, joinsAt).counted - joiner.counted;
+                text.AppendLine("Pendulum: " + count + " passes through the middle in " + watched + " s for the wearer; a stranger's blade at most " +
+                                stranger.worst.ToString("0.00") + " s behind; someone arriving part way through, with updates up to 0.30 s apart, at most " +
+                                joiner.worst.ToString("0.00") + " s behind and " + joiner.atEnd.ToString("0.00") + " s at the end, in step from their first full swing (" +
+                                soon + " passes in it)");
+            }
+            finally
+            {
+                late?.Dispose();
+            }
+
+            // Taken away, the clock stops; set out again, it starts.
+            table.Wearer.Animator.SetBool(On(PendulumPiece.ThingName), false);
+            table.Run(PendulumPiece.SwingSeconds * 1.5f);
+            if (!In(table.Wearer, controller, "Pendulum Clock", "Stopped")) problems.Add("The pendulum's clock goes on running after the pendulum is taken away.");
+            var swing = PendulumPiece.Swing(CryptPrefix);
+            var flips = 0;
+            var held = table.Wearer.Animator.GetBool(swing);
+            table.Run(PendulumPiece.SwingSeconds * 2f, () =>
+            {
+                if (table.Wearer.Animator.GetBool(swing) != held) flips++;
+                held = table.Wearer.Animator.GetBool(swing);
+            });
+            if (flips > 0) problems.Add("With the pendulum taken away its synced bit still turned over " + flips + " times.");
         }
 
         /// <summary>The rift: sealing, creeping open when left, and staying shut once shut.</summary>

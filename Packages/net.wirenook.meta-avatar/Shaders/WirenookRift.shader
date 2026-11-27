@@ -1,17 +1,20 @@
 // A window on somewhere else. Three materials of this one shader, drawn in
 // this order by their render queues, make a rift:
 //
-//   the window   a ball. Draws no colour: it marks its pixels in one bit of
-//                the stencil buffer and writes its own depth over whatever
-//                was behind it.
+//   the window   the body of the tear: a closed shape with two faces and an
+//                edge. Draws no colour: it marks its pixels in one bit of the
+//                stencil buffer and writes its own depth over whatever was
+//                behind it.
 //   the beyond   everything on the far side. Drawn only on marked pixels,
 //                and only where it lies behind the window's surface (the
 //                depth the window wrote), so that what is between the
 //                viewer and the window is not mistaken for what is through
 //                it. It does not write depth, and is drawn in the order its
 //                triangles come in: farthest first.
-//   the rim      the ball again, to take the mark off, with a little light
-//                where it is seen edge on.
+//   the rim      the body again, from the same points, to take the mark off.
+//                Its first UV coordinate is how much light a face has: the
+//                faces are cut into bands, and the bands along the torn edge
+//                are lit, in steps and not a gradient.
 //
 // The far side is shaded here and not by a texture. A vertex whose second
 // UV coordinate is above a half belongs to the sky: its colour comes from
@@ -19,6 +22,10 @@
 // since it does not slide as the viewer moves. Anything else is a flat
 // shade between _Deep and _Glow, by its first UV coordinate, and does
 // slide, because it really is where it is drawn.
+//
+// _Heading is which way the tear faces, as a share of a turn about the
+// vertical; the build animates it with the tear's own heading. The sky is
+// looked up in the tear's frame, so the eye stays behind the same face.
 Shader "Wirenook/Rift"
 {
     Properties
@@ -27,7 +34,8 @@ Shader "Wirenook/Rift"
         _Deep ("The dark of the far side", Color) = (0.03, 0.01, 0.07, 1)
         _Glow ("Its light", Color) = (0.42, 0.2, 0.75, 1)
         _Eye ("The eye in its sky", Color) = (0.75, 1, 0.55, 1)
-        _EyeDirection ("Where the eye is (a direction in the world)", Vector) = (0.55, 0.3, 0.78, 0)
+        _EyeDirection ("Where the eye is (a direction in the tear's frame)", Vector) = (0.07, 0.1, -1, 0)
+        _Heading ("Which way the tear faces (a share of a turn)", Range(0, 1)) = 0
         _Bit ("Stencil bit it marks (a power of two)", Float) = 8
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("Depth test", Float) = 4
         [Enum(Off,0,On,1)] _ZWrite ("Depth write", Float) = 0
@@ -46,7 +54,7 @@ Shader "Wirenook/Rift"
             "RenderType" = "Transparent"
             "IgnoreProjector" = "True"
             "DisableBatching" = "True"
-            // With the avatar's shaders blocked there is no window: show nothing rather than a grey ball.
+            // With the avatar's shaders blocked there is no window: show nothing rather than a grey shape.
             "VRCFallback" = "Hidden"
         }
 
@@ -77,6 +85,7 @@ Shader "Wirenook/Rift"
             float4 _Glow;
             float4 _Eye;
             float4 _EyeDirection;
+            float _Heading;
 
             struct appdata
             {
@@ -115,6 +124,15 @@ Shader "Wirenook/Rift"
                 return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
             }
 
+            // A direction in the world, in the tear's frame: the turn about the vertical undone.
+            float3 unturned(float3 dir)
+            {
+                float angle = _Heading * 6.283185307;
+                float s = sin(angle);
+                float c = cos(angle);
+                return float3(dir.x * c - dir.z * s, dir.y, dir.x * s + dir.z * c);
+            }
+
             // The sky of the far side, from the direction it is looked at in.
             float3 sky(float3 dir)
             {
@@ -135,7 +153,7 @@ Shader "Wirenook/Rift"
                 float facing = dot(dir, eye);
                 float2 at = float2(dot(dir, right), dot(dir, up));
                 float breathe = 0.9 + 0.1 * sin(_Time.y * 0.6);
-                const float size = 0.2;
+                const float size = 0.16;
                 float inside = step(0.0, facing) * (1.0 - smoothstep(size - 0.012, size, length(at)));
                 float halo = step(0.0, facing) * (1.0 - smoothstep(size, size * 2.6, length(at)));
                 colour += _Eye.rgb * halo * halo * 0.22 * breathe;
@@ -167,14 +185,16 @@ Shader "Wirenook/Rift"
 
                 if (_Part < 1.5)
                 {
-                    if (i.uv.y > 0.5) return fixed4(sky(-toEye), 1);
+                    if (i.uv.y > 0.5) return fixed4(sky(unturned(-toEye)), 1);
                     return fixed4(lerp(_Deep.rgb * 0.35, _Glow.rgb, saturate(i.uv.x)), 1);
                 }
 
-                // The rim: light where the ball is seen edge on.
+                // The rim: the bands along the torn edge, and a little light where a face is seen edge on.
+                float band = saturate(i.uv.x);
                 float edge = 1.0 - abs(dot(normalize(i.normal), toEye));
                 edge = edge * edge;
-                return fixed4(_Glow.rgb * 1.3, edge * edge * 0.9);
+                float3 light = lerp(_Glow.rgb * 1.3, float3(1.0, 0.96, 1.0), band * 0.6);
+                return fixed4(light, max(band, edge * edge * 0.6));
             }
             ENDCG
         }
