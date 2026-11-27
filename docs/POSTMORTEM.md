@@ -880,3 +880,59 @@ tint, as plain zones do.
   and once more before a grandchild.
 - **`CASS_UNATTENDED=1` held for a whole run**: thirty-seven uploads with
   nobody there, none waiting behind a window.
+
+### The same session: an afternoon before a demo
+
+The owner read the report from the road and asked for fixes, the world on
+VRChat and the avatars public, all before six that evening. Five hours
+were allowed and three were used.
+
+- **The mantle** half-followed the upper arm (55 % at most), and cloth
+  that half-follows an arm stays put while the arm turns under it. It is
+  now a bib on the chest and a cap on each upper arm, drawn as worn and
+  stored in the T-pose. `meta_validate.py` poses the arms eleven ways and
+  fails on a sleeve face crossing a mantle face; the old model fails
+  seven of them.
+- **The pendulum is in step.** A synced parameter cannot be animated, but
+  a driver on a layer that runs only for the wearer can flip a synced
+  bool. It flips at each end of the swing; every client swings across on
+  the flip and waits at the end, so lateness is spent out of the wait and
+  not carried forward.
+- **The world went up from the avatar project's editor.** The world
+  project only ever runs in batch mode and nobody is signed in there; the
+  avatar editor is signed in and has `VRCApi`, which is all the Worlds
+  SDK's builder uses after a build. `VRCApi` labels what it sends with
+  the editor's own platform, so the Android and iOS bundles go through a
+  copy of its two requests that names the platform
+  (`WorldUpload.UpdateBundleFor`), with no platform switch. A world's
+  first upload has to be for the editor's platform.
+- **Publishing a world is a call of its own** (`VRCApi.PublishWorld`),
+  allowed about once a week. A fork that only had the owner's "World:
+  Public" relayed to it was refused the call; the main conversation,
+  where the owner said it, was not. A relayed permission is not the
+  permission.
+- **A world's audio source without a VRC Spatial Audio Source gets one**,
+  with ten decibels of gain and forty metres of range. Every source in
+  the world now carries its own with a gain of nought.
+- **A sky material shared a file name with a palette colour** and had
+  been a flat Standard material since it was made. Nobody saw: the stills
+  had a sky-coloured background.
+- **A short loop is heard as a loop.** The night's crickets are one
+  ten-second recording at three speeds on three sources, so the mixture
+  takes minutes to come round.
+- **The release script was given `CassidyPrather/assets` for
+  `wirenook-assets`** and reported "CI on main: none" with exit code 0.
+  It had pushed to the right place, since git goes by the remote, and
+  looked for runs in the wrong one. Read the remote; do not type the name.
+- **The bridge once threw `PermissionError` reading its answer file while
+  the upload it was answering for had succeeded.** After a `Send` that
+  errors, ask `scripts/world.sh live` before sending again.
+- **Recorded sounds were chosen by name and measurement**, and levelled
+  to the synthesised ones they replaced with a limiter. Nobody has heard
+  them.
+
+Open: none of the afternoon has been in a client either. The yard west
+of the dungeon is where the crypt's pieces fit (a beam for the pendulum,
+a gap for the barricade, a plinth, a ledge, a dark bay); a test holds
+its sizes to the crypt's, read from `CryptPieces.cs` by hand, so a
+change there needs the test's numbers changed with it.
