@@ -58,6 +58,7 @@ Spec/*.json ──────────────────────�
 | [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign, the crash and the vanish for when you are away, and the shape collector: a collect-the-shapes course laid out in any world from the avatar (the pilot for world-sync's bus). |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat contacts put to use. A kit on the standard contact tags: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. And skill checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Their avatar demo is a campfire, a match and a marshmallow. |
+| [`selective-animation`](https://github.com/CassidyPrather/selective-animation) | `net.wirenook.selective-animation` | Things an avatar does for only some of the people looking at it: whoever its wearer points at and marks (one raycast against the viewer's own collider, after VRLabs' Selective Animation), or whoever carries the same circle. With a reticle, a latch, and a probe for testing it in a client. No variant carries it yet. |
 
 
 [`wirenook-world`](https://github.com/CassidyPrather/wirenook-world) is
@@ -847,6 +848,9 @@ Wirenook.Validation.Editor.<Name>.Render <slug>`, pictures in
   time, read back from the built mesh.
 - `GripPreview`: each held prop in its hand with the finger pose the
   build gave it, from five sides.
+- `SelectivePreview` (no slug): the selective-animation probe's lamps
+  and reticle, its animator played with what one viewer's client, and
+  then the wearer's, would hold.
 - `PartsPreview`: a one-piece prop (`OnePieceProp`) with its parts at
   chosen sizes.
 

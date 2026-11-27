@@ -24,3 +24,7 @@
 	path = modules/wirenook-world
 	url = https://github.com/CassidyPrather/wirenook-world.git
 	branch = claude/setup
+[submodule "modules/selective-animation"]
+	path = modules/selective-animation
+	url = https://github.com/CassidyPrather/selective-animation.git
+	branch = claude/setup
