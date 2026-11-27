@@ -809,3 +809,63 @@ Gotchas from that:
 Open: none of it has been in a client, and the adventure-tools README
 lists what to try first. The megaphone was set aside by its owner. The
 seat is one, where several were asked for.
+
+### The same session: one module's game master
+
+The last item of the list: a game master made over for one adventure,
+`meta-dm-crypt`, with six kinds of thing to set down (zones of an
+element, a danger zone, a barricade, a chest and its key, a pendulum, a
+rift), a course that is laid out behind the scenes and made live at
+once, and a start on spending fewer synced bits.
+
+- **The bits were saved by time-division, on a channel that already
+  took turns.** The anchor bus reads each thing's place out in turn; it
+  now reads a byte out beside it. Fifteen sizes and headings cost eight
+  bits, not 120, and `meta-dm` itself went from 160 to 136. What it
+  costs is in world-sync's README: a second or two before other people
+  have a change, a round before a late arrival has anything, and a
+  dial that is followed in steps. A value that changes jumps the queue;
+  noticing that it has changed took a blend tree that subtracts, since
+  an animator cannot compare two parameters.
+- **The kit needed four small things to be made over**: a value and a
+  "rehearsed" mark on what a tool asks the stage for, a feature id and a
+  list of what it replaces, and a colour of its own on the volume
+  shader. Everything else the crypt is built from was already public.
+
+Gotchas from that:
+
+- **A listener that copies once can be a step of the grid out.** With
+  six things nothing showed; with fifteen, a client that eases synced
+  floats had one slot 3.4 cm off where 3.1 is allowed, because the
+  check's places came round in a new order. The listener now copies a
+  second time while the number is still up.
+- **Time a thing from before the button is pressed.** The danger zone
+  seemed to warn for 1.84 s and not 2: the stopwatch was started after
+  the press had already reached the viewer.
+- **A kit's declared parameters are not all in its controller.** The
+  notices it carries have an animator of their own; a check that copies
+  "every synced parameter" across has to ask the controller which it
+  holds.
+- **Someone else's copy of a synced check drains.** Only the wearer's
+  client completes a check that spends a bit on being done; a preview
+  played as a stranger showed the key coming back.
+- **A window on somewhere else has to hide what is on this side of
+  it.** Drawing the far side wherever the stencil is marked also draws
+  whatever of it lies between the viewer and the window. The window
+  writes its own depth and the far side is drawn only where it is
+  farther than that.
+- **A far sky is shaded by direction, not position.** It then does not
+  slide as the viewer moves, which is all "far away" is; the rocks that
+  do slide are real geometry.
+- **A contact is three metres of radius at most**, after scaling. The
+  zones that carry a trait stop there, and the abstract ones, which
+  carry nothing, go to sixteen.
+- **A star field by cells of direction needs small cells.** At 26 to
+  the unit a "star" was a square a hand wide.
+- **The rank of a demonstration is set by what it adds to.** The crypt's
+  nine contacts are Poor only on top of the skeleton key's twenty.
+
+Open: none of it has been in a client; the README lists the two minutes
+that would settle each point. The pieces have no heading but a dial.
+Overlapping zones of an element and plain zones cancel each other's
+tint, as plain zones do.

@@ -1,0 +1,236 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &398697602420501046
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 731860820715784546}
+    m_Modifications:
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.010721933
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.06917431
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.029999733
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.054314446
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.054314688
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7050167
+      objectReference: {fileID: 0}
+    - target: {fileID: 1644207489086140444, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.7050187
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.010721938
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.06917419
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.00000023843404
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.054314446
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.054314688
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7050167
+      objectReference: {fileID: 0}
+    - target: {fileID: 7170932342921554558, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.7050187
+      objectReference: {fileID: 0}
+    - target: {fileID: 9044416788153992182, guid: dc1273f3e41387d4d8575742b28d17f2,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Game Master (Crypt)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: dc1273f3e41387d4d8575742b28d17f2, type: 3}
+--- !u!4 &786963399502438636 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1108921599190452954, guid: dc1273f3e41387d4d8575742b28d17f2,
+    type: 3}
+  m_PrefabInstance: {fileID: 398697602420501046}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &8562509012501759496
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 5678142935526714962, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: avatarName
+      value: meta-dm-crypt
+      objectReference: {fileID: 0}
+    - target: {fileID: 5678142935526714962, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: description
+      value: 'A hooded low-poly game master from wirenook.net, fitted out for one
+        adventure, The Sunken Crypt: zones of heat, cold and wind, a danger zone,
+        a barricade, a locked chest, a pendulum and a rift. AGPLv3. github.com/CassidyPrather/cass-avatar'
+      objectReference: {fileID: 0}
+    - target: {fileID: 8626613963909862864, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_Name
+      value: meta-dm-crypt
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 786963399502438636}
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 93aac3eb41c79594bb932c5dde56e2d5, type: 3}
+--- !u!4 &731860820715784546 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9006129556091162474, guid: 93aac3eb41c79594bb932c5dde56e2d5,
+    type: 3}
+  m_PrefabInstance: {fileID: 8562509012501759496}
+  m_PrefabAsset: {fileID: 0}

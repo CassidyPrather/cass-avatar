@@ -335,6 +335,7 @@ children.
 | `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. Not uploaded yet, and private when it is. See [The game master](#the-game-master). |
 | `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. Not uploaded yet, and private when it is. See [The spectator](#the-spectator). |
 | `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. Not uploaded yet, and private when it is. See [Running a scene](#running-a-scene). |
+| `meta-dm-crypt` | Poor | `meta-dm` made over for one adventure, as an example of doing that: zones that are hot, cold or windy, a danger zone that warns before it strikes, a barricade that hands take apart or fire burns, a chest that opens once its key is found, a swinging blade and a rift that hands seal, all laid out behind the scenes and made live with one switch. PC only. Not uploaded yet, and private when it is. See [One module's game master](#one-modules-game-master). |
 | `meta-probe` | Good | Not for wearing: `meta` with five lamps over its head that show what each viewer's client worked out, to find out in a VRChat client whether the mechanisms under the spectator work. PC and Android (Medium there). See [The spectator](#the-spectator). |
 
 ### How much a variant carries
@@ -732,7 +733,8 @@ signature colour.
   wearer alone on a board of their own (and the people backstage, if the
   wearer says so). A public roll shows whether or not the wearer does.
 - **Pause.** One press drops a ring where the wearer stands, sized by a
-  dial, with a pause sign over it and a sound. On PC the inside is dimmed
+  dial (other people see a turn of it a second or two later: the sizes
+  ride the bus, below), with a pause sign over it and a sound. On PC the inside is dimmed
   (the game master excepted) and everyone whose eyes are inside has a
   card on their screen saying so.
 - **Zones.** Three spheres to aim and set down, each sized by a dial and
@@ -754,7 +756,9 @@ signature colour.
 What stands in the world (the pause, the zones, both ends of the portal)
 rides one anchor bus of `net.wirenook.world-sync`, so six things sync
 what one position costs, and a late arrival has them all within one round
-of it. A thing is aimed with the finger, set down with a fist, measured,
+of it. The bus also carries a value for each thing, which is where the
+four sizes travel: eight synced bits between them, where a synced float
+each was thirty-two. A thing is aimed with the finger, set down with a fist, measured,
 read out ahead of the bus's round and only then switched on, about two
 seconds after the click: nobody is shown it where it used to stand. The
 kit's two meshes are made in code and stand apart from the wearer's
@@ -772,21 +776,128 @@ scene.
 | Contacts | 21 (Medium) | 1 |
 | Raycasts | 3 | 3 (Medium) |
 | Bones | 79 | 66 |
-| Synced bits | 160 | 160 |
+| Synced bits | 136 | 136 |
 
 On PC three things each hold it at Medium, so none is worth giving up
 alone: a third skinned mesh for the shapes that need the kit's own
 shaders, ten material slots, and the key's contacts. On mobile it is two
 skinned meshes in two materials, which is all Android and iOS allow
 before Very Poor: nothing more that is a mesh of its own can be added
-there, which is why the carry seat is left out of those builds. The 160
-synced bits are the kit's 140 (the bus is 57 of them), `meta`'s 10,
-presence's 8, flight's 1 and the seat's 1; 96 are left for a game master
+there, which is why the carry seat is left out of those builds. The 136
+synced bits are the kit's 116 (the bus is 65 of them), `meta`'s 10,
+presence's 8, flight's 1 and the seat's 1; 120 are left for a game master
 made for one module, which is the same kit built with more tools in its
-list (the package's README has how).
+list (the package's README has how, and
+[the next section](#one-modules-game-master) is one).
 
 Not done: the megaphone, set aside for now; and the seat is the one cloud
 of `avatar-stations`, not several.
+
+### One module's game master
+
+`meta-dm-crypt` is `meta-dm` made over for one adventure, a module called
+The Sunken Crypt that exists only to be an example. Its kit is the plain
+kit with one more tool in the list (`CryptTool`, in
+`Packages/net.wirenook.meta-avatar/Editor/Crypt`), built with nothing but
+the kit's public parts, the skill checks of `net.wirenook.contacts` and
+VRChat's standard contact tags. The prefab names the plain kit as what it
+replaces, so the variant can extend `meta-dm`. Under "Game Master ▸
+Crypt":
+
+- **Zones that are hot, cold or windy.** A ring of dashes in the
+  element's colour, with embers rising, flakes falling or streaks of air
+  going round inside it, a faint tint over everything in it, and a
+  contact sender with the trait (`Hot`, `Cold`, `Wind`) filling it. An
+  avatar with the contact reactions of `net.wirenook.contacts` says HOT!
+  in one; anything of anybody's that listens for those tags does what it
+  does. 0.75 to 3 m: VRChat allows a contact three metres of radius, and
+  a zone that looked bigger than it acts would be a lie.
+- **A danger zone** that shows where it will strike before it does: a
+  dark disc spreads from the middle for two seconds, and when it fills
+  the ring the ground jabs up and the zone carries `Damage` and
+  `DamageBlunt` for a third of a second. Once, or over and over. Nothing
+  in it glows, flashes or is red.
+- **A barricade** of five planks. Ten seconds of hands on it take it
+  apart from the top, a plank at a time, and it keeps what has been done
+  when it is let go; fire does the same and it burns meanwhile. It stays
+  down for everyone once it is down.
+- **A chest with a padlock, and its key**, set down separately wherever
+  it is to be found. A hand on the key takes it, for the whole party.
+  Until then the padlock rattles under a hand; after, it gives and the
+  lid goes back.
+- **A pendulum**: a blade on a long arm under a gantry, carrying
+  `Damage` and `DamageSharp` through its swing.
+- **A rift**: a ball of somewhere else hanging in the air. Seen through
+  it, from any side, are a violet sky with an eye in it, a broken
+  skyline, and rocks adrift that slide against the sky as the viewer
+  moves. Hands on it draw it shut over eight seconds; left half shut it
+  creeps open again; shut, it stays shut. It hums until then.
+
+Four things are worth taking from it.
+
+**The course is laid out behind the scenes.** Every piece is marked as
+rehearsed: set down, it is seen only by the game master and the people
+backstage, as a spectre in the game master's signature colour, and none
+of its contacts is on. "Course is live" is one synced bit that shows the
+whole of it to everyone at once, solid, and switches its contacts on.
+"Clear all" takes it back.
+
+**Values ride the bus.** The stage's anchor bus now carries one byte for
+each thing beside its place, sent in the thing's turn and ahead of it
+when the wearer has just changed it. Fifteen things use eight synced
+bits for that, where a synced float each would be 120: the sizes of the
+zones, and the headings of the three pieces that have a front. (The bus
+syncs no heading, so the barricade, the chest and the pendulum each have
+a "Turn" dial, which is their value.) The price is a second or two of
+delay and no smooth following; `net.wirenook.world-sync`'s README has the
+whole account. It took 24 bits off `meta-dm` as well.
+
+**The pieces that react are skill checks.** The barricade, the key, the
+padlock and the rift are each a `CheckSpec` from `net.wirenook.contacts`
+built into the animator: what must touch it, how fast it goes, whether
+it stays done. The padlock's check needs a hand and the key's check
+complete, one check reading another. Each spends one synced bit, on
+whether it is done as the wearer's client sees it, which is what makes
+"the barricade is down" true for someone who was not near enough to be
+shown the hands on it.
+
+**The rift is stencil work**, in one small shader
+(`Shaders/WirenookRift.shader`) used by three materials in queue order:
+the ball marks its pixels and writes its depth, the far side is drawn
+only on marked pixels and only behind the ball's surface, and the ball is
+drawn again to take the mark off. The far sky is shaded by the direction
+it is seen in, which is what makes it look far away. It is a ball and
+not a flat tear because a ball needs no heading.
+
+It ranks **Poor on PC**, the only platform it is built for, and is
+priced like the demonstration it is:
+
+| | `meta-dm` | `meta-dm-crypt` |
+| --- | --- | --- |
+| Triangles | 14,284 | 18,464 |
+| Skinned meshes | 3 | 5 (Medium) |
+| Material slots | 10 | 17 (Poor) |
+| Contacts | 21 | 30 (Poor) |
+| Audio sources | 3 | 7 (Medium) |
+| Synced bits | 136 | 151 |
+
+Thirty-two contacts and eight audio sources are where Very Poor begins,
+so there is room for two more contacts and one more sound, and not for
+another piece with a sound of its own. Leaving the skeleton key out of
+the tool list (twenty contacts) and giving the three tints one material
+would bring it back to Medium; the key stayed because a game master
+wants it here, to light the barricade or try a zone.
+
+An avatar cannot stop anyone walking and cannot hurt anyone: the
+barricade bars the way, and the blade and the danger zone do harm, by
+whatever the people at the table have agreed those contact tags mean.
+
+`CryptPreview.Render` (through `scripts/unity-bridge.py invoke
+Wirenook.Validation.Editor.CryptPreview.Render`) writes pictures of every
+piece to `dist/validation/crypt/`; `Tools > Wirenook > Meta > Verify
+Crypt` plays the kit as a wearer, someone backstage and a stranger; and
+`Tools > Wirenook > Meta > Rebuild Crypt` generates it (it is not part of
+`scripts/cass.sh rebuild`, as no package's features are).
 
 `GameMasterPreview.Render` (through `scripts/unity-bridge.py invoke
 Wirenook.Validation.Editor.GameMasterPreview.Render`) writes pictures of
@@ -1182,7 +1293,7 @@ it is built for, as this page describes them. The uploads were made on
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
 
-**`meta`, `meta-spectator`, `meta-dm` and `meta-probe` are built and
+**`meta`, `meta-spectator`, `meta-dm`, `meta-dm-crypt` and `meta-probe` are built and
 checked, and not uploaded.** They are marked `unreleased`, so their first uploads will
 be private; they have no avatar ids yet, and so no rights agreement on
 record (an unattended upload passes them over until their owner has
@@ -1383,6 +1494,37 @@ Not checked, because only the client can:
   on), whether a driver draws whole numbers at random, the pause's card,
   the portal's station, and a contact switched on by animation. The
   package's README says what to do to find each out.
+- The crypt of `meta-dm-crypt` (2026-11-27) is checked the same way:
+  its animator is played as a wearer, someone backstage and a stranger
+  (who is shown the course before and after it goes live, as a spectre
+  or solid, and where its contacts are on; the barricade under hands and
+  fire against the check's own rules; the chest with and without its
+  key; the danger zone's two seconds of warning and third of a second of
+  blow; the rift sealing, creeping open and staying shut; a size and a
+  heading reaching a stranger by the bus), with what a contact would
+  report written into the animator, and its shaders compile and are
+  rendered. Untried, each with the two minutes that would settle it:
+  - *Whether a zone's trait reaches people.* Stand in the hot zone
+    wearing `cass-contacts`: HOT! should come up, and stop on stepping
+    out. That needs a contact switched on by animation, scaled by its
+    bone, to send.
+  - *Whether the checks feel hands.* Put a hand on the barricade for
+    ten seconds, with a friend watching from across the room: planks
+    should come off for both, and stay off. The checks listen for the
+    `Hand` and `Finger` tags VRChat puts on every avatar.
+  - *The rift in a client and a headset.* Look into it and walk round
+    it: the sky should hold still and the rocks slide. If it is a grey
+    or empty ball, the stencil or the depth trick is not surviving
+    VRChat's rendering; in a mirror it may differ again.
+  - *The course going live.* Lay it out with a friend backstage (in
+    `meta-spectator`) and one not: spectres for the first, nothing for
+    the second, until the switch.
+  - *A size by the bus.* Turn a zone's dial with a friend watching: it
+    should follow within about two seconds, in steps.
+  - *The danger zone's timing* for two people at once, and whether its
+    third of a second of `Damage` is long enough for a receiver to see.
+  - *The pendulum*, which every client swings from the moment it is
+    shown it: two people will not see the blade in the same place.
 
 Known gaps:
 

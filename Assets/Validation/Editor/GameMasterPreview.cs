@@ -25,6 +25,7 @@ namespace Wirenook.Validation.Editor
 
         private static string On(string thing) => Stage + "/" + thing.Replace(" ", "");
         private static string Placed(int slot) => Stage + "/Bus/" + slot + "/Set";
+        private static string Value(int slot) => Stage + "/Bus/" + slot + "/Value";
 
         /// <returns>The folder the pictures were written to.</returns>
         public static string Render()
@@ -121,12 +122,12 @@ namespace Wirenook.Validation.Editor
                 // Slots: the pause is 1, the zones 2 to 4, the door 5 and the way out 6.
                 animator.SetBool(On("Zone 1"), true);
                 animator.SetBool(Placed(2), true);
-                animator.SetFloat(ZoneTool.Size(Prefix, 1), ZoneModel.Amount(3f));
+                animator.SetFloat(Value(2), ZoneModel.Amount(3f));
                 Play(0.6f);
                 Shot("zone, 3 m, on uneven ground", new Vector3(5.5f, 4.5f, 6.5f), new Vector3(0f, 0.3f, 0f), 50f);
                 Shot("zone, 3 m, from a person's height", new Vector3(1.5f, 1.6f, 7f), new Vector3(0f, 0.8f, 0f), 55f);
                 Shot("zone, 3 m, from inside it", new Vector3(-0.6f, 1.6f, -0.8f), new Vector3(2.4f, 0.2f, 1.2f), 75f);
-                animator.SetFloat(ZoneTool.Size(Prefix, 1), ZoneModel.Amount(1.5f));
+                animator.SetFloat(Value(2), ZoneModel.Amount(1.5f));
                 Play(0.3f);
                 Shot("zone, 1.5 m", new Vector3(3f, 2.6f, 4f), new Vector3(0f, 0.3f, 0f), 50f);
                 animator.SetBool(On("Zone 1"), false);
@@ -134,7 +135,7 @@ namespace Wirenook.Validation.Editor
 
                 animator.SetBool(On("Pause"), true);
                 animator.SetBool(Placed(1), true);
-                animator.SetFloat(PauseTool.Size(Prefix), ZoneModel.Amount(3f));
+                animator.SetFloat(Value(1), ZoneModel.Amount(3f));
                 Play(0.8f);
                 Shot("pause, 3 m, from outside", new Vector3(5.5f, 3.6f, 6.5f), new Vector3(0f, 1.2f, 0f), 50f);
                 Shot("pause, from inside (the card is on screen)", new Vector3(1.2f, 1.6f, -1.4f), new Vector3(-2f, 1f, 2.5f), 70f);

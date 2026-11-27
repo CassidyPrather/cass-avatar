@@ -204,6 +204,21 @@
       "worstRankMobile": "Medium"
     },
     {
+      "slug": "meta-dm-crypt",
+      "extends": "meta-dm",
+      "description": "A hooded low-poly game master from wirenook.net, fitted out for one adventure, The Sunken Crypt: zones of heat, cold and wind, a danger zone, a barricade, a locked chest, a pendulum and a rift. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "An example of a game master made over for one module, The Sunken Crypt (net.wirenook.meta-avatar, Editor/Crypt): meta-dm with one more tool in its kit. It sets out zones that are hot, cold or windy and give off the contact trait they look like; a danger zone that shows where it will strike before it does; a barricade that comes apart under hands or burns; a chest whose padlock opens to a hand once its key has been found; a swinging blade; and a rift, a stencil window on somewhere else that hands seal. The pieces that react are skill checks from net.wirenook.contacts. The whole course is laid out behind the scenes, seen as spectres by the people backstage, and one switch makes it live. Fifteen things stand on one anchor bus, which also carries a value for each (sizes and headings) for eight synced bits between them. A demonstration and priced like one: the key and the course together are thirty contacts, which is Poor. PC only: the rift and the tints need shaders of their own.",
+      "unreleased": true,
+      "worstRank": "Poor",
+      "features": [
+        "Packages/net.wirenook.meta-avatar/Prefabs/Wirenook Game Master (Crypt).prefab"
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "meta-probe",
       "extends": "meta",
       "description": "A test rig from wirenook.net: lamps over the head that show what each viewer's client worked out. AGPLv3. github.com/CassidyPrather/cass-avatar",

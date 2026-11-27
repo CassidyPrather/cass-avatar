@@ -170,6 +170,10 @@ namespace Wirenook.Cass.Editor
                 meshes = stats.meshCount ?? 0,
                 materialSlots = stats.materialCount ?? 0,
                 bones = stats.boneCount ?? 0,
+                contacts = stats.contactCount ?? 0,
+                audioSources = stats.audioSourceCount ?? 0,
+                constraints = stats.constraintsCount ?? 0,
+                raycasts = stats.raycastCount ?? 0,
                 textureMegabytes = stats.textureMegabytes ?? 0f,
                 faceTrackingOperations = stats.faceTrackingOperations ?? 0,
                 syncedParameterBits = SyncedBits(built),
@@ -249,6 +253,12 @@ namespace Wirenook.Cass.Editor
         public int meshes;
         public int materialSlots;
         public int bones;
+
+        /// <summary>Contacts that count for rank: local-only ones do not.</summary>
+        public int contacts;
+        public int audioSources;
+        public int constraints;
+        public int raycasts;
         public float textureMegabytes;
         public int faceTrackingOperations;
         public int syncedParameterBits;
