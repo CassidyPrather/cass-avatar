@@ -1364,7 +1364,7 @@ up on purpose, and their owner has said they will be deleted later:
 what is described here. The packages are on the VPM listing at
 <https://wirenook.net/vpm/listing.json>, each with its `.zip` and
 `.unitypackage` on GitHub: `net.wirenook.adventure-tools` 0.3.0;
-`assets`, `world-sync` and `party-tricks` 0.2.1; `locomotion` and
+`assets` 0.2.2; `world-sync` and `party-tricks` 0.2.1; `locomotion` and
 `avatar-stations` 0.2.0; `contacts` and `selective-animation` 0.1.0.
 Of this repository's three packages, `net.wirenook.cass` and
 `net.wirenook.meta-avatar` are 0.3.1 and `net.wirenook.bot` is 0.3.0 (see
