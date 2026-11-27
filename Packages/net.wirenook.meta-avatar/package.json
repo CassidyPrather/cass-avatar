@@ -1,7 +1,7 @@
 {
   "name": "net.wirenook.meta-avatar",
   "displayName": "Wirenook Meta (Avatar)",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "unity": "2022.3",
   "description": "A low-poly game master in a hooded robe, in the wirenook.net style: pixel textures, no face, and trim in a colour its wearer chooses. The base of the avatars that run a game or watch one. Built by the cass pipeline. With a game master's kit made over for one module, The Sunken Crypt, as an example of doing that.",
   "author": {
@@ -16,7 +16,7 @@
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
     "net.wirenook.assets": "^0.2.1",
-    "net.wirenook.cass": "^0.2.0",
+    "net.wirenook.cass": "^0.3.0",
     "net.wirenook.adventure-tools": "^0.3.0",
     "net.wirenook.contacts": "^0.1.0",
     "net.wirenook.world-sync": "^0.2.1",

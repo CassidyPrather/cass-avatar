@@ -869,3 +869,14 @@ Open: none of it has been in a client; the README lists the two minutes
 that would settle each point. The pieces have no heading but a dial.
 Overlapping zones of an element and plain zones cancel each other's
 tint, as plain zones do.
+
+### Giving new variants their avatar ids
+
+- **A variant inherits its parent's avatar id until it has one of its
+  own**, like any other property of a prefab variant. Reserving ids for
+  a family in one go gave the parent an id and then found that every
+  child "already had one": the parent's. `CassPrefabs.SeparateBlueprints`
+  clears inherited ids; run it after each id is written, parents first,
+  and once more before a grandchild.
+- **`CASS_UNATTENDED=1` held for a whole run**: thirty-seven uploads with
+  nobody there, none waiting behind a window.

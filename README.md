@@ -331,7 +331,7 @@ children.
 | `cass-gaits` | Good | A sampler for choosing how the avatar walks: every walk style of the locomotion package, with a Walk style menu to switch between them in game. PC only, and not a variant of `cass`. See below. |
 | `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. It crashes while away where `cass` vanishes. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
-| `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. Uploaded private until its owner has looked at it. See [The robot](#the-robot). |
+| `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. See [The robot](#the-robot). |
 | `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. Not uploaded yet, and private when it is. See [The game master](#the-game-master). |
 | `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. Not uploaded yet, and private when it is. See [The spectator](#the-spectator). |
 | `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. Not uploaded yet, and private when it is. See [Running a scene](#running-a-scene). |
@@ -590,9 +590,10 @@ plays it on the built variant and measures the feet. The Base controller
 is 13 MB of keys, so a rebuild bakes it only when the model, the motions
 or the locomotion package have changed (`Generated/Locomotion/baked-from.txt`).
 
-`unreleased` in its variant makes it upload private. To make it public,
-take that line out, run `scripts/cass.sh rebuild` and then
-`scripts/cass.sh publish wirenook-bot`.
+It went up private at first (`unreleased` in its variant) and was made
+public on 2026-11-26: that line taken out, `scripts/cass.sh rebuild`,
+then `scripts/cass.sh publish wirenook-bot`. The `meta` variants are
+where it was.
 
 ### The game master
 
@@ -1274,10 +1275,12 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Eleven variants are uploaded**, ten public and one private
-(`cass-quickhack`, which carries a bought prop), each for every platform
-it is built for, as this page describes them. The uploads were made on
-2026-11-26.
+**Sixteen variants are uploaded**, each for every platform it is built
+for, as this page describes them. Ten are public. Six are private:
+`cass-quickhack`, which carries a bought prop, and the five `meta`
+variants, which are marked `unreleased` until their owner has worn them.
+The uploads were made on 2026-11-27, and every one carries the invisible
+switch.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -1292,16 +1295,21 @@ it is built for, as this page describes them. The uploads were made on
 | `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
+| `meta` (private) | `avtr_ac7b2354-77c3-4ae5-9890-fc467fdb1d46` | PC, Android, iOS |
+| `meta-spectator` (private) | `avtr_93dc487a-4fa4-4e4e-a672-95bfc3f15673` | PC, Android, iOS |
+| `meta-dm` (private) | `avtr_94f7f812-36b3-4923-82be-c684d4e14d71` | PC, Android, iOS |
+| `meta-dm-crypt` (private) | `avtr_c79c13b2-b311-4857-ae25-4d19fde60b2b` | PC |
+| `meta-probe` (private) | `avtr_99fab1f6-5c12-4b74-880d-7aa79c40d2f0` | PC, Android |
 
-**`meta`, `meta-spectator`, `meta-dm`, `meta-dm-crypt` and `meta-probe` are built and
-checked, and not uploaded.** They are marked `unreleased`, so their first uploads will
-be private; they have no avatar ids yet, and so no rights agreement on
-record (an unattended upload passes them over until their owner has
-answered that once).
-
-**The invisible switch is on every variant here and on none of the
-uploads**, which were made before it. The next upload of each carries
-it, and one more synced bit.
+**None of the `meta` variants has been worn.** Everything they do that
+depends on what another person's client does (who is pointed at, who is
+chosen, who is backstage, who hears, where a thing set down arrives) is
+checked here against models and not in VRChat. `meta-probe` is the
+two-minute test for the mechanisms underneath, and it and
+`meta-spectator` each need a second person in the same avatar, which a
+private avatar cannot have: make one public by taking `unreleased` out of
+its variant, then `scripts/cass.sh rebuild` and
+`scripts/cass.sh publish <slug>`.
 
 **Three more avatars are still on VRChat and are no longer built**:
 `cass-party`, `cass-event` and `cass-shapes`, as they were
@@ -1313,11 +1321,11 @@ up on purpose, and their owner has said they will be deleted later:
 **Everything is pushed and released.** Every repository's `main` holds
 what is described here. The packages are on the VPM listing at
 <https://wirenook.net/vpm/listing.json>, each with its `.zip` and
-`.unitypackage` on GitHub: `net.wirenook.assets`, `locomotion`,
-`world-sync`, `avatar-stations`, `adventure-tools` and `party-tricks` at
-0.2.0 (their 0.1.0 of 2026-11-18 is still listed beside it), and
-`contacts` at 0.1.0, its first. This repository's two packages are 0.2.0
-(see [Releasing](#releasing)).
+`.unitypackage` on GitHub: `net.wirenook.adventure-tools` 0.3.0;
+`assets`, `world-sync` and `party-tricks` 0.2.1; `locomotion` and
+`avatar-stations` 0.2.0; `contacts` and `selective-animation` 0.1.0.
+This repository's three packages are 0.3.0 (see
+[Releasing](#releasing)). Earlier versions stay listed beside them.
 
 **One thing is left for the listing.** A release asks the listing to
 rebuild, which takes a `VPM_DISPATCH_TOKEN` secret in each repository: a
@@ -1627,7 +1635,8 @@ This repository's releases are immutable, which GitHub only lets take
 files while they are still drafts. That is why the release is made by CI
 from the tag, files and all, and not by hand first: v0.1.0 was published
 by hand on 2026-11-18, has no files, and its tag cannot be used again.
-v0.2.0 was the first made this way.
+v0.2.0 was the first made this way. One tag publishes every package
+here whose version matches it, so the three move together.
 
 ## Legal
 
