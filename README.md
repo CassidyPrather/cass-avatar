@@ -57,7 +57,7 @@ Spec/*.json ──────────────────────�
 | [`locomotion`](https://github.com/CassidyPrather/locomotion) | `net.wirenook.locomotion` | Procedural locomotion generated from a gait model, collider flight, a stepladder for a lifted play space, and a standing nap while away. |
 | [`world-sync`](https://github.com/CassidyPrather/world-sync) | `net.wirenook.world-sync` | Leaving props in the world, with their position synced for late joiners: one at a time, or many on a shared bus. |
 | [`avatar-stations`](https://github.com/CassidyPrather/avatar-stations) | `net.wirenook.avatar-stations` | A carry seat, a catch-up portal, and seats for a group in a ring or facing a screen. |
-| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon; an invisible switch, and presence: who sees you and who hears you, decided for each person in the room. |
+| [`adventure-tools`](https://github.com/CassidyPrather/adventure-tools) | `net.wirenook.adventure-tools` | Laser pointer (with a ping), megaphone, flashlight, lantern, screen notices, a beacon; an invisible switch; presence: who sees you and who hears you, decided for each person in the room; and a game master's kit: dice, a pause, zone markers, a pointer, a portal and a skeleton key. |
 | [`party-tricks`](https://github.com/CassidyPrather/party-tricks) | `net.wirenook.party-tricks` | A bonk hammer, a vanishing act, a mosaic censor, a busy sign, the crash and the vanish for when you are away, and the shape collector: a collect-the-shapes course laid out in any world from the avatar (the pilot for world-sync's bus). |
 | [`contacts`](https://github.com/CassidyPrather/contacts) | `net.wirenook.contacts` | VRChat contacts put to use. A kit on the standard contact tags: reactions to each, a tester that emits each and launches things, a shield that burns, targets to set down. And skill checks, one set of rules for worlds and avatars: the right tags touch a thing for long enough and it happens. Their avatar demo is a campfire, a match and a marshmallow. |
 | [`selective-animation`](https://github.com/CassidyPrather/selective-animation) | `net.wirenook.selective-animation` | Things an avatar does for only some of the people looking at it: whoever its wearer points at and marks (one raycast against the viewer's own collider, after VRLabs' Selective Animation), or whoever carries the same circle. With a reticle, a latch, and a probe for testing it in a client. No variant carries it yet. |
@@ -334,6 +334,7 @@ children.
 | `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. Uploaded private until its owner has looked at it. See [The robot](#the-robot). |
 | `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. Not uploaded yet, and private when it is. See [The game master](#the-game-master). |
 | `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. Not uploaded yet, and private when it is. See [The spectator](#the-spectator). |
+| `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. Not uploaded yet, and private when it is. See [Running a scene](#running-a-scene). |
 | `meta-probe` | Good | Not for wearing: `meta` with five lamps over its head that show what each viewer's client worked out, to find out in a VRChat client whether the mechanisms under the spectator work. PC and Android (Medium there). See [The spectator](#the-spectator). |
 
 ### How much a variant carries
@@ -715,6 +716,83 @@ VRChat's rules before doing it anywhere people have not agreed to it.
 `PresencePreview.Render <slug>` (through `scripts/unity-bridge.py invoke
 Wirenook.Validation.Editor.PresencePreview.Render`) writes what each kind
 of viewer is drawn to `dist/validation/presence/<slug>/`.
+
+### Running a scene
+
+`meta-dm` is `meta` carrying **the game master's kit** of
+`net.wirenook.adventure-tools`, with presence (the plain one: it loads
+seen and heard by everyone, and is backstage with the spectators),
+flight, and the carry seat of `net.wirenook.avatar-stations`. Everything
+below is behind one "Game Master" entry in the menu and in the wearer's
+signature colour.
+
+- **Dice.** A coin, 1d6, 2d6, 1d20, 2d20. The wearer's client draws the
+  numbers and syncs them; everyone near is shown them on a board over the
+  wearer's head that reads from both sides, or, rolled in secret, the
+  wearer alone on a board of their own (and the people backstage, if the
+  wearer says so). A public roll shows whether or not the wearer does.
+- **Pause.** One press drops a ring where the wearer stands, sized by a
+  dial, with a pause sign over it and a sound. On PC the inside is dimmed
+  (the game master excepted) and everyone whose eyes are inside has a
+  card on their screen saying so.
+- **Zones.** Three spheres to aim and set down, each sized by a dial and
+  shown to everyone or to backstage only: a ring of dashes and two
+  arches everywhere, and on PC a dashed line lying on whatever the
+  sphere's edge crosses and a faint tint inside, drawn with stencil
+  volumes, so with no depth texture and no light on the avatar.
+- **Pointer.** A glow on the index fingertip, on with the pointing
+  gesture or a switch, and a laser from it. It is also what things are
+  aimed with.
+- **Portal.** A door anyone can click and, set down separately, where it
+  leads; with no second end it leads to the wearer, for whoever was left
+  behind.
+- **Skeleton key.** Sends any one of VRChat's nineteen trait tags by
+  touch and shows which it feels. PC only: it is twenty contacts.
+- **Notices** for a table ("Scene starts", "Roll for initiative", ...).
+  PC only, as the everyday ones are.
+
+What stands in the world (the pause, the zones, both ends of the portal)
+rides one anchor bus of `net.wirenook.world-sync`, so six things sync
+what one position costs, and a late arrival has them all within one round
+of it. A thing is aimed with the finger, set down with a fist, measured,
+read out ahead of the bus's round and only then switched on, about two
+seconds after the click: nobody is shown it where it used to stand. The
+kit's two meshes are made in code and stand apart from the wearer's
+figure, so a game master who has gone unseen keeps their zones.
+
+It ranks **Medium on PC, Android and iOS**, and has to stay clear of Very
+Poor: a game master hidden by someone's performance filter spoils the
+scene.
+
+| | PC | Android, iOS |
+| --- | --- | --- |
+| Triangles | 14,284 | 7,416 |
+| Skinned meshes | 3 (Medium) | 2 (Medium) |
+| Material slots | 10 (Medium) | 2 (Medium) |
+| Contacts | 21 (Medium) | 1 |
+| Raycasts | 3 | 3 (Medium) |
+| Bones | 79 | 66 |
+| Synced bits | 160 | 160 |
+
+On PC three things each hold it at Medium, so none is worth giving up
+alone: a third skinned mesh for the shapes that need the kit's own
+shaders, ten material slots, and the key's contacts. On mobile it is two
+skinned meshes in two materials, which is all Android and iOS allow
+before Very Poor: nothing more that is a mesh of its own can be added
+there, which is why the carry seat is left out of those builds. The 160
+synced bits are the kit's 140 (the bus is 57 of them), `meta`'s 10,
+presence's 8, flight's 1 and the seat's 1; 96 are left for a game master
+made for one module, which is the same kit built with more tools in its
+list (the package's README has how).
+
+Not done: the megaphone, set aside for now; and the seat is the one cloud
+of `avatar-stations`, not several.
+
+`GameMasterPreview.Render` (through `scripts/unity-bridge.py invoke
+Wirenook.Validation.Editor.GameMasterPreview.Render`) writes pictures of
+every tool to `dist/validation/dm/`, and `Tools > Wirenook > Adventure
+Tools > Verify Game Master` plays the kit as a wearer and a viewer. The
+package's README lists what only a client can answer, and how to ask.
 
 ### Wardrobes
 
@@ -1104,8 +1182,8 @@ it is built for, as this page describes them. The uploads were made on
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
 
-**`meta`, `meta-spectator` and `meta-probe` are built and checked, and
-not uploaded.** They are marked `unreleased`, so their first uploads will
+**`meta`, `meta-spectator`, `meta-dm` and `meta-probe` are built and
+checked, and not uploaded.** They are marked `unreleased`, so their first uploads will
 be private; they have no avatar ids yet, and so no rights agreement on
 record (an unattended upload passes them over until their owner has
 answered that once).
@@ -1294,6 +1372,17 @@ Not checked, because only the client can:
   friend; wearing `meta-spectator` beside someone in any other avatar
   answers the rest (they should neither see nor hear you until you choose
   "Everyone").
+- The game master's kit of `meta-dm` (2026-11-26) is checked the same
+  way and no further: its animator is played as a wearer and a viewer
+  with VRChat's part stood in for (setting a thing down, all four
+  hundred pairs of two d20, who is shown what, the key's nineteen
+  senders), its shaders compile and are rendered, and the built avatar's
+  own controller shows the same boards and markers. Untried: whether the
+  stencil volumes draw in a client and a headset, whether things arrive
+  where they were put (which rests on everything the anchor bus rests
+  on), whether a driver draws whole numbers at random, the pause's card,
+  the portal's station, and a contact switched on by animation. The
+  package's README says what to do to find each out.
 
 Known gaps:
 

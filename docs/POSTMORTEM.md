@@ -759,3 +759,53 @@ rotation constraint keeps the hood on the head without lag, whether
 `VRCHeadChop` at scale 0 on a bone that is not under `Head` hides the
 hood from its wearer, how the cuffs' physics hang, and whether a synced
 float turns the hue smoothly for other people.
+
+### The same session: a kit for running a scene
+
+- **`meta-dm`**, and under it the game master's kit of
+  `net.wirenook.adventure-tools`: dice, a pause, zone markers, a pointer,
+  a portal, a skeleton key and a second set of notices, as one prefab
+  built from a list of tools that share a stage (one anchor bus), a
+  pointer and two meshes made in code. Medium on every platform, 160
+  synced bits.
+- **The anchor bus reads a newly placed slot out ahead of its round**, and
+  says on the wearer's client where a placement has got to, so that a
+  feature can wait to show a thing until everyone can know where it
+  stands.
+- **`WirenookApart`**, for renderers that are not part of the wearer's
+  figure.
+
+Gotchas from that:
+
+- **A prefab that is edited in place is found as the last build left
+  it.** Bones that a layer scales rest at the scale its first state
+  holds, which is usually nought, and a mesh bound to a bone of no size
+  comes out as numbers that are not numbers. Put every bone back where it
+  rests before binding (`GameMasterBuild.Bone`).
+- **A renderer's root bone must not be of no size either.** Skinning is
+  done in the root bone's space. The kit's bounds rest at a ten-thousandth
+  of their size, not at nought.
+- **A direct blend tree adds.** Two children that animate one property
+  give it the sum of their values times their weights. That is how the
+  dice show a total with no state per total, and how nineteen pips each
+  follow a parameter of their own in one layer. Checked in the editor's
+  animator for every pair of two d20.
+- **A clip read at a parameter draws a table.** Curves with stepped keys,
+  played at a motion time, make one state do for forty-one numbers.
+- **Avatar Optimizer removes a blendshape whose every curve is one
+  constant** and bakes the result in. The tens of a d20 never have their
+  top-left stroke; nine shapes went that way and the boards are right.
+- **Marks that a build strips cannot be asked for afterwards.** The check
+  that the invisible switch reaches every renderer runs on the built
+  avatar; which renderers stood apart is remembered by the build step
+  that read the marks.
+- **A stencil increment counts in the whole byte.** With a write mask on
+  high bits it never shows. Inverting one bit counts parity instead, in
+  any bit, and leaves the rest of the buffer alone.
+- **A PC-only object takes its children with it.** Shapes that every
+  platform draws were skinned to bones under one, which a mobile build
+  would have removed from under the mesh.
+
+Open: none of it has been in a client, and the adventure-tools README
+lists what to try first. The megaphone was set aside by its owner. The
+seat is one, where several were asked for.

@@ -186,6 +186,24 @@
       "worstRankMobile": "Good"
     },
     {
+      "slug": "meta-dm",
+      "extends": "meta",
+      "description": "A hooded low-poly game master from wirenook.net, with what it takes to run a scene: dice, a pause, zone markers, a pointer, a portal and a key. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "The game master: meta carrying the kit of net.wirenook.adventure-tools behind one menu entry. Dice rolled for everyone or in secret; a pause dropped where it stands; three zone markers and a portal with two ends, aimed with the finger and set down in the world for everyone (all on one anchor bus, so together they sync what one position costs); a light and a laser on the fingertip; a skeleton key that sends or feels any of VRChat's contact traits; notices for running a scene. With presence, so its wearer chooses who sees and who hears them, flight, and a seat to carry someone on. It has to stay clear of Very Poor everywhere: a game master hidden by someone's performance filter spoils the scene. Android and iOS builds leave out what needs a shader of the kit's own, the key's contacts and the seat.",
+      "unreleased": true,
+      "worstRank": "Medium",
+      "features": [
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Presence.prefab",
+        "Packages/net.wirenook.adventure-tools/Prefabs/Wirenook Game Master.prefab",
+        "Packages/net.wirenook.locomotion/Prefabs/Wirenook Flight.prefab",
+        {
+          "path": "Packages/net.wirenook.avatar-stations/Prefabs/Wirenook Carry Seat.prefab",
+          "pcOnly": true
+        }
+      ],
+      "worstRankMobile": "Medium"
+    },
+    {
       "slug": "meta-probe",
       "extends": "meta",
       "description": "A test rig from wirenook.net: lamps over the head that show what each viewer's client worked out. AGPLv3. github.com/CassidyPrather/cass-avatar",
@@ -195,7 +213,10 @@
       "features": [
         "Packages/net.wirenook.selective-animation/Prefabs/Wirenook Selective Probe.prefab"
       ],
-      "platforms": ["pc", "android"],
+      "platforms": [
+        "pc",
+        "android"
+      ],
       "worstRankMobile": "Medium"
     }
   ],

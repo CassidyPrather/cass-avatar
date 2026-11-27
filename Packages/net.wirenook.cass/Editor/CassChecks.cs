@@ -162,6 +162,9 @@ namespace Wirenook.Cass.Editor
         /// Every avatar has the invisible switch, once, and its one layer
         /// reaches every renderer the build left: a renderer it missed
         /// would go on being drawn for people the wearer is hidden from.
+        /// The ones a feature has said are not part of the wearer's figure
+        /// (<see cref="Wirenook.Assets.WirenookApart"/>: a zone marker left
+        /// standing in the world) are that feature's to show and hide.
         /// </summary>
         private static void Unseen(GameObject built, List<string> problems)
         {
@@ -173,7 +176,9 @@ namespace Wirenook.Cass.Editor
                 return;
             }
 
+            var apart = WirenookRenderers.Apart(built);
             var renderers = built.GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => !apart.Contains(renderer))
                 .Select(renderer => UnityEditor.AnimationUtility.CalculateTransformPath(renderer.transform, built.transform))
                 .Distinct()
                 .ToList();

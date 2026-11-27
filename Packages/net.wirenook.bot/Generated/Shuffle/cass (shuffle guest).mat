@@ -617,6 +617,7 @@ Material:
     - _WirenookSignReach: 0.3
     - _WirenookSignShow: 0
     - _WirenookSignature: 0
+    - _WirenookSpectral: 0
     - _ZClip: 1
     - _ZTest: 4
     - _ZWrite: 1
