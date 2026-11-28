@@ -1,7 +1,7 @@
 {
   "name": "net.wirenook.cass",
   "displayName": "Cass (Avatar)",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "unity": "2022.3",
   "description": "Cassidy's VRChat avatar: one root prefab, upload variants layered over it, and the build-time tooling that optimises and publishes them.",
   "author": {
@@ -16,7 +16,7 @@
     "nadena.dev.modular-avatar": "^1.18.7",
     "jp.lilxyzw.liltoon": "^2.4.1",
     "com.anatawa12.avatar-optimizer": "^1.9.22",
-    "net.wirenook.assets": "^0.2.1",
+    "net.wirenook.assets": "^0.2.3",
     "net.wirenook.locomotion": "^0.2.0",
     "net.wirenook.world-sync": "^0.2.1",
     "net.wirenook.avatar-stations": "^0.2.0",

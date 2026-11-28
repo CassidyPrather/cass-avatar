@@ -160,6 +160,23 @@
       "worstRankMobile": "Medium"
     },
     {
+      "slug": "wirenook-contacts",
+      "root": "Packages/net.wirenook.bot/Prefabs/bot-root.prefab",
+      "description": "A low-poly robot from wirenook.net, carrying the contact toys: it reacts to VRChat's standard contact tags, emits each of them, and sets down targets and a collect-the-shapes course. AGPLv3. github.com/CassidyPrather/cass-avatar",
+      "about": "The robot as the build for playing with contacts, for whoever would sooner not wear cass to do it: what cass-contacts carries (everything from net.wirenook.contacts, and the shape collector) on the wirenook bot. It stands on the robot's root and not on wirenook-bot, which is full: that variant's party tricks and campfire are left behind to make room in the 256 synced bits, and it naps when its wearer is away, since the crash is one of the party tricks. PC only, like cass-contacts.",
+      "worstRank": "Medium",
+      "afk": "nap",
+      "features": [
+        "Packages/net.wirenook.bot/Prefabs/Bot Locomotion.prefab",
+        "Packages/net.wirenook.contacts/Prefabs/Wirenook Contacts.prefab",
+        "Packages/net.wirenook.party-tricks/Prefabs/Wirenook Shape Collector.prefab"
+      ],
+      "platforms": [
+        "pc"
+      ],
+      "worstRankMobile": "VeryPoor"
+    },
+    {
       "slug": "meta",
       "root": "Packages/net.wirenook.meta-avatar/Prefabs/meta-root.prefab",
       "description": "A hooded low-poly game master from wirenook.net, with trim in a colour its wearer chooses. AGPLv3. github.com/CassidyPrather/cass-avatar",

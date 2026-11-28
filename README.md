@@ -332,6 +332,7 @@ children.
 | `cass-cyber` | Good | `cass` in the cyber wardrobe: a techwear jacket with lit seams, a utility vest, a pleated skirt with a lit hem, chunky boots and a headset in place of the hat. It crashes while away where `cass` vanishes. See [Wardrobes](#wardrobes). |
 | `cass-quickhack` | Very Poor | The cyber build carrying Quick Hack by DiNe Shop, a bought prop that is not in this repository. PC only, uploaded private, and only made where the prop has been imported. See [Assets that are not in the repository](#assets-that-are-not-in-the-repository). |
 | `wirenook-bot` | Good | Not cass at all: a low-poly robot with a sprite face, carrying the same drop-in features. See [The robot](#the-robot). |
+| `wirenook-contacts` | Medium | The robot as the build for playing with contacts, for whoever would sooner not wear cass to do it: the contact kit and the shape collector that `cass-contacts` carries, on the robot. It stands on the robot's root and leaves `wirenook-bot`'s party tricks and campfire behind to fit in 256 synced bits (it uses 161), and naps when its wearer is away. PC only. |
 | `meta` | Excellent | Not cass either: a low-poly game master in a hooded robe with nothing in the hood, and trim in a colour its wearer chooses. The base for the avatars that run a game or watch one, kept light enough to rank Excellent on every platform. See [The game master](#the-game-master). |
 | `meta-spectator` | Good | `meta` as a ghost, for watching a game: it loads seen and heard by nobody but the people backstage (everyone wearing this or a game master's avatar, who see each other as spectres in their own colours), and its wearer chooses from there who sees them and who hears them. Flight on PC. Good on Android and iOS too. See [The spectator](#the-spectator). |
 | `meta-dm` | Medium | `meta` with what it takes to run a scene, behind one menu entry: dice rolled for everyone or in secret, a pause, three zone markers and a two-ended portal set down in the world, a light and a laser on the fingertip, a skeleton key for contacts, notices for a table. With presence (it loads seen and heard by all), flight and a seat to carry someone on. Medium on Android and iOS too. See [Running a scene](#running-a-scene). |
@@ -1319,12 +1320,30 @@ No atlasing happens at build time: the model is built with its one atlas.
 
 ## Status
 
-**Sixteen variants are uploaded**, each for every platform it is built
-for, as this page describes them. Fifteen are public. `cass-quickhack`,
+**Seventeen variants are uploaded**, each for every platform it is built
+for, as this page describes them. Sixteen are public. `cass-quickhack`,
 which carries a bought prop, is private. The uploads were made on
 2026-11-27, and every one carries the invisible switch. The five `meta`
 variants went up private that morning and again, public, that afternoon,
 with the mantle refitted and the crypt's pendulum, rift and props redone.
+That evening every variant went up once more, with a renderer that is
+never switched off (see below), and `wirenook-contacts` for the first
+time.
+
+**The invisible switch stranded people, and the first evening found it.**
+VRChat does not run the animator of somebody else's avatar while none of
+its renderers is in view, and the switch (and the moment of not being
+drawn that every avatar began with) switched all of them off: on any
+client where that happened the animator stopped and could not switch
+them on again. Every build now carries one renderer nothing switches
+off, the size of the figure, that draws nothing
+(`WirenookRenderers.KeepAwake` in `net.wirenook.assets`), and a check
+fails a build without one. On PC it holds a triangle too small to see
+and one material slot, which was seen to work; that slot takes
+`cass-adv` and `cass-contacts` from Medium to Poor and `wirenook-bot`
+from Good to Medium on PC. On Android and iOS it holds a mesh with no
+triangle and no slot, which keeps every rank and **has not been
+confirmed to work**. If it does, PC should take it too.
 
 | Variant | Avatar id | Platforms uploaded |
 | --- | --- | --- |
@@ -1339,6 +1358,7 @@ with the mantle refitted and the crypt's pendulum, rift and props redone.
 | `cass-cyber` | `avtr_6e4d8fa5-248c-49c2-ab94-f95251452992` | PC, Android, iOS |
 | `cass-quickhack` (private) | `avtr_03ae9d5a-620a-4000-a0a0-8ad4dae77823` | PC |
 | `wirenook-bot` | `avtr_bf5b646b-a4a3-4ea7-85e4-e8985c7e8dd0` | PC, Android, iOS |
+| `wirenook-contacts` | `avtr_9b9a2c67-0e43-4e29-b752-e10c5f7f6292` | PC |
 | `meta` | `avtr_ac7b2354-77c3-4ae5-9890-fc467fdb1d46` | PC, Android, iOS |
 | `meta-spectator` | `avtr_93dc487a-4fa4-4e4e-a672-95bfc3f15673` | PC, Android, iOS |
 | `meta-dm` | `avtr_94f7f812-36b3-4923-82be-c684d4e14d71` | PC, Android, iOS |

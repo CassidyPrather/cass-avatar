@@ -936,3 +936,35 @@ of the dungeon is where the crypt's pieces fit (a beam for the pendulum,
 a gap for the barricade, a plinth, a ledge, a dark bay); a test holds
 its sizes to the crypt's, read from `CryptPieces.cs` by hand, so a
 change there needs the test's numbers changed with it.
+
+### The same session: the first evening in a client
+
+The owner wore the avatars at the weekly gathering. Some people could not
+see them at all, and switching invisible on and off again hid them from
+more.
+
+- **An animator that switches off every renderer it has cannot switch
+  them on again.** VRChat does not run a remote avatar's animator while
+  none of its renderers is in view, and a renderer that is switched off
+  is never in view. The invisible switch did exactly that, and so did the
+  second of not being drawn that every avatar started with: whoever was
+  looking at the wearer as the avatar loaded never saw it. This is the
+  kind of fault no check in the editor finds, because the editor's
+  animator always runs. Every build now has one renderer that is never
+  switched off (`WirenookRenderers.KeepAwake`), and `CassChecks.Unseen`
+  fails a build in which every renderer can be.
+- **A renderer costs a material slot, and VRChat counts a slot for each
+  part of a mesh, not for each material.** A `MeshRenderer` with no
+  materials still counted one; a mesh with no triangles at all counts
+  none. Mobile builds use that, since one slot there is a whole rank. PC
+  builds use a real, sub-pixel triangle, because that was the version
+  seen to work, at the price of a rank on the three variants that sat on
+  a slot limit. Whether the slot-free one keeps the animator running is
+  still to be seen in a headset.
+- **`upload` does not hold a variant to its `worstRank`; `verify` does.**
+  The fix went up without a verify in between and took three variants
+  down a rank unnoticed until the numbers were read afterwards.
+- **The rights agreements were gone by the evening**: the editor's
+  session had changed, and every id needed its agreement recorded again.
+- **A new variant gets its id from `CassUpload.Reserve <slug>`** before
+  its first upload, so the agreement can be recorded for it.

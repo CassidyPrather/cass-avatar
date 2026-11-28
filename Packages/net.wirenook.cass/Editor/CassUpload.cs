@@ -233,6 +233,38 @@ namespace Wirenook.Cass.Editor
             return agreed ? "no" : "yes: no rights agreement is recorded for " + blueprint + " in this session of the editor";
         }
 
+        /// <summary>
+        /// Gives a variant that has never been uploaded its avatar id, and
+        /// returns it: the record the SDK would make at the start of a first
+        /// upload, made now. The SDK asks for the rights agreement per id,
+        /// so a first upload nobody is watching needs the id beforehand.
+        /// A variant that has an id keeps it.
+        /// </summary>
+        public static async Task<string> Reserve(string slug)
+        {
+            await SignedIn();
+            CassPrefabs.SeparateBlueprints();
+            var prefab = CassBuild.LoadVariant(slug);
+            var held = prefab.GetComponent<PipelineManager>()?.blueprintId;
+            if (!string.IsNullOrEmpty(held)) return held;
+
+            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            try
+            {
+                var record = Compose(instance, default, out _);
+                var made = await VRCApi.CreateAvatarRecord(record, (status, amount) => { }, default);
+                if (string.IsNullOrEmpty(made.ID)) throw new InvalidOperationException("VRChat made no record for " + slug);
+                SaveBlueprint(slug, made.ID);
+                CassPrefabs.SeparateBlueprints();
+                return made.ID;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(instance);
+                Tidy(slug);
+            }
+        }
+
         /// <summary>Builds and uploads a variant. Needs an account signed in through the SDK control panel.</summary>
         public static async Task<string> Upload(string slug)
         {

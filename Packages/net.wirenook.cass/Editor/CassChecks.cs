@@ -199,6 +199,27 @@ namespace Wirenook.Cass.Editor
                                  " renderers: " + string.Join(", ", missed.Take(4)) + (missed.Count > 4 ? ", ..." : ""));
             }
 
+            // VRChat stops the animator of somebody else's avatar while none of its
+            // renderers is in view, and one that is switched off never is. So one
+            // renderer has to be on at rest that no animation switches off, itself
+            // or by an object above it, or the layer above could not undo itself.
+            var switched = new HashSet<string>(Fx(built).animationClips
+                .SelectMany(clip => UnityEditor.AnimationUtility.GetCurveBindings(clip))
+                .Where(binding => binding.propertyName == "m_Enabled" && typeof(Renderer).IsAssignableFrom(binding.type) ||
+                                  binding.propertyName == "m_IsActive" && binding.type == typeof(GameObject))
+                .Select(binding => binding.path));
+            bool StaysOn(Renderer renderer)
+            {
+                if (!renderer.enabled || !renderer.gameObject.activeInHierarchy) return false;
+                for (var at = renderer.transform; at != null && at != built.transform; at = at.parent)
+                    if (switched.Contains(UnityEditor.AnimationUtility.CalculateTransformPath(at, built.transform))) return false;
+                return renderer.bounds.size.x > 0.3f && renderer.bounds.size.y > 0.3f;
+            }
+
+            if (!built.GetComponentsInChildren<Renderer>(true).Any(StaysOn))
+                problems.Add("No renderer in the build stays on whatever the animator does (net.wirenook.assets, WirenookRenderers.KeepAwake): " +
+                             "once the invisible switch had hidden the avatar from someone, their client would stop its animator and never show it again.");
+
             var switches = Switches(built.GetComponent<VRCAvatarDescriptor>().expressionsMenu, WirenookSignals.Unseen, new HashSet<UnityEngine.Object>());
             if (switches != 1)
                 problems.Add("The menu has " + switches + " switches for " + WirenookSignals.Unseen + "; every avatar has the one \"Invisible\" switch.");
